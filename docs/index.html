@@ -51,8 +51,25 @@
                 </a>
             </div>
 
+      
             <div class="nav-group">
-                <div class="nav-group-title">第一部分：基礎架構</div>
+                <div class="nav-group-title">第一部分：使用者指南</div>
+                <a href="#u1" class="nav-item" data-chapter="u1">
+                    <span class="nav-icon">U1</span>安裝與快速開始
+                </a>
+                <a href="#u2" class="nav-item" data-chapter="u2">
+                    <span class="nav-icon">U2</span>互動模式與基本操作
+                </a>
+                <a href="#u3" class="nav-item" data-chapter="u3">
+                    <span class="nav-icon">U3</span>配置 LLM 供應商
+                </a>
+                <a href="#u4" class="nav-item" data-chapter="u4">
+                    <span class="nav-icon">U4</span>客製化：指令與技能
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-title">第二部分：基礎架構</div>
                 <a href="#ch1" class="nav-item" data-chapter="ch1">
                     <span class="nav-icon">01</span>專案概觀與設計哲學
                 </a>
@@ -68,7 +85,7 @@
             </div>
 
             <div class="nav-group">
-                <div class="nav-group-title">第二部分：安全與信任</div>
+                <div class="nav-group-title">第三部分：安全與信任</div>
                 <a href="#ch5" class="nav-item" data-chapter="ch5">
                     <span class="nav-icon">05</span>信任模型 (Trust System)
                 </a>
@@ -78,7 +95,7 @@
             </div>
 
             <div class="nav-group">
-                <div class="nav-group-title">第三部分：供應商引擎</div>
+                <div class="nav-group-title">第四部分：供應商引擎</div>
                 <a href="#ch7" class="nav-item" data-chapter="ch7">
                     <span class="nav-icon">07</span>多供應商系統
                 </a>
@@ -88,7 +105,7 @@
             </div>
 
             <div class="nav-group">
-                <div class="nav-group-title">第四部分：提示詞工程</div>
+                <div class="nav-group-title">第五部分：提示詞工程</div>
                 <a href="#ch9" class="nav-item" data-chapter="ch9">
                     <span class="nav-icon">09</span>指令載入器
                 </a>
@@ -104,7 +121,7 @@
             </div>
 
             <div class="nav-group">
-                <div class="nav-group-title">第五部分：核心執行</div>
+                <div class="nav-group-title">第六部分：核心執行</div>
                 <a href="#ch13" class="nav-item" data-chapter="ch13">
                     <span class="nav-icon">13</span>Agent 迴圈
                 </a>
@@ -117,7 +134,7 @@
             </div>
 
             <div class="nav-group">
-                <div class="nav-group-title">第六部分：介面與輸出</div>
+                <div class="nav-group-title">第七部分：介面與輸出</div>
                 <a href="#ch16" class="nav-item" data-chapter="ch16">
                     <span class="nav-icon">16</span>CLI 介面設計
                 </a>
@@ -127,7 +144,7 @@
             </div>
 
             <div class="nav-group">
-                <div class="nav-group-title">第七部分：綜合</div>
+                <div class="nav-group-title">第八部分：綜合</div>
                 <a href="#ch18" class="nav-item" data-chapter="ch18">
                     <span class="nav-icon">18</span>14 步執行管線全景
                 </a>
@@ -141,7 +158,7 @@
             <div class="reading-progress">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
-            <span class="progress-text" id="progressText">0 / 19 章</span>
+            <span class="progress-text" id="progressText">0 / 23 章</span>
         </div>
     </aside>
 
@@ -315,7 +332,220 @@ $ gcd exec --provider gemini-official --skill code-review <span class="token str
 
                 <div class="chapter-nav">
                     <div></div>
-                    <a href="#ch1" class="btn btn-outline" onclick="navigateTo('ch1')">下一章：專案概觀 &rarr;</a>
+                    <a href="#u1" class="btn btn-outline" onclick="navigateTo('u1')">下一章：快速開始 (使用者指南) &rarr;</a>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==================== U1 ==================== -->
+        <section id="u1" class="chapter">
+            <div class="chapter-header">
+                <span class="chapter-number">U1</span>
+                <h1>安裝與快速開始</h1>
+                <p class="chapter-desc">介紹如何編譯 GemiClawdex 並進行第一次對話。</p>
+            </div>
+            <div class="content-body">
+                <h2>系統要求</h2>
+                <ul>
+                    <li>Rust 1.70 或更高版本</li>
+                    <li>連網環境 (以取得依賴模組)</li>
+                    <li>準備好你的 API Key (目前支援 OpenAI, Anthropic, Gemini)</li>
+                </ul>
+
+                <h2>編譯與安裝</h2>
+                <div class="code-window">
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">終端機</span></div>
+                    <div class="window-body">
+<pre><code class="language-bash"># 1. 取得原始碼並切換目錄
+git clone https://github.com/your-repo/GemiClawdex.git
+cd GemiClawdex
+
+# 2. 使用 Cargo 編譯 (Release 模式以獲得最佳效能)
+cargo build --release
+
+# 3. 把執行檔移到系統路徑，方便全域使用 (選擇性)
+sudo cp target/release/gcd /usr/local/bin/</code></pre>
+                    </div>
+                </div>
+
+                <h2>第一次執行</h2>
+                <p>如果你還沒設定任何環境變數，可以直接輸入 <code>gcd</code>。通常我們會帶上環境變數啟動，例如：</p>
+                <div class="code-window">
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">快速執行</span></div>
+                    <div class="window-body">
+<pre><code class="language-bash"># 設定環境變數並進入互動 REPL
+GEMINI_API_KEY="AIzaSy..." gcd</code></pre>
+                    </div>
+                </div>
+                
+                <div class="callout callout-info">
+                    <div class="callout-title">如何離開 REPL？</div>
+                    <p>在 <code>gcd></code> 提示符號下，輸入 <code>/exit</code> 或短按 <code>Ctrl+C</code>（部分終端可能需要 <code>Ctrl+D</code>）即可安全退出互動模式並儲存會話紀錄。</p>
+                </div>
+
+                <div class="chapter-nav">
+                    <a href="#intro" class="btn btn-outline" onclick="navigateTo('intro')">&larr; 前言</a>
+                    <a href="#u2" class="btn btn-outline" onclick="navigateTo('u2')">下一章：基本操作 &rarr;</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== U2 ==================== -->
+        <section id="u2" class="chapter">
+            <div class="chapter-header">
+                <span class="chapter-number">U2</span>
+                <h1>互動模式與基本操作</h1>
+                <p class="chapter-desc">GemiClawdex 支援 One-off Exec 跟強大的 REPL 互動模式。</p>
+            </div>
+            <div class="content-body">
+                <h2>單次任務 (Exec)</h2>
+                <p>如果你只想把代理當作命令列工具處理單一請求：</p>
+                <div class="code-window">
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">終端機</span></div>
+                    <div class="window-body">
+<pre><code class="language-bash">$ gcd exec "幫我解釋 src/agent.rs 裡面的邏輯"
+$ gcd exec --provider openai-codex "在 src/ 裡面寫一個簡單的 HelloWorld"</code></pre>
+                    </div>
+                </div>
+
+                <h2>互動模式 (REPL)</h2>
+                <p>直接輸入 <code>gcd</code>，你就會進入與 AI 代理對話的世界：</p>
+                <div class="code-window">
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">REPL</span></div>
+                    <div class="window-body">
+<pre><code class="language-text">gcd> 請分析目前的專案架構
+[Agent 開始使用 list_dir 等工具探勘專案...]
+Agent: 專案主要是一個 Rust workspace...
+
+gcd> 幫我把 README.md 的錯字改一下
+[Agent 呼叫 write_file 工具進行修改...]
+Agent: 已經修改完成了！</code></pre>
+                    </div>
+                </div>
+
+                <h2>常用的斜線指令 (Slash Commands)</h2>
+                <p>在 REPL 中，你可以使用特定指令向系統下達控制：</p>
+                <ul>
+                    <li><code>/help</code>：顯示幫助資訊與快速指令表</li>
+                    <li><code>/overview</code>：回報目前的工作區和系統狀態 (信任等級, 沙箱, 供應商)</li>
+                    <li><code>/clear</code>：清除目前的控制台畫面</li>
+                    <li><code>/reset</code>：清除對話上下文歷史 (新開一個乾淨的 Session)</li>
+                </ul>
+
+                <div class="chapter-nav">
+                    <a href="#u1" class="btn btn-outline" onclick="navigateTo('u1')">&larr; 上一章</a>
+                    <a href="#u3" class="btn btn-outline" onclick="navigateTo('u3')">下一章：配置供應商 &rarr;</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== U3 ==================== -->
+        <section id="u3" class="chapter">
+            <div class="chapter-header">
+                <span class="chapter-number">U3</span>
+                <h1>配置 LLM 供應商</h1>
+                <p class="chapter-desc">GemiClawdex 支援多種強大的 LLM，你可以自由切換以符合工作需求。</p>
+            </div>
+            <div class="content-body">
+                <h2>系統自動偵測 (Zero Config)</h2>
+                <p>最簡單的方式是將 API Key 設定為環境變數，GemiClawdex 會自動選用適合的官方引擎：</p>
+                <ul>
+                    <li><code>OPENAI_API_KEY</code> &rarr; 對應 <code>openai-env</code> (預設 gpt-4o)</li>
+                    <li><code>ANTHROPIC_API_KEY</code> &rarr; 對應 <code>anthropic-env</code> (預設 claude-3-5-sonnet)</li>
+                    <li><code>GEMINI_API_KEY</code> &rarr; 對應 <code>gemini-env</code> (預設 gemini-1.5-pro)</li>
+                </ul>
+
+                <h2>自定義供應商設定檔</h2>
+                <p>你可以透過編輯設定檔來新增模型、更改 baseUrl（例如使用第三方代理伺服器或像是 Ollama 的本機模型）。全域的設定存放在 <code>~/.gcd/providers.conf</code>。</p>
+                <div class="code-window">
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">~/.gcd/providers.conf</span></div>
+                    <div class="window-body">
+<pre><code class="language-toml">[[provider]]
+id = "my-local-ollama"
+family = "OpenAiCompatible"
+protocol = "OpenAIChat"
+api_base = "http://localhost:11434/v1"
+model = "qwen2.5-coder:32b"
+supports_multimodal = false
+supports_grounding = false</code></pre>
+                    </div>
+                </div>
+                <p>設定好後，可使用命令指定：<code>gcd exec --provider my-local-ollama "寫一段 python"</code>。</p>
+
+                <h2>設定預設供應商</h2>
+                <p>如果系統有多組 Key，或者你想固定使用自定義供應商，請設定環境變數：</p>
+                <div class="code-window">
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">~/.zshrc</span></div>
+                    <div class="window-body">
+<pre><code class="language-bash">export GCD_PROVIDER="my-local-ollama"</code></pre>
+                    </div>
+                </div>
+
+                <div class="chapter-nav">
+                    <a href="#u2" class="btn btn-outline" onclick="navigateTo('u2')">&larr; 上一章</a>
+                    <a href="#u4" class="btn btn-outline" onclick="navigateTo('u4')">下一章：客製化 &rarr;</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== U4 ==================== -->
+        <section id="u4" class="chapter">
+            <div class="chapter-header">
+                <span class="chapter-number">U4</span>
+                <h1>客製化：指令與技能</h1>
+                <p class="chapter-desc">讓代理融入你的開發流程。學習設定系統級提示詞與自定義命令。</p>
+            </div>
+            <div class="content-body">
+                <h2>專案層級指令：AGENTS.md / GCD.md</h2>
+                <p>當你在專案根目錄建立一個 <code>AGENTS.md</code> 或 <code>GCD.md</code> 檔案時，GemiClawdex 會自動將它加到 Agent 的「系統提示詞」開頭（類似 Cursor 的 rules）。這適合：</p>
+                <ul>
+                    <li>宣告專案的程式撰寫風格 (如：請使用 Rust 1.70，不要用外部套件)</li>
+                    <li>告知 Agent 關鍵檔案的路徑 (如：路由設定在 <code>routes/</code>，ORM 在 <code>db/</code>)</li>
+                </ul>
+
+                <h2>建立技能手冊 (Skills)</h2>
+                <p>你可以透過撰寫 Markdown 檔案將常用的大型協作工作流打包。把技能檔放在 <code>~/.gcd/skills/&lt;skill-name&gt;/SKILL.md</code>。</p>
+                <div class="code-window">
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">~/.gcd/skills/code-review/SKILL.md</span></div>
+                    <div class="window-body">
+<pre><code class="language-markdown">---
+description: 嚴謹的程式碼審查與重構流程
+---
+# 執行步驟
+1. 找出最近有被修改的檔案（透過 `git status`）。
+2. 分析這些檔案是否符合 SOLID 原則，並檢查潛在效能問題。
+3. 如果發現問題，主動呼叫 write_file 修復。
+4. 產生一個 summary.md 記錄變更與原因。
+</code></pre>
+                    </div>
+                </div>
+                <p>呼叫技能：<code>gcd exec --skill code-review "請幫我審核目前變更"</code></p>
+
+                <h2>建立快捷命令 (Commands)</h2>
+                <p>對於重複性的特定情境需求，可以用 TOML 檔在 <code>~/.gcd/commands/</code> 來綁定 prompt 樣板：</p>
+                <div class="code-window">
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">~/.gcd/commands/lint.toml</span></div>
+                    <div class="window-body">
+<pre><code class="language-toml">description = "檢查程式碼規範並修復"
+prompt = """
+請先執行 `cargo clippy`。
+如果發現警告，自動修改對應的原始碼並消除警告。
+修改完成後，執行 `cargo fmt`。
+""" 
+</code></pre>
+                    </div>
+                </div>
+                <p>使用方式：在 REPL 輸入 <code>/lint</code>，或者在終端執行 <code>gcd run lint</code>。</p>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">信任機制 (Trust Mechanism) 防護</div>
+                    <p>如果你的專案包含 <code>.gcd/commands/</code> 目錄，只有當該專案在你的信任白名單 (<code>~/.gcd/trusted-folders.txt</code>) 中，代理才會載入專案專屬的命令！這是防止執行惡意代碼的重要設計。</p>
+                </div>
+
+                <div class="chapter-nav">
+                    <a href="#u3" class="btn btn-outline" onclick="navigateTo('u3')">&larr; 上一章</a>
+                    <a href="#ch1" class="btn btn-outline" onclick="navigateTo('ch1')">進入進階解析：專案概觀 &rarr;</a>
                 </div>
             </div>
         </section>
@@ -377,7 +607,7 @@ $ gcd exec --provider gemini-official --skill code-review <span class="token str
                 </div>
 
                 <div class="chapter-nav">
-                    <a href="#intro" class="btn btn-outline" onclick="navigateTo('intro')">&larr; 前言</a>
+                    <a href="#u4" class="btn btn-outline" onclick="navigateTo('u4')">&larr; 客製化：指令與技能</a>
                     <a href="#ch2" class="btn btn-outline" onclick="navigateTo('ch2')">下一章：技術棧 &rarr;</a>
                 </div>
             </div>
