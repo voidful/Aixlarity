@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "crates/gemi-clawdex-core",
-  "crates/gemi-clawdex-cli",
+  "crates/gcd-core",
+  "crates/gcd-cli",
 ]
 resolver = "2"

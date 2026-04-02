@@ -1,4 +1,4 @@
-// GemiClawdex — Agent Loop
+// GemiClawDex — Agent Loop
 //
 // Core execution loop: prompt → API → parse tool calls → execute → loop.
 // Supports Gemini GenerateContent protocol as the primary adapter.

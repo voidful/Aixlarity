@@ -1,4 +1,4 @@
-// GemiClawdex — Output rendering
+// GemiClawDex — Output rendering
 //
 // All output structs derive Serialize for clean JSON output via serde_json.
 // This replaces the previous hand-written JsonValue builder (400+ lines → ~120).

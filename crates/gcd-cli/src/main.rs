@@ -4,12 +4,12 @@ use std::path::PathBuf;
 use std::process;
 
 use clap::{Parser, Subcommand};
-use gemi_clawdex_core::config::SandboxPolicy;
-use gemi_clawdex_core::providers::ProviderScope;
-use gemi_clawdex_core::trust::TrustRuleKind;
-use gemi_clawdex_core::{App, AppCommand, ExecOptions};
+use gcd_core::config::SandboxPolicy;
+use gcd_core::providers::ProviderScope;
+use gcd_core::trust::TrustRuleKind;
+use gcd_core::{App, AppCommand, ExecOptions};
 
-/// GemiClawdex — Efficient Terminal AI Coding Agent
+/// GemiClawDex — Efficient Terminal AI Coding Agent
 #[derive(Parser, Debug)]
 #[command(name = "gcd", version, about, long_about = None)]
 struct Cli {
@@ -182,7 +182,7 @@ async fn run_repl(json: bool) -> anyhow::Result<()> {
 
     // Print welcome banner
     println!("╔══════════════════════════════════════════╗");
-    println!("║       GemiClawdex Interactive Mode       ║");
+    println!("║       GemiClawDex Interactive Mode       ║");
     println!("║   Type your task, or /help for commands  ║");
     println!("╚══════════════════════════════════════════╝");
     println!();

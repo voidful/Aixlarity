@@ -1,5 +1,5 @@
 /* ============================================================
-   GemiClawdex Documentation — Navigation & Interactivity
+   GemiClawDex Documentation — Navigation & Interactivity
    ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {

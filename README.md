@@ -1,4 +1,4 @@
-# GemiClawdex
+# GemiClawDex
 
 > **高效能終端 AI 編碼代理** — 融合 Gemini CLI、OpenAI Codex 與 Claude Code 的設計精髓，以 Rust 打造。
 
@@ -53,7 +53,7 @@ gcd overview --json
 
 ```
 crates/
-├── gemi-clawdex-core/      # 核心邏輯庫
+├── gcd-core/      # 核心邏輯庫
 │   ├── agent.rs             # Agent 執行迴圈（API 呼叫 + 工具分派）
 │   ├── tools.rs             # Tool trait + 5 個內建工具
 │   ├── app.rs               # 命令路由 facade
@@ -64,7 +64,7 @@ crates/
 │   ├── config.rs            # 路徑檢測與偏好設定
 │   ├── output.rs            # 輸出渲染（serde Serialize 驅動）
 │   └── ...
-├── gemi-clawdex-cli/        # CLI 入口 → 二進位名稱: gcd
+├── gcd-cli/        # CLI 入口 → 二進位名稱: gcd
 │   └── main.rs              # clap 4 + REPL 互動模式
 ```
 

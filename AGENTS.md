@@ -1,4 +1,4 @@
-# GemiClawdex Instructions
+# GemiClawDex Instructions
 
 This repository is building a Rust-native coding agent that blends:
 

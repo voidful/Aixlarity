@@ -87,7 +87,7 @@ pub fn save_checkpoint(base_dir: &Path, assembly: &PromptAssembly) -> io::Result
     let file_name = format!("{}-{}.md", stamp, slug);
     let path = base_dir.join(file_name);
     let body = format!(
-        "# GemiClawdex Checkpoint\n\n- Workspace: {}\n- Provider: {}\n- Trust: {}\n- Sandbox: {}\n\n## Prompt\n\n{}",
+        "# GemiClawDex Checkpoint\n\n- Workspace: {}\n- Provider: {}\n- Trust: {}\n- Sandbox: {}\n\n## Prompt\n\n{}",
         display_path(&assembly.workspace_root),
         assembly.provider.label,
         assembly.trust_label,
@@ -641,6 +641,6 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        std::env::temp_dir().join(format!("gemi-clawdex-{}-{}", label, stamp))
+        std::env::temp_dir().join(format!("gcd-{}-{}", label, stamp))
     }
 }

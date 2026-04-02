@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GemiClawdex 深度解析 | Harness Engineering 完全指南</title>
-    <meta name="description" content="以書籍形式完整走過 GemiClawdex 原始碼，從零開始理解 Rust 原生 AI Coding Agent 的 Harness Engineering。">
+    <title>GemiClawDex 深度解析 | Harness Engineering 完全指南</title>
+    <meta name="description" content="以書籍形式完整走過 GemiClawDex 原始碼，從零開始理解 Rust 原生 AI Coding Agent 的 Harness Engineering。">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -29,7 +29,7 @@
             <div class="logo">
                 <span class="logo-icon">&#x1F980;</span>
                 <div class="logo-text">
-                    <span class="logo-title">GemiClawdex</span>
+                    <span class="logo-title">GemiClawDex</span>
                     <span class="logo-sub">Harness Engineering Guide</span>
                 </div>
             </div>
@@ -170,7 +170,7 @@
             <div class="hero">
                 <div class="hero-badge">Rust-Native AI Coding Agent</div>
                 <h1 class="hero-title">
-                    <span class="gradient-text">GemiClawdex</span><br>
+                    <span class="gradient-text">GemiClawDex</span><br>
                     <span class="hero-subtitle-text">深度原始碼解析</span>
                 </h1>
                 <p class="hero-desc">
@@ -207,10 +207,10 @@
                         <span class="dot red"></span>
                         <span class="dot yellow"></span>
                         <span class="dot green"></span>
-                        <span class="window-title">~/GemiClawdex</span>
+                        <span class="window-title">~/GemiClawDex</span>
                     </div>
                     <div class="window-body">
-<pre><code class="language-bash"><span class="token comment"># 編譯 GemiClawdex</span>
+<pre><code class="language-bash"><span class="token comment"># 編譯 GemiClawDex</span>
 $ cargo build --release
 
 <span class="token comment"># 啟動互動式 REPL</span>
@@ -244,7 +244,7 @@ $ gcd exec --provider gemini-official --skill code-review <span class="token str
                 </div>
 
                 <h2>三大設計傳承</h2>
-                <p>GemiClawdex 刻意融合了三大主流 AI 編碼代理的設計精華：</p>
+                <p>GemiClawDex 刻意融合了三大主流 AI 編碼代理的設計精華：</p>
 
                 <div class="comparison-table">
                     <table>
@@ -343,7 +343,7 @@ $ gcd exec --provider gemini-official --skill code-review <span class="token str
             <div class="chapter-header">
                 <span class="chapter-number">U1</span>
                 <h1>安裝與快速開始</h1>
-                <p class="chapter-desc">介紹如何編譯 GemiClawdex 並進行第一次對話。</p>
+                <p class="chapter-desc">介紹如何編譯 GemiClawDex 並進行第一次對話。</p>
             </div>
             <div class="content-body">
                 <h2>系統要求</h2>
@@ -358,8 +358,8 @@ $ gcd exec --provider gemini-official --skill code-review <span class="token str
                     <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">終端機</span></div>
                     <div class="window-body">
 <pre><code class="language-bash"># 1. 取得原始碼並切換目錄
-git clone https://github.com/your-repo/GemiClawdex.git
-cd GemiClawdex
+git clone https://github.com/your-repo/GemiClawDex.git
+cd GemiClawDex
 
 # 2. 使用 Cargo 編譯 (Release 模式以獲得最佳效能)
 cargo build --release
@@ -396,7 +396,7 @@ GEMINI_API_KEY="AIzaSy..." gcd</code></pre>
             <div class="chapter-header">
                 <span class="chapter-number">U2</span>
                 <h1>互動模式與基本操作</h1>
-                <p class="chapter-desc">GemiClawdex 支援 One-off Exec 跟強大的 REPL 互動模式。</p>
+                <p class="chapter-desc">GemiClawDex 支援 One-off Exec 跟強大的 REPL 互動模式。</p>
             </div>
             <div class="content-body">
                 <h2>單次任務 (Exec)</h2>
@@ -445,11 +445,11 @@ Agent: 已經修改完成了！</code></pre>
             <div class="chapter-header">
                 <span class="chapter-number">U3</span>
                 <h1>配置 LLM 供應商</h1>
-                <p class="chapter-desc">GemiClawdex 支援多種強大的 LLM，你可以自由切換以符合工作需求。</p>
+                <p class="chapter-desc">GemiClawDex 支援多種強大的 LLM，你可以自由切換以符合工作需求。</p>
             </div>
             <div class="content-body">
                 <h2>系統自動偵測 (Zero Config)</h2>
-                <p>最簡單的方式是將 API Key 設定為環境變數，GemiClawdex 會自動選用適合的官方引擎：</p>
+                <p>最簡單的方式是將 API Key 設定為環境變數，GemiClawDex 會自動選用適合的官方引擎：</p>
                 <ul>
                     <li><code>OPENAI_API_KEY</code> &rarr; 對應 <code>openai-env</code> (預設 gpt-4o)</li>
                     <li><code>ANTHROPIC_API_KEY</code> &rarr; 對應 <code>anthropic-env</code> (預設 claude-3-5-sonnet)</li>
@@ -498,7 +498,7 @@ supports_grounding = false</code></pre>
             </div>
             <div class="content-body">
                 <h2>專案層級指令：AGENTS.md / GCD.md</h2>
-                <p>當你在專案根目錄建立一個 <code>AGENTS.md</code> 或 <code>GCD.md</code> 檔案時，GemiClawdex 會自動將它加到 Agent 的「系統提示詞」開頭（類似 Cursor 的 rules）。這適合：</p>
+                <p>當你在專案根目錄建立一個 <code>AGENTS.md</code> 或 <code>GCD.md</code> 檔案時，GemiClawDex 會自動將它加到 Agent 的「系統提示詞」開頭（類似 Cursor 的 rules）。這適合：</p>
                 <ul>
                     <li>宣告專案的程式撰寫風格 (如：請使用 Rust 1.70，不要用外部套件)</li>
                     <li>告知 Agent 關鍵檔案的路徑 (如：路由設定在 <code>routes/</code>，ORM 在 <code>db/</code>)</li>
@@ -555,11 +555,11 @@ prompt = """
             <div class="chapter-header">
                 <span class="chapter-number">第一章</span>
                 <h1>專案概觀與設計哲學</h1>
-                <p class="chapter-desc">GemiClawdex 不只是一個 CLI 工具，它是一套完整的 Harness Engineering 參考實作。</p>
+                <p class="chapter-desc">GemiClawDex 不只是一個 CLI 工具，它是一套完整的 Harness Engineering 參考實作。</p>
             </div>
             <div class="content-body">
-                <h2>GemiClawdex 是什麼？</h2>
-                <p>GemiClawdex 是一個以 <strong>Rust</strong> 編寫的終端 AI 編碼代理（Terminal AI Coding Agent），編譯為單一二進位檔 <code>gcd</code>。它的核心使命是：</p>
+                <h2>GemiClawDex 是什麼？</h2>
+                <p>GemiClawDex 是一個以 <strong>Rust</strong> 編寫的終端 AI 編碼代理（Terminal AI Coding Agent），編譯為單一二進位檔 <code>gcd</code>。它的核心使命是：</p>
                 <blockquote>保留 Gemini CLI、OpenAI Codex 和 Claude Code 最好的互動模式，同時不繼承 TypeScript 執行環境的全部複雜度。</blockquote>
 
                 <h2>六大核心設計賭注</h2>
@@ -603,7 +603,7 @@ prompt = """
 
                 <div class="callout callout-warning">
                     <div class="callout-title">設計啟示</div>
-                    <p>注意第 5 點「提示詞組裝與執行解耦」——這是 GemiClawdex 最聰明的設計之一。在大多數 AI 代理中，「組裝提示詞」和「呼叫 API」是糾纏在一起的。GemiClawdex 將它們完全分離，這意味著你可以在不連網的情況下測試整個提示詞管線。這就是真正的 <strong>Harness Engineering</strong>。</p>
+                    <p>注意第 5 點「提示詞組裝與執行解耦」——這是 GemiClawDex 最聰明的設計之一。在大多數 AI 代理中，「組裝提示詞」和「呼叫 API」是糾纏在一起的。GemiClawDex 將它們完全分離，這意味著你可以在不連網的情況下測試整個提示詞管線。這就是真正的 <strong>Harness Engineering</strong>。</p>
                 </div>
 
                 <div class="chapter-nav">
@@ -618,18 +618,18 @@ prompt = """
             <div class="chapter-header">
                 <span class="chapter-number">第二章</span>
                 <h1>技術棧與專案結構</h1>
-                <p class="chapter-desc">了解 GemiClawdex 用了哪些 crate、專案如何組織、每個檔案負責什麼。</p>
+                <p class="chapter-desc">了解 GemiClawDex 用了哪些 crate、專案如何組織、每個檔案負責什麼。</p>
             </div>
             <div class="content-body">
                 <h2>Cargo Workspace 架構</h2>
-                <p>GemiClawdex 使用 Cargo Workspace 將專案分為兩個 crate：</p>
+                <p>GemiClawDex 使用 Cargo Workspace 將專案分為兩個 crate：</p>
                 <div class="code-window">
                     <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">Cargo.toml（workspace root）</span></div>
                     <div class="window-body">
 <pre><code class="language-toml">[workspace]
 members = [
-    "crates/gemi-clawdex-core",  # 核心邏輯庫
-    "crates/gemi-clawdex-cli",   # CLI 入口二進位
+    "crates/gcd-core",  # 核心邏輯庫
+    "crates/gcd-cli",   # CLI 入口二進位
 ]</code></pre>
                     </div>
                 </div>
@@ -637,7 +637,7 @@ members = [
                 <h2>為什麼要分兩個 crate？</h2>
                 <div class="callout callout-info">
                     <div class="callout-title">架構原則</div>
-                    <p><strong>gemi-clawdex-core</strong> 擁有所有領域邏輯，不依賴 CLI 框架（clap）。<strong>gemi-clawdex-cli</strong> 只負責解析命令列參數和呈現輸出。這種分離讓 core 可以被其他前端（如 TUI、Web API）重用，也讓單元測試不需要啟動完整的 CLI。</p>
+                    <p><strong>gcd-core</strong> 擁有所有領域邏輯，不依賴 CLI 框架（clap）。<strong>gcd-cli</strong> 只負責解析命令列參數和呈現輸出。這種分離讓 core 可以被其他前端（如 TUI、Web API）重用，也讓單元測試不需要啟動完整的 CLI。</p>
                 </div>
 
                 <h2>關鍵依賴解析</h2>
@@ -659,9 +659,9 @@ members = [
                 </div>
 
                 <h2>Core 模組地圖</h2>
-                <p><code>gemi-clawdex-core</code> 包含 14 個模組，以下是每個模組的職責和程式碼行數：</p>
+                <p><code>gcd-core</code> 包含 14 個模組，以下是每個模組的職責和程式碼行數：</p>
                 <div class="code-window">
-                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">crates/gemi-clawdex-core/src/</span></div>
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">crates/gcd-core/src/</span></div>
                     <div class="window-body">
 <pre><code class="language-text">lib.rs          (16 行)   公開 API，re-export 主要型別
 workspace.rs    (65 行)   工作區根目錄發現
@@ -723,7 +723,7 @@ app.rs         (551 行)   CLI 命令路由 facade</code></pre>
                     <div class="window-body">
 <pre><code class="language-rust">fn detect_marker(path: &Path) -> Option&lt;&'static str&gt; {
     let markers = [
-        (".gcd", ".gcd"), // 最高優先：GemiClawdex 自身設定
+        (".gcd", ".gcd"), // 最高優先：GemiClawDex 自身設定
         (".git", ".git"),                     // Git 倉庫根
         ("Cargo.toml", "Cargo.toml"),         // Rust 專案
         ("package.json", "package.json"),     // Node.js 專案
@@ -863,7 +863,7 @@ app.rs         (551 行)   CLI 命令路由 facade</code></pre>
                 </div>
 
                 <h2>最長路徑匹配演算法</h2>
-                <p>當多條規則同時匹配時，GemiClawdex 使用<strong>最長路徑匹配</strong>——路徑元件數最多的規則勝出：</p>
+                <p>當多條規則同時匹配時，GemiClawDex 使用<strong>最長路徑匹配</strong>——路徑元件數最多的規則勝出：</p>
                 <div class="code-window">
                     <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">trust.rs — evaluate()</span></div>
                     <div class="window-body">
@@ -905,7 +905,7 @@ untrusted	/tmp/sketchy-repos/malware-example</code></pre>
 
                 <div class="callout callout-warning">
                     <div class="callout-title">安全啟示</div>
-                    <p>信任模型是 GemiClawdex 從 Claude Code 借鏡的最重要設計之一。它示範了一個原則：<strong>在 AI 代理中，「能力」必須受「授權」約束</strong>。代理能讀寫檔案、執行 shell 命令，這些能力如果不受控，就是安全漏洞。</p>
+                    <p>信任模型是 GemiClawDex 從 Claude Code 借鏡的最重要設計之一。它示範了一個原則：<strong>在 AI 代理中，「能力」必須受「授權」約束</strong>。代理能讀寫檔案、執行 shell 命令，這些能力如果不受控，就是安全漏洞。</p>
                 </div>
 
                 <div class="chapter-nav">
@@ -973,7 +973,7 @@ untrusted	/tmp/sketchy-repos/malware-example</code></pre>
             </div>
             <div class="content-body">
                 <h2>四層供應商來源</h2>
-                <p>GemiClawdex 的供應商系統有四層來源，後者覆蓋前者：</p>
+                <p>GemiClawDex 的供應商系統有四層來源，後者覆蓋前者：</p>
                 <div class="roadmap">
                     <div class="roadmap-item"><div class="roadmap-marker">1</div><div class="roadmap-content"><h4>Built-in（內建）</h4><p>三個預設供應商：<code>openai-codex</code>、<code>gemini-official</code>、<code>claude-official</code></p></div></div>
                     <div class="roadmap-item"><div class="roadmap-marker">2</div><div class="roadmap-content"><h4>Environment（環境變數）</h4><p>偵測 <code>OPENAI_API_KEY</code>、<code>GEMINI_API_KEY</code> 等，自動生成 <code>*-env</code> profile</p></div></div>
@@ -1060,7 +1060,7 @@ best_for = "offline local development"</code></pre>
                 </div>
 
                 <h2>解析器實作亮點</h2>
-                <p>GemiClawdex 實作了自己的 INI-like 解析器，而非使用通用 TOML 解析器。這是刻意的設計——保持 core crate 零非必要依賴。</p>
+                <p>GemiClawDex 實作了自己的 INI-like 解析器，而非使用通用 TOML 解析器。這是刻意的設計——保持 core crate 零非必要依賴。</p>
                 <ul>
                     <li><code>parse_provider_section()</code> 解析 <code>[provider "id"]</code> 區塊頭</li>
                     <li><code>parse_string_literal()</code> 處理雙引號字串，支援 <code>\n</code>、<code>\t</code>、<code>\\</code> 跳脫序列</li>
@@ -1088,7 +1088,7 @@ best_for = "offline local development"</code></pre>
             </div>
             <div class="content-body">
                 <h2>什麼是 Repository Instructions？</h2>
-                <p>Repository Instructions 是放在專案根目錄的 Markdown 檔案，告訴 AI 代理如何與這個專案互動。GemiClawdex 支援四種指令檔：</p>
+                <p>Repository Instructions 是放在專案根目錄的 Markdown 檔案，告訴 AI 代理如何與這個專案互動。GemiClawDex 支援四種指令檔：</p>
                 <div class="comparison-table">
                     <table>
                         <thead><tr><th>檔案</th><th>來源靈感</th><th>典型內容</th></tr></thead>
@@ -1096,7 +1096,7 @@ best_for = "offline local development"</code></pre>
                             <tr><td><code>AGENTS.md</code></td><td>OpenAI Codex</td><td>專案架構、貢獻規範、程式碼風格</td></tr>
                             <tr><td><code>GEMINI.md</code></td><td>Gemini CLI</td><td>Gemini 特定的上下文提示</td></tr>
                             <tr><td><code>CLAUDE.md</code></td><td>Claude Code</td><td>Claude 特定的行為指引</td></tr>
-                            <tr><td><code>GCD.md</code></td><td>GemiClawdex</td><td>GCD 專用指令</td></tr>
+                            <tr><td><code>GCD.md</code></td><td>GemiClawDex</td><td>GCD 專用指令</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1220,7 +1220,7 @@ When reviewing code, prioritize in this order:
             <div class="content-body">
 
                 <h2>為什麼要有 Prompt Engine？</h2>
-                <p>在大多數 AI 代理框架中，「組裝提示詞」和「呼叫 API」是緊密糾纏在一起的。GemiClawdex 刻意將兩者<strong>完全解耦</strong>——你可以在不連網的情況下測試整個提示詞管線。這就是 Harness Engineering 的核心精神。</p>
+                <p>在大多數 AI 代理框架中，「組裝提示詞」和「呼叫 API」是緊密糾纏在一起的。GemiClawDex 刻意將兩者<strong>完全解耦</strong>——你可以在不連網的情況下測試整個提示詞管線。這就是 Harness Engineering 的核心精神。</p>
 
                 <h2>1. PromptAssembly 結構宣告</h2>
                 <p>最終的系統提示詞不只是一個字串，而是一個結構化的 <code>PromptAssembly</code> 產物，同時記錄了附件清單與待審批指令：</p>
@@ -1275,7 +1275,7 @@ let (active_command, command_text) = match invocation {
                 </div>
 
                 <h3>階段 2：檔案注入 @{...} 與截斷防護</h3>
-                <p>使用者可以寫 <code>@{src/agent.rs}</code>，引擎會自動把檔案內容塞進提示詞中。為了防止 Context Window 超載，GemiClawdex 設定了嚴格的截斷防護：</p>
+                <p>使用者可以寫 <code>@{src/agent.rs}</code>，引擎會自動把檔案內容塞進提示詞中。為了防止 Context Window 超載，GemiClawDex 設定了嚴格的截斷防護：</p>
                 <div class="code-window">
                     <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">prompt.rs — 截斷防護常數 + read_text_preview()</span></div>
                     <div class="window-body">
@@ -1360,7 +1360,7 @@ rendered.push_str(&amp;format!(
                 </div>
 
                 <h2>3. Balanced Span Parser：自製微型解析器</h2>
-                <p>GemiClawdex 沒有依賴 regex crate，而是自己實作了一個平衡括號解析器 <code>find_balanced_spans()</code>，用於解析 <code>@{...}</code> 和 <code>!{...}</code> 語法。這個函數位於第 495 行，它追蹤大括號的巢狀深度 (<code>depth</code>)，確保 <code>@{path/to/{nested}/file}</code> 這類路徑也能正確解析。</p>
+                <p>GemiClawDex 沒有依賴 regex crate，而是自己實作了一個平衡括號解析器 <code>find_balanced_spans()</code>，用於解析 <code>@{...}</code> 和 <code>!{...}</code> 語法。這個函數位於第 495 行，它追蹤大括號的巢狀深度 (<code>depth</code>)，確保 <code>@{path/to/{nested}/file}</code> 這類路徑也能正確解析。</p>
 
                 <div class="chapter-nav">
                     <a href="#ch11" class="btn btn-outline" onclick="navigateTo('ch11')">&larr; 上一章</a>
@@ -1467,7 +1467,7 @@ rendered.push_str(&amp;format!(
                 </div>
 
                 <h2>2. 多供應商路由：call_provider_api()</h2>
-                <p>GemiClawdex 的 Agent Loop 並不綁定單一 LLM。call_provider_api 使用 Rust 的 <code>match</code> 語法做供應商路由：</p>
+                <p>GemiClawDex 的 Agent Loop 並不綁定單一 LLM。call_provider_api 使用 Rust 的 <code>match</code> 語法做供應商路由：</p>
 
                 <div class="code-window">
                     <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">agent.rs 第 156-172 行 — 供應商路由</span></div>
@@ -1598,7 +1598,7 @@ rendered.push_str(&amp;format!(
             <div class="content-body">
 
                 <h2>概觀：五個內建工具</h2>
-                <p>GemiClawdex 的預設工具箱包含五件武器，每一件都受到 <code>SandboxPolicy</code> 的嚴格管控：</p>
+                <p>GemiClawDex 的預設工具箱包含五件武器，每一件都受到 <code>SandboxPolicy</code> 的嚴格管控：</p>
                 <div class="tool-cards">
                     <div class="tool-card">
                         <div class="tool-name">read_file</div>
@@ -1865,7 +1865,7 @@ pub trait Tool: Send + Sync {
             <div class="chapter-header">
                 <span class="chapter-number">第十六章</span>
                 <h1>CLI 介面設計</h1>
-                <p class="chapter-desc">程式碼位置：<code>crates/gemi-clawdex-cli/src/main.rs</code>——使用 clap 4 建構的命令列介面。</p>
+                <p class="chapter-desc">程式碼位置：<code>crates/gcd-cli/src/main.rs</code>——使用 clap 4 建構的命令列介面。</p>
             </div>
             <div class="content-body">
                 <h2>命令結構</h2>
@@ -1977,7 +1977,7 @@ impl AppOutput {
             <div class="chapter-header">
                 <span class="chapter-number">第十九章</span>
                 <h1>Harness Engineering 原理總結</h1>
-                <p class="chapter-desc">從 GemiClawdex 的實作中提煉出的 Harness Engineering 設計原則。</p>
+                <p class="chapter-desc">從 GemiClawDex 的實作中提煉出的 Harness Engineering 設計原則。</p>
             </div>
             <div class="content-body">
                 <h2>七大設計原則</h2>
@@ -2037,12 +2037,12 @@ impl AppOutput {
                 <h2>帶走的啟示</h2>
                 <div class="callout callout-info">
                     <div class="callout-title">如果你只記住一件事</div>
-                    <p><strong>AI 代理的品質，80% 由 Harness 決定，20% 由模型決定。</strong>GemiClawdex 用 ~4,500 行 Rust 示範了這一點：模型只是 <code>agent.rs</code> 中的一個 HTTP 呼叫，但圍繞它的工作區發現、信任邊界、沙箱策略、多供應商管理、提示詞組裝、會話持久化等工程——這才是讓 AI 代理真正可靠、可用、可信的關鍵。</p>
+                    <p><strong>AI 代理的品質，80% 由 Harness 決定，20% 由模型決定。</strong>GemiClawDex 用 ~4,500 行 Rust 示範了這一點：模型只是 <code>agent.rs</code> 中的一個 HTTP 呼叫，但圍繞它的工作區發現、信任邊界、沙箱策略、多供應商管理、提示詞組裝、會話持久化等工程——這才是讓 AI 代理真正可靠、可用、可信的關鍵。</p>
                 </div>
 
                 <div class="final-cta">
                     <h2>繼續探索</h2>
-                    <p>本書涵蓋了 GemiClawdex 的完整原始碼。如果你想動手實踐：</p>
+                    <p>本書涵蓋了 GemiClawDex 的完整原始碼。如果你想動手實踐：</p>
                     <div class="cta-actions">
                         <div class="cta-card">
                             <h4>Clone & Build</h4>
@@ -2054,7 +2054,7 @@ impl AppOutput {
                         </div>
                         <div class="cta-card">
                             <h4>閱讀原始碼</h4>
-                            <code>crates/gemi-clawdex-core/src/</code>
+                            <code>crates/gcd-core/src/</code>
                         </div>
                     </div>
                 </div>

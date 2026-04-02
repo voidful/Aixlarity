@@ -9,7 +9,7 @@ name = "gcd"
 path = "src/main.rs"
 
 [dependencies]
-gemi-clawdex-core = { path = "../gemi-clawdex-core" }
+gcd-core = { path = "../gcd-core" }
 
 clap = { version = "4", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }

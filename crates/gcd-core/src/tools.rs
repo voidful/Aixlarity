@@ -1,4 +1,4 @@
-// GemiClawdex — Tool System
+// GemiClawDex — Tool System
 //
 // Defines the Tool trait and built-in tools for the agent loop.
 // Inspired by gemini-cli's file/shell tools and codex's sandbox model.

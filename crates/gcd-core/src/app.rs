@@ -1,4 +1,4 @@
-// GemiClawdex — Application facade
+// GemiClawDex — Application facade
 //
 // Routes CLI commands to the appropriate subsystem.
 // Rewritten to use serde-based output and thiserror for errors.
@@ -79,7 +79,7 @@ impl App {
         let sessions = list_sessions(&self.paths.sessions_dir())?;
 
         let lines = vec![
-            "GemiClawdex".to_string(),
+            "GemiClawDex".to_string(),
             format!("Workspace: {}", display_path(&workspace.root)),
             format!("Detected by: {}", workspace.detected_by),
             format!("Trust: {}", trust.status_label()),
@@ -90,11 +90,11 @@ impl App {
             format!("Custom commands loaded: {}", commands.commands.len()),
             format!("Skills loaded: {}", skills.skills.len()),
             format!("Saved sessions: {}", sessions.len()),
-            "Use `gemi-clawdex exec ...` to run a coding task.".to_string(),
+            "Use `gcd exec ...` to run a coding task.".to_string(),
         ];
 
         let json = OverviewJson {
-            app: "GemiClawdex".to_string(),
+            app: "GemiClawDex".to_string(),
             workspace: display_path(&workspace.root),
             detected_by: workspace.detected_by,
             trust: trust.status_label().to_string(),

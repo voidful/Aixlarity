@@ -1,4 +1,4 @@
-# GemiClawdex Architecture
+# GemiClawDex Architecture
 
 ## Design goal
 
@@ -15,7 +15,7 @@ Build a Rust-native coding agent that keeps the best interaction patterns from G
 
 ## Crates
 
-### `gemi-clawdex-core`
+### `gcd-core`
 
 Owns the domain logic:
 
@@ -32,7 +32,7 @@ Owns the domain logic:
 - saved sessions with resume/fork semantics
 - structured JSON rendering support
 
-### `gemi-clawdex-cli`
+### `gcd-cli`
 
 Owns argument parsing and text rendering:
 
@@ -45,7 +45,7 @@ Owns argument parsing and text rendering:
 
 ## Configuration model
 
-`GemiClawdex` uses a blended filesystem layout:
+`GemiClawDex` uses a blended filesystem layout:
 
 - global home: `~/.gcd/`
 - workspace config: `<repo>/.gcd/`

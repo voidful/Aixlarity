@@ -609,6 +609,6 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        std::env::temp_dir().join(format!("gemi-clawdex-{}-{}", label, unique))
+        std::env::temp_dir().join(format!("gcd-{}-{}", label, unique))
     }
 }
