@@ -564,7 +564,7 @@ mod tests {
         let workspace = Workspace {
             root: root.clone(),
             current_dir: root.clone(),
-            detected_by: ".gemi-clawdex".to_string(),
+            detected_by: ".gcd".to_string(),
         };
         let trust = TrustState {
             kind: None,

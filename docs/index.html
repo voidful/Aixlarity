@@ -493,7 +493,7 @@ app.rs         (551 行)   CLI 命令路由 facade</code></pre>
                     <div class="window-body">
 <pre><code class="language-rust">fn detect_marker(path: &Path) -> Option&lt;&'static str&gt; {
     let markers = [
-        (".gemi-clawdex", ".gemi-clawdex"), // 最高優先：GemiClawdex 自身設定
+        (".gcd", ".gcd"), // 最高優先：GemiClawdex 自身設定
         (".git", ".git"),                     // Git 倉庫根
         ("Cargo.toml", "Cargo.toml"),         // Rust 專案
         ("package.json", "package.json"),     // Node.js 專案
@@ -510,7 +510,7 @@ app.rs         (551 行)   CLI 命令路由 facade</code></pre>
 
                 <div class="callout callout-info">
                     <div class="callout-title">設計巧思</div>
-                    <p><code>.gemi-clawdex</code> 目錄排在 <code>.git</code> 之前，這意味著你可以在一個 monorepo 的子專案中放置 <code>.gemi-clawdex</code> 目錄，覆蓋 Git 根目錄的偵測。如果一路到根目錄都找不到任何標記，系統會回退（fallback）到當前目錄，用 <code>"cwd-fallback"</code> 標記。</p>
+                    <p><code>.gcd</code> 目錄排在 <code>.git</code> 之前，這意味著你可以在一個 monorepo 的子專案中放置 <code>.gcd</code> 目錄，覆蓋 Git 根目錄的偵測。如果一路到根目錄都找不到任何標記，系統會回退（fallback）到當前目錄，用 <code>"cwd-fallback"</code> 標記。</p>
                 </div>
 
                 <h2>衍生方法</h2>
@@ -520,10 +520,10 @@ app.rs         (551 行)   CLI 命令路由 facade</code></pre>
                     <div class="window-body">
 <pre><code class="language-rust">impl Workspace {
     pub fn project_commands_dir(&self) -> PathBuf {
-        self.root.join(".gemi-clawdex").join("commands")
+        self.root.join(".gcd").join("commands")
     }
     pub fn project_skills_dir(&self) -> PathBuf {
-        self.root.join(".gemi-clawdex").join("skills")
+        self.root.join(".gcd").join("skills")
     }
 }</code></pre>
                     </div>
@@ -563,7 +563,7 @@ app.rs         (551 行)   CLI 命令路由 facade</code></pre>
                 <div class="code-window">
                     <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">路徑結構</span></div>
                     <div class="window-body">
-<pre><code class="language-text">~/.gemi-clawdex/                   # 全域設定首頁
+<pre><code class="language-text">~/.gcd/                   # 全域設定首頁
     ├── trusted-folders.txt        # 信任規則資料庫
     ├── providers.conf             # 全域供應商設定
     ├── active-provider.txt        # 全域啟用供應商
@@ -582,16 +582,16 @@ app.rs         (551 行)   CLI 命令路由 facade</code></pre>
                             <tr><th>環境變數</th><th>預設值</th><th>說明</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td><code>GEMICLAWDEX_PROVIDER</code></td><td>自動偵測</td><td>預設供應商 ID</td></tr>
-                            <tr><td><code>GEMICLAWDEX_SANDBOX</code></td><td><code>workspace-write</code></td><td>預設沙箱策略</td></tr>
-                            <tr><td><code>GEMICLAWDEX_TRUST</code></td><td><code>true</code></td><td>是否啟用信任檢查</td></tr>
+                            <tr><td><code>GCD_PROVIDER</code></td><td>自動偵測</td><td>預設供應商 ID</td></tr>
+                            <tr><td><code>GCD_SANDBOX</code></td><td><code>workspace-write</code></td><td>預設沙箱策略</td></tr>
+                            <tr><td><code>GCD_TRUST</code></td><td><code>true</code></td><td>是否啟用信任檢查</td></tr>
                         </tbody>
                     </table>
                 </div>
 
                 <div class="callout callout-tip">
                     <div class="callout-title">自動偵測邏輯</div>
-                    <p>如果沒有設定 <code>GEMICLAWDEX_PROVIDER</code>，系統會依序檢查 <code>CLAUDE_CODE_USE_OPENAI</code>、<code>OPENAI_API_KEY</code>、<code>GEMINI_API_KEY</code>、<code>ANTHROPIC_API_KEY</code> 等環境變數，自動選擇對應的供應商。這讓「零設定啟動」成為可能。</p>
+                    <p>如果沒有設定 <code>GCD_PROVIDER</code>，系統會依序檢查 <code>CLAUDE_CODE_USE_OPENAI</code>、<code>OPENAI_API_KEY</code>、<code>GEMINI_API_KEY</code>、<code>ANTHROPIC_API_KEY</code> 等環境變數，自動選擇對應的供應商。這讓「零設定啟動」成為可能。</p>
                 </div>
 
                 <div class="chapter-nav">
@@ -610,7 +610,7 @@ app.rs         (551 行)   CLI 命令路由 facade</code></pre>
             </div>
             <div class="content-body">
                 <h2>為什麼需要信任模型？</h2>
-                <p>想像這個情境：你 clone 了一個陌生的開源倉庫，裡面的 <code>.gemi-clawdex/commands/</code> 目錄有一個惡意命令會刪除你的 home 目錄。如果代理盲目載入這些命令，後果不堪設想。</p>
+                <p>想像這個情境：你 clone 了一個陌生的開源倉庫，裡面的 <code>.gcd/commands/</code> 目錄有一個惡意命令會刪除你的 home 目錄。如果代理盲目載入這些命令，後果不堪設想。</p>
                 <p>信任模型的核心功能是：<strong>根據工作區的信任等級，決定是否載入專案層級的指令、命令和技能</strong>。</p>
 
                 <h2>三種信任等級</h2>
@@ -663,7 +663,7 @@ app.rs         (551 行)   CLI 命令路由 facade</code></pre>
                 </div>
 
                 <h2>信任檔案格式</h2>
-                <p>規則儲存在 <code>~/.gemi-clawdex/trusted-folders.txt</code>，格式極為簡單——TSV（Tab-Separated Values）：</p>
+                <p>規則儲存在 <code>~/.gcd/trusted-folders.txt</code>，格式極為簡單——TSV（Tab-Separated Values）：</p>
                 <div class="code-window">
                     <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">trusted-folders.txt</span></div>
                     <div class="window-body">
@@ -747,8 +747,8 @@ untrusted	/tmp/sketchy-repos/malware-example</code></pre>
                 <div class="roadmap">
                     <div class="roadmap-item"><div class="roadmap-marker">1</div><div class="roadmap-content"><h4>Built-in（內建）</h4><p>三個預設供應商：<code>openai-codex</code>、<code>gemini-official</code>、<code>claude-official</code></p></div></div>
                     <div class="roadmap-item"><div class="roadmap-marker">2</div><div class="roadmap-content"><h4>Environment（環境變數）</h4><p>偵測 <code>OPENAI_API_KEY</code>、<code>GEMINI_API_KEY</code> 等，自動生成 <code>*-env</code> profile</p></div></div>
-                    <div class="roadmap-item"><div class="roadmap-marker">3</div><div class="roadmap-content"><h4>Global Config（全域設定）</h4><p>從 <code>~/.gemi-clawdex/providers.conf</code> 載入</p></div></div>
-                    <div class="roadmap-item"><div class="roadmap-marker">4</div><div class="roadmap-content"><h4>Workspace Config（工作區設定）</h4><p>從 <code>&lt;repo&gt;/.gemi-clawdex/providers.conf</code> 載入（受信任規則控制）</p></div></div>
+                    <div class="roadmap-item"><div class="roadmap-marker">3</div><div class="roadmap-content"><h4>Global Config（全域設定）</h4><p>從 <code>~/.gcd/providers.conf</code> 載入</p></div></div>
+                    <div class="roadmap-item"><div class="roadmap-marker">4</div><div class="roadmap-content"><h4>Workspace Config（工作區設定）</h4><p>從 <code>&lt;repo&gt;/.gcd/providers.conf</code> 載入（受信任規則控制）</p></div></div>
                 </div>
 
                 <h2>供應商 Profile 結構</h2>
@@ -804,7 +804,7 @@ untrusted	/tmp/sketchy-repos/malware-example</code></pre>
             <div class="content-body">
                 <h2>設定檔範例</h2>
                 <div class="code-window">
-                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">.gemi-clawdex/providers.conf</span></div>
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">.gcd/providers.conf</span></div>
                     <div class="window-body">
 <pre><code class="language-toml">[provider "openrouter-codex"]
 label = "OpenRouter Relay for Codex"
@@ -866,7 +866,7 @@ best_for = "offline local development"</code></pre>
                             <tr><td><code>AGENTS.md</code></td><td>OpenAI Codex</td><td>專案架構、貢獻規範、程式碼風格</td></tr>
                             <tr><td><code>GEMINI.md</code></td><td>Gemini CLI</td><td>Gemini 特定的上下文提示</td></tr>
                             <tr><td><code>CLAUDE.md</code></td><td>Claude Code</td><td>Claude 特定的行為指引</td></tr>
-                            <tr><td><code>GEMICLAWDEX.md</code></td><td>GemiClawdex</td><td>GemiClawdex 專用指令</td></tr>
+                            <tr><td><code>GCD.md</code></td><td>GemiClawdex</td><td>GCD 專用指令</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -894,7 +894,7 @@ best_for = "offline local development"</code></pre>
                 <h2>命令是什麼？</h2>
                 <p>命令是可重用的提示詞模板，用 TOML 格式定義。你可以用 <code>/review src/app.rs</code> 這樣的斜線語法觸發它們。</p>
                 <div class="code-window">
-                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">.gemi-clawdex/commands/review.toml</span></div>
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">.gcd/commands/review.toml</span></div>
                     <div class="window-body">
 <pre><code class="language-toml">description = "Review file or directory"
 prompt = """
@@ -953,7 +953,7 @@ Context: @{AGENTS.md}
 
                 <h2>技能檔案範例</h2>
                 <div class="code-window">
-                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">.gemi-clawdex/skills/code-review/SKILL.md</span></div>
+                    <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">.gcd/skills/code-review/SKILL.md</span></div>
                     <div class="window-body">
 <pre><code class="language-markdown"># Code Review Guidelines
 
@@ -1260,7 +1260,7 @@ pub trait Tool: Send + Sync {
                 <div class="code-window">
                     <div class="window-header"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="window-title">Session 目錄結構</span></div>
                     <div class="window-body">
-<pre><code class="language-text">~/.gemi-clawdex/sessions/
+<pre><code class="language-text">~/.gcd/sessions/
     └── 1712345678-review/
         ├── session.txt         # 元資料（id, workspace, timestamps）
         └── turns/

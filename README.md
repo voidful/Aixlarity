@@ -46,8 +46,8 @@ gcd overview --json
 | `GEMINI_API_KEY` | Google Gemini API 金鑰 |
 | `OPENAI_API_KEY` | OpenAI API 金鑰 |
 | `ANTHROPIC_API_KEY` | Anthropic API 金鑰 |
-| `GEMICLAWDEX_PROVIDER` | 預設供應商 ID |
-| `GEMICLAWDEX_SANDBOX` | 預設 sandbox 策略 |
+| `GCD_PROVIDER` | 預設供應商 ID |
+| `GCD_SANDBOX` | 預設 sandbox 策略 |
 
 ## 架構
 

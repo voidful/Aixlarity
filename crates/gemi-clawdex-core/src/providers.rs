@@ -169,11 +169,11 @@ pub struct ProviderRegistry {
 impl ProviderRegistry {
     pub fn load(paths: &AppPaths, workspace: &Workspace, trust: &TrustState) -> io::Result<Self> {
         let global_registry_path = paths.global_provider_registry_path();
-        let workspace_registry_path = workspace.root.join(".gemi-clawdex").join("providers.conf");
+        let workspace_registry_path = workspace.root.join(".gcd").join("providers.conf");
         let global_active_path = paths.global_active_provider_path();
         let workspace_active_path = workspace
             .root
-            .join(".gemi-clawdex")
+            .join(".gcd")
             .join("active-provider.txt");
 
         let mut providers = BTreeMap::new();
@@ -790,14 +790,14 @@ mod tests {
     #[test]
     fn workspace_active_provider_overrides_global() {
         let root = unique_dir("active");
-        fs::create_dir_all(root.join(".gemi-clawdex")).unwrap();
+        fs::create_dir_all(root.join(".gcd")).unwrap();
         let home = root.join("home");
         fs::create_dir_all(&home).unwrap();
         let workspace_root = root.clone();
 
         fs::write(home.join("active-provider.txt"), "claude-official\n").unwrap();
         fs::write(
-            root.join(".gemi-clawdex").join("active-provider.txt"),
+            root.join(".gcd").join("active-provider.txt"),
             "gemini-official\n",
         )
         .unwrap();
@@ -810,7 +810,7 @@ mod tests {
             &Workspace {
                 root: workspace_root.clone(),
                 current_dir: workspace_root,
-                detected_by: ".gemi-clawdex".to_string(),
+                detected_by: ".gcd".to_string(),
             },
             &TrustState {
                 kind: None,
@@ -827,9 +827,9 @@ mod tests {
     #[test]
     fn set_active_persists_workspace_provider() {
         let root = unique_dir("persist");
-        fs::create_dir_all(root.join(".gemi-clawdex")).unwrap();
+        fs::create_dir_all(root.join(".gcd")).unwrap();
         fs::write(
-            root.join(".gemi-clawdex").join("providers.conf"),
+            root.join(".gcd").join("providers.conf"),
             "[provider \"openrouter-codex\"]\nlabel = \"OpenRouter Codex\"\nfamily = \"openai-compatible\"\napi_base = \"https://openrouter.ai/api/v1\"\napi_key_env = \"OPENROUTER_API_KEY\"\nmodel = \"openai/codex-mini-latest\"\n",
         )
         .unwrap();
@@ -843,7 +843,7 @@ mod tests {
         let workspace = Workspace {
             root: workspace_root.clone(),
             current_dir: workspace_root,
-            detected_by: ".gemi-clawdex".to_string(),
+            detected_by: ".gcd".to_string(),
         };
         let trust = TrustState {
             kind: None,

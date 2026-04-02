@@ -22,7 +22,7 @@ impl InstructionBundle {
         }
 
         let mut sources = Vec::new();
-        for name in &["AGENTS.md", "GEMINI.md", "CLAUDE.md", "GEMICLAWDEX.md"] {
+        for name in &["AGENTS.md", "GEMINI.md", "CLAUDE.md", "GCD.md"] {
             let path = workspace.root.join(name);
             if path.exists() {
                 let content = fs::read_to_string(&path)?;

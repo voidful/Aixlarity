@@ -41,17 +41,17 @@ impl Workspace {
     }
 
     pub fn project_commands_dir(&self) -> PathBuf {
-        self.root.join(".gemi-clawdex").join("commands")
+        self.root.join(".gcd").join("commands")
     }
 
     pub fn project_skills_dir(&self) -> PathBuf {
-        self.root.join(".gemi-clawdex").join("skills")
+        self.root.join(".gcd").join("skills")
     }
 }
 
 fn detect_marker(path: &Path) -> Option<&'static str> {
     let markers = [
-        (".gemi-clawdex", ".gemi-clawdex"),
+        (".gcd", ".gcd"),
         (".git", ".git"),
         ("Cargo.toml", "Cargo.toml"),
         ("package.json", "package.json"),

@@ -47,13 +47,13 @@ Owns argument parsing and text rendering:
 
 `GemiClawdex` uses a blended filesystem layout:
 
-- global home: `~/.gemi-clawdex/`
-- workspace config: `<repo>/.gemi-clawdex/`
+- global home: `~/.gcd/`
+- workspace config: `<repo>/.gcd/`
 - provider profiles: `providers.conf`
 - active provider pins: `active-provider.txt`
-- saved sessions: `~/.gemi-clawdex/sessions/<session-id>/`
+- saved sessions: `~/.gcd/sessions/<session-id>/`
 - repo instructions: `<repo>/AGENTS.md`
-- optional persistent context: `<repo>/GEMINI.md`, `<repo>/CLAUDE.md`, `<repo>/GEMICLAWDEX.md`
+- optional persistent context: `<repo>/GEMINI.md`, `<repo>/CLAUDE.md`, `<repo>/GCD.md`
 
 This intentionally mirrors:
 

@@ -93,11 +93,11 @@ impl Default for RuntimePreferences {
     fn default() -> Self {
         Self {
             default_provider_id: default_provider_from_env(),
-            default_sandbox: env::var("GEMICLAWDEX_SANDBOX")
+            default_sandbox: env::var("GCD_SANDBOX")
                 .ok()
                 .and_then(|value| SandboxPolicy::parse(value.trim()))
                 .unwrap_or(SandboxPolicy::WorkspaceWrite),
-            trust_enabled: env::var("GEMICLAWDEX_TRUST")
+            trust_enabled: env::var("GCD_TRUST")
                 .ok()
                 .map(|value| parse_env_bool(&value))
                 .unwrap_or(true),
@@ -106,7 +106,7 @@ impl Default for RuntimePreferences {
 }
 
 fn default_provider_from_env() -> Option<String> {
-    if let Some(value) = env::var("GEMICLAWDEX_PROVIDER")
+    if let Some(value) = env::var("GCD_PROVIDER")
         .ok()
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
@@ -151,7 +151,7 @@ fn default_config_home() -> PathBuf {
         .or_else(|| env::var_os("USERPROFILE"))
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("."));
-    home.join(".gemi-clawdex")
+    home.join(".gcd")
 }
 
 fn parse_env_bool(value: &str) -> bool {
