@@ -1,0 +1,47 @@
+<div class="chapter-header"><span class="chapter-number">第 23 章</span><h1>插件系統</h1><p class="chapter-desc">JSON 定義的工具基本架構，以及它目前在 codebase 中的真實狀態</p></div>
+            <div class="content-body">
+                <div class="callout callout-info">
+                    <div class="callout-title">實作狀態更新 (2026-04)</div>
+                    <p><strong><code>插件系統現已接入主執行路徑。</strong><code>App::exec</code> 載入 <code>PluginCatalog</code> 並傳入 <code>run_agent</code>，與 built-in tools 和 MCP tools 一起合併進 live tool registry。此外，原有的指令注入漏洞已修復：不再使用 <code>sh -c</code> 展開模板，改用安全的 <code>Command::new(program).args()</code> 方式。Plugin 系統仍標為<strong>實驗中的 (experimental)</strong>，API 可能在未來版本變動。</p>
+                </div>
+
+                <h2>插件定義格式</h2>
+                <div class="code-window">
+                    <div class="window-header"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div><span class="window-title">.gcd/plugins/lint.json</span></div>
+                    <div class="window-body">
+<pre><code class="language-json">{
+  "name": "lint_code",
+  "description": "Run ESLint on a file",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "file": { "type": "string", "description": "File to lint" }
+    },
+    "required": ["file"]
+  },
+  "command": "npx eslint {{file}}",
+  "max_output_bytes": 10240
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2>這個模組已經完成的部分</h2>
+                <ul>
+                    <li>可以從全域與工作區插件目錄讀取 JSON 定義。</li>
+                    <li>可以把 <code>{{param}}</code> 模板展開成 shell command。</li>
+                    <li>可以包裝成實作 <code>Tool</code> trait 的動態工具元件。</li>
+                </ul>
+
+                <h2>已完成連接 (2026-04 更新)</h2>
+                <ul>
+                    <li><code>App::exec</code> 現在會載入 <code>PluginCatalog</code>（全域 + 工作區）並傳進 agent runtime。</li>
+                    <li><code>agent.rs</code> 的 <code>run_agent</code> 接收 <code>plugin_tools</code> 參數，透過 <code>all_tools()</code> 合併 built-in + plugin + MCP tools。</li>
+                    <li>指令執行改用 <code>Command::new().args()</code>，不再透過 shell 展開，防止命令注入。</li>
+                </ul>
+
+                <div class="source-ref"><strong>原始碼</strong>：<code>crates/gcd-core/src/plugins.rs</code>、<code>crates/gcd-core/src/tools/registry.rs</code>、<code>crates/gcd-core/src/app.rs</code>、<code>crates/gcd-core/src/agent.rs</code></div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch22')">← 22：多代理</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch24')">24：供應商降級 →</button>
+            </div>

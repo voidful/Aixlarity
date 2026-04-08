@@ -1,0 +1,33 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 17 章</span>
+                <h1>輸出渲染系統</h1>
+                <p class="chapter-desc">結構化輸出 — <code>output.rs</code></p>
+            </div>
+            <div class="content-body">
+                <h2>三種輸出模式</h2>
+                <div class="trust-levels">
+                    <div class="trust-card trust-trusted">
+                        <span class="trust-badge">Text</span>
+                        <h3>人類可讀</h3>
+                        <p>預設模式。彩色終端輸出，使用 <code>colored</code> crate。</p>
+                    </div>
+                    <div class="trust-card trust-parent">
+                        <span class="trust-badge">JSON</span>
+                        <h3>程式可讀</h3>
+                        <p><code>--json</code> 旗標。單一 JSON 物件輸出，適合腳本處理。</p>
+                    </div>
+                    <div class="trust-card trust-untrusted">
+                        <span class="trust-badge">JSONL</span>
+                        <h3>串流友好</h3>
+                        <p><code>--jsonl</code> 旗標。每行一個 JSON 物件，適合串流處理。</p>
+                    </div>
+                </div>
+
+                <div class="source-ref">
+                    <strong>原始碼</strong>：<code>crates/gcd-core/src/output.rs</code>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch16')">← 16：CLI 介面</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch18')">18：執行管線全景 →</button>
+            </div>

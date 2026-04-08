@@ -1,0 +1,382 @@
+<div class="chapter-header">
+    <span class="chapter-number">參考矩陣</span>
+    <h1>來源不是靈感清單，而是可追蹤的工程參考</h1>
+    <p class="chapter-desc">這一章把理論、產品、社群衍生版與替代實作整理成參考來源整理，讓你看得出每個來源影響了 GCD 哪一層。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">使用方式</div>
+        <p>先看主產品與方法論，再看社群反饋。對每個來源都問四個問題：它提供什麼工程參考？GCD 學了哪一部分？改造了什麼？哪些地方故意不複製？</p>
+    </div>
+
+    <h2>來源研究不是收集靈感，而是建立判斷方法</h2>
+    <p>如果只是把一堆 repo、文章與教學站排成連結清單，讀者通常很難真的得到什麼。這一章要做的，是把來源分成不同層級。理論與教學資料幫我們建立語言；產品與官方 repo 提供可以觀察功能範圍；替代實作提醒我們 從頭重建時容易踩的坑；社群衍生版則反映成本、相容性、本地化與安全透明度這些真實需求。</p>
+
+    <p>換句話說，來源在本站的角色不是「證明我們很有研究」，而是幫我們回答兩件事。第一，GCD 的設計判斷從哪裡來。第二，哪些判斷只是合理推論，哪些則能被原始碼或官方文件直接支持。</p>
+
+    <h2>如何使用這張參考來源整理</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>先用理論資料建立總綱</h3>
+            <p>像 外殼工程、Claude Code Book、Learn AI 助手 這類資料，幫我們先把問題框起來：要看的是 外殼，而不是單一 feature。</p>
+        </div>
+        <div class="check-item">
+            <h3>再用產品資料確認成熟功能範圍</h3>
+            <p>Claude Code、Gemini CLI、OpenAI Codex 讓我們看到終端體驗、permission 語言、trusted folder、MCP、instruction workflow 等能力怎麼被做成可用產品。</p>
+        </div>
+        <div class="check-item">
+            <h3>最後用社群反饋補 實際使用情況</h3>
+            <p>成本、替代端點、語言門檻、還原原始碼、安全機制的透明度，這些往往不會在官方說明裡被放太前面，但對實際採用非常關鍵。</p>
+        </div>
+    </div>
+
+    <h2>用一個實例看「來源」如何變成「設計判斷」</h2>
+    <p>這一章最重要的不是把來源背起來，而是學會一個轉化過程。下面用三個例子示範，同一則外部訊號怎麼影響到 GCD 的文件與設計裡。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>外部訊號</th>
+                    <th>先回答的問題</th>
+                    <th>影響到 GCD 的哪裡</th>
+                    <th>我們刻意保留的差異</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Gemini CLI 的 trusted folders</td>
+                    <td>工作區本身是否可信，應不應影響 prompt 與 workspace config？</td>
+                    <td>GCD 的 信任檢查、instructions 載入條件與 workspace-scoped provider 限制。</td>
+                    <td>沒有把它只做成 UI 勾選，而是讓它直接改變 執行時 行為。</td>
+                </tr>
+                <tr>
+                    <td>Codex 的 approval / sandbox 語言</td>
+                    <td>人類要如何在操作影響前介入，而不是只在事後修補？</td>
+                    <td><code>suggest</code> / <code>auto-edit</code> / <code>full-auto</code>、tool permission 機制。</td>
+                    <td>GCD 不綁單一 provider，也不把 container 已完整實際做出來寫得比現況更滿。</td>
+                </tr>
+                <tr>
+                    <td>yage.ai 談的新模型整合成本</td>
+                    <td>為什麼 provider adapter 不只是 API wrapper？</td>
+                    <td>把 provider adapters、fallback、請求格式調整、parsing 直接寫進核心說明。</td>
+                    <td>不把連接問題藏到「SDK 細節」章節，改列為 外殼 核心層。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="atlas-controls" data-filter-group="sources">
+        <button type="button" class="chip active" data-filter="all">全部</button>
+        <button type="button" class="chip" data-filter="theory">理論 / 教學</button>
+        <button type="button" class="chip" data-filter="product">產品</button>
+        <button type="button" class="chip" data-filter="community">社群反饋</button>
+        <button type="button" class="chip" data-filter="alt">替代實作</button>
+    </div>
+
+    <div class="atlas-grid" data-filter-target="sources">
+        <article class="atlas-card revealable" data-category="theory">
+            <div class="atlas-topline">
+                <span class="atlas-type">Theory</span>
+                
+            </div>
+            <h3><a href="https://github.com/ZhangHanDong/harness-engineering-from-cc-to-ai-coding" target="_blank">Harness Engineering from CC to AI Coding</a></h3>
+            <p class="atlas-signal">把 prompt、tools、安全、會話視為同一個外殼。</p>
+            <p>GCD 的首頁、前言與全景章都直接沿用這種總綱式寫法，而不是從 CLI 參數開始講。</p>
+        </article>
+
+        <article class="atlas-card revealable" data-category="theory">
+            <div class="atlas-topline">
+                <span class="atlas-type">Article</span>
+                
+            </div>
+            <h3><a href="https://yage.ai/share/claude-code-engineering-cost-20260331.html" target="_blank">AI 工程的真實代價</a></h3>
+            <p class="atlas-signal">新模型整合成本在 快取金鑰、測試版標頭、格式標準化流程、串流解析。</p>
+            <p>因此本站刻意把 provider adapters、fallback 與 parsing 當成 外殼 內容，而不是把它們藏進「SDK 細節」。</p>
+        </article>
+
+        <article class="atlas-card revealable" data-category="theory">
+            <div class="atlas-topline">
+                <span class="atlas-type">Book</span>
+                
+            </div>
+            <h3><a href="https://github.com/huifer/claude-code-book" target="_blank">Claude Code Book</a></h3>
+            <p class="atlas-signal">以專書拆章而不是功能堆疊，帶讀者沿著系統層次前進。</p>
+            <p>GCD 文件站保留這種 教學導覽風格，但改成更明確的 完成度 標示與來源追溯。</p>
+        </article>
+
+        <article class="atlas-card revealable" data-category="product">
+            <div class="atlas-topline">
+                <span class="atlas-type">Product</span>
+                
+            </div>
+            <h3><a href="https://github.com/google-gemini/gemini-cli" target="_blank">Gemini CLI</a></h3>
+            <p class="atlas-signal">terminal-first、trusted folders、MCP、context file、token caching、headless output。</p>
+            <p>GCD 已採用 terminal-first 與 provider/workspace config 心智；token caching 與更完整 擴充生命週期 仍屬下一階段。</p>
+        </article>
+
+        <article class="atlas-card revealable" data-category="product">
+            <div class="atlas-topline">
+                <span class="atlas-type">Product</span>
+                
+            </div>
+            <h3><a href="https://github.com/openai/codex" target="_blank">OpenAI Codex</a></h3>
+            <p class="atlas-signal">approval / sandbox UX、本地 AI 助手 節奏、instruction-driven workflow。</p>
+            <p>GCD 借這套產品風格，但不把自己綁成單一供應商工具，這是最明顯的差異。</p>
+        </article>
+
+        <article class="atlas-card revealable" data-category="product">
+            <div class="atlas-topline">
+                <span class="atlas-type">Docs</span>
+                
+            </div>
+            <h3><a href="https://ccunpacked.dev" target="_blank">Claude Code Unpacked</a></h3>
+            <p class="atlas-signal">互動式導覽、step-by-step 代理迴圈、有引導的教學閱讀。</p>
+            <p>本站的 pipeline 視覺、比較矩陣與章節導讀 rail，正是朝這個方向重做，但保留更重的技術說明。</p>
+        </article>
+
+        <article class="atlas-card revealable" data-category="product">
+            <div class="atlas-topline">
+                <span class="atlas-type">Localized Docs</span>
+                
+            </div>
+            <h3><a href="https://anneheartrecord.github.io/claude-code-docs/#/" target="_blank">Claude Code 繁中解說站</a></h3>
+            <p class="atlas-signal">把偏英文、偏內部的概念重編排成繁中工程教學。</p>
+            <p>GCD 全站改寫成台灣工程語境，就是吸收這個方向，而不是只做逐句翻譯。</p>
+        </article>
+
+        <article class="atlas-card revealable" data-category="alt">
+            <div class="atlas-topline">
+                <span class="atlas-type">Rust Rebuild</span>
+                
+            </div>
+            <h3><a href="https://github.com/Kuberwastaken/claurst" target="_blank">Claurst</a></h3>
+            <p class="atlas-signal">從頭重建的 Rust reimplementation、Dream memory、multi-agent 觀察框架。</p>
+            <p>GCD 學的是「先把 規格與實作 分層」的精神；Dream 級記憶整合仍只是下一步研究方向。</p>
+        </article>
+
+        <article class="atlas-card revealable" data-category="alt">
+            <div class="atlas-topline">
+                <span class="atlas-type">SDK</span>
+                
+            </div>
+            <h3><a href="https://github.com/codeany-ai/open-agent-sdk-typescript" target="_blank">Open Agent SDK TypeScript</a></h3>
+            <p class="atlas-signal">in-process 代理迴圈、hooks、skills、MCP、subagents、可程式化的抽象層。</p>
+            <p>GCD 目前先穩定 <code>App</code> 與 執行時 主要流程；如果未來要 SDK 化，這會是重要對照物。</p>
+        </article>
+
+        <article class="atlas-card revealable" data-category="community">
+            <div class="atlas-topline">
+                <span class="atlas-type">Community Signal</span>
+                
+            </div>
+            <h3>Claude-Code-Compiled / claude-code-rev</h3>
+            <p class="atlas-signal">社群想要的是可以觀察、可執行、可修補的 還原原始碼，而不是神秘看不透的。</p>
+            <p>因此本站把「production path / scaffold / inferred」標得很重，避免讓文件再次變成看不透的包裝。</p>
+        </article>
+
+        <article class="atlas-card revealable" data-category="community">
+            <div class="atlas-topline">
+                <span class="atlas-type">Community Signal</span>
+                
+            </div>
+            <h3>claw-code / claude-copy-code</h3>
+            <p class="atlas-signal">本地化與知識整理本身就是採用門檻的一部分。</p>
+            <p>GCD 選擇用完整繁中、互動教學與原始碼對照來降低進入門檻，這不是附屬工作，而是產品策略。</p>
+        </article>
+
+        <article class="atlas-card revealable" data-category="community">
+            <div class="atlas-topline">
+                <span class="atlas-type">Community Signal</span>
+                
+            </div>
+            <h3>free-code / claude-code-haha / claude-code-best</h3>
+            <p class="atlas-signal">社群在意成本、替代端點、可用性、workflow best practices。</p>
+            <p>GCD 的多供應商、fallback 與文件中的 workflow 段落，都對應這些訊號；但 移除安全機制 不會被直接當成設計目標。</p>
+        </article>
+    </div>
+
+    <h2>從來源走到設計決策，中間其實還有兩步</h2>
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>先辨識來源提供的是哪一種訊號</h3>
+                <p>它是在提供理論框架、產品能力、社群分析，還是社群需求？不同訊號的可信度與用途不同，不能混為一談。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>再判斷這個訊號應該對應到系統的哪一層</h3>
+                <p>例如 token caching 應該落在 provider / 請求格式調整 層；trusted folder 則會影響 instructions 與 workspace config 是否進 prompt。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>最後才問它是否已被 GCD 採用</h3>
+                <p>如果原始碼主要流程已經接上，就算已完成；如果只有局部連接，就標註為部分實作；如果只是方向，就說明它是研究軌。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>來源類型會影響我們怎麼使用它</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>來源類型</th>
+                    <th>最適合回答的問題</th>
+                    <th>本站如何使用</th>
+                    <th>常見誤用</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>理論 / 教學</td>
+                    <td>系統應該如何分層、如何建立學習路徑。</td>
+                    <td>拿來做總綱、章節節奏與概念定義。</td>
+                    <td>把抽象框架直接當成某個專案已實際做出來的事實。</td>
+                </tr>
+                <tr>
+                    <td>產品 / 官方 repo</td>
+                    <td>公開功能範圍、使用者工作流、產品風格。</td>
+                    <td>拿來對照 GCD 參考了哪些交互與能力分層。</td>
+                    <td>把官方產品能力直接映射成 GCD 現況。</td>
+                </tr>
+                <tr>
+                    <td>替代實作 / 從頭重建</td>
+                    <td>哪些概念值得重建、哪些地方會出現實作落差。</td>
+                    <td>拿來觀察 規格與實作 如何分層。</td>
+                    <td>把替代實作包裝成原版行為的官方依據。</td>
+                </tr>
+                <tr>
+                    <td>社群衍生版 / 還原原始碼</td>
+                    <td>大家在意什麼成本、安全與相容性問題。</td>
+                    <td>拿來補 實際使用情況與社群需求訊號。</td>
+                    <td>把社群 patch 的價值觀當成官方設計目標。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>哪些來源主要影響文件寫法，哪些更影響程式設計</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>來源</th>
+                    <th>主要影響文件</th>
+                    <th>主要影響設計</th>
+                    <th>原因</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>外殼工程 / Claude Code Book / Learn AI 助手</td>
+                    <td>高</td>
+                    <td>中</td>
+                    <td>它們最強的是章節節奏、概念拆層與教學方法。</td>
+                </tr>
+                <tr>
+                    <td>Gemini CLI / OpenAI Codex</td>
+                    <td>中</td>
+                    <td>高</td>
+                    <td>它們提供的是產品邊界、交互節奏與功能設計。</td>
+                </tr>
+                <tr>
+                    <td>Claude Code Unpacked / 繁中解說站</td>
+                    <td>高</td>
+                    <td>低到中</td>
+                    <td>更強的是導覽與本地化編排，不是直接決定 GCD 執行時 怎麼寫。</td>
+                </tr>
+                <tr>
+                    <td>Claurst / Open Agent SDK TypeScript</td>
+                    <td>低到中</td>
+                    <td>中</td>
+                    <td>它們比較像架構對照物，提醒未來 SDK 化與 從頭重建 的可能邊界。</td>
+                </tr>
+                <tr>
+                    <td>社群衍生版 / 還原原始碼</td>
+                    <td>中</td>
+                    <td>中</td>
+                    <td>它們不一定直接提供解法，但很能反映成本、安全、相容性與透明度需求。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>社群衍生版提醒了我們什麼</h2>
+    <div class="comparison-table">
+        <table data-compare="signals">
+            <thead>
+                <tr>
+                    <th>社群最在意的問題</th>
+                    <th>這反映什麼</th>
+                    <th>GCD 的回應</th>
+                    <th>不該複製的地方</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>成本與替代端點</td>
+                    <td>Agent 採用受限於於 API 價格與被單一供應商綁住。</td>
+                    <td>provider 清單、fallback、多供應商 profile。</td>
+                    <td>為了支援一切端點而把協定層做成難維護難維護的混亂系統。</td>
+                </tr>
+                <tr>
+                    <td>可以觀察與可執行 還原原始碼</td>
+                    <td>工程師不想被看不透的 prompt 與隱藏的行為綁架。</td>
+                    <td>文件站明標完成度與原始碼依據。</td>
+                    <td>把 restored / reversed source 直接包裝成官方真相。</td>
+                </tr>
+                <tr>
+                    <td>本地化與教學再編排</td>
+                    <td>語言與案例會直接影響採用速度。</td>
+                    <td>全站繁中重寫、閱讀路徑、比較章。</td>
+                    <td>只做機械翻譯，不做結構重整。</td>
+                </tr>
+                <tr>
+                    <td>安全界線與隱私透明度</td>
+                    <td>大家會主動檢視 安全機制、telemetry、權限模型。</td>
+                    <td>把 trust / sandbox / permission 當成首頁級概念。</td>
+                    <td>把移除 安全機制 當成「更自由」而不是新的風險。</td>
+                </tr>
+                <tr>
+                    <td>逆向與 從頭重建</td>
+                    <td>工程師想看可以觀察主要流程，而不是只接受看不透的描述。</td>
+                    <td>整站都以原始碼 實況檢查 為底，再回來談參考。</td>
+                    <td>把反向推測寫成官方保證，模糊「已完成」與「推論」的界線。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>參考來源整理最怕的錯誤：把不同等級的訊號混成一句話</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>錯誤示範：因為某個產品有 token caching，所以 GCD 也應該立刻補齊</h3>
+            <p>正確做法是先問：它是 adoption 的核心瓶頸，還是第二階段的成本優化？再回頭看 GCD 主要流程是否已經準備好承接這層複雜度。</p>
+        </div>
+        <div class="check-item">
+            <h3>錯誤示範：社群 還原原始碼 說某能力存在，所以可以當官方真相引用</h3>
+            <p>正確做法是把它標成 <code>Implemented</code> 或 <code>Observed</code>，並且只拿來解釋社群關注點，不拿來當 GCD 事實依據。</p>
+        </div>
+        <div class="check-item">
+            <h3>錯誤示範：某篇教學文章把一個概念講得漂亮，就直接當作本專案已實際做出來設計</h3>
+            <p>正確做法是回到原始碼，確認這個概念究竟對應到哪條主要流程、哪個資料結構、哪個 執行時 閘門。</p>
+        </div>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">來源越多，越需要如實的標記系統</div>
+        <p>當一個教學站同時吸收理論、產品、社群分析、社群衍生版與替代實作時，最大的風險不是資訊不夠，而是把不同可信度的資訊混成同一種口氣。所以本站會明確區分「已完成」、「部分實作」與「研究方向」這三種不同的狀態。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('comp')">← 三大產品對照</button>
+    <button class="btn btn-primary" onclick="navigateTo('refs')">參考附錄與可追蹤表 →</button>
+</div>

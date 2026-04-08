@@ -1,0 +1,524 @@
+<div class="chapter-header">
+    <span class="chapter-number">Provider Lab</span>
+    <h1>同一個任務，四種 Provider 協定如何變形</h1>
+    <p class="chapter-desc">同一個任務，用 Gemini、OpenAI、Anthropic 分別跑，API 請求長什麼樣？這一章讓你直接看到差異。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先講這一章要解的困惑</div>
+        <p>很多人知道 GCD 支援 Gemini、OpenAI、Anthropic，也知道有 Responses 與 Chat 兩種 OpenAI 路徑，但真正接到原始碼時，還是不知道這些差異到底落在哪裡。這一章的目標，就是把 provider layer 從「名詞列表」變成「可以看到的 請求格式調整 實例」。</p>
+    </div>
+
+    <h2>先建立一個很重要的觀念</h2>
+    <p>對 外殼 工程來說，新增 provider 並不只有一種工作量。只是新增一個 profile，和真正新增一條新協定，是完全不同層級的事情。前者比較像設定擴充；後者則會牽涉 request body、tool declaration、tool result 回送、streaming parser、usage 欄位與 fallback 含義。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>如果你要新增的是</th>
+                    <th>主要工作</th>
+                    <th>工程難度</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>既有協定上的新 profile</td>
+                    <td>補 profile、key env、base URL 與模型名稱。</td>
+                    <td>低到中</td>
+                </tr>
+                <tr>
+                    <td>相容端點，但仍走既有協定</td>
+                    <td>確認 request / response 是否真的相容，並補 profile。</td>
+                    <td>中</td>
+                </tr>
+                <tr>
+                    <td>新的 provider protocol</td>
+                    <td>新增 adapter、streaming parser、tool normalization、usage 抽取。</td>
+                    <td>高</td>
+                </tr>
+                <tr>
+                    <td>新的 family + 新的 protocol</td>
+                    <td>除了新 adapter，還要重新思考 fallback、能力宣告與測試策略。</td>
+                    <td>很高</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>同一個任務，四種協定的基本架構差異</h2>
+    <p>先用一個最小任務當基準：<code>review src/lib.rs，必要時先呼叫 read_file</code>。接著看這個任務在四種協定裡，最外層 body 怎麼長。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>協定</th>
+                    <th>主端點</th>
+                    <th>對話承載欄位</th>
+                    <th>工具宣告欄位</th>
+                    <th>第二輪如何延續</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>OpenAI Responses</td>
+                    <td><code>/responses</code></td>
+                    <td><code>input</code></td>
+                    <td><code>tools</code> with <code>type=function</code></td>
+                    <td>靠 <code>previous_response_id</code> 與 <code>function_call_output</code></td>
+                </tr>
+                <tr>
+                    <td>OpenAI Chat Completions</td>
+                    <td><code>/chat/completions</code></td>
+                    <td><code>messages</code></td>
+                    <td><code>tools[].function</code></td>
+                    <td>重送完整 messages 歷史</td>
+                </tr>
+                <tr>
+                    <td>Gemini GenerateContent</td>
+                    <td><code>:generateContent</code> / <code>:streamGenerateContent</code></td>
+                    <td><code>contents</code></td>
+                    <td><code>functionDeclarations</code></td>
+                    <td>把 tool result 轉成 <code>functionResponse</code></td>
+                </tr>
+                <tr>
+                    <td>Anthropic Messages</td>
+                    <td><code>/v1/messages</code></td>
+                    <td><code>messages</code></td>
+                    <td><code>tools[].input_schema</code></td>
+                    <td>以 <code>tool_use</code> / <code>tool_result</code> block 延續</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>案例一：第一輪請求，四種 body 已經不一樣</h2>
+    <p>在第一輪，大家看起來都像是在送「使用者輸入 + 工具定義」，但實際 JSON 形狀差很多。這就是 請求格式調整 成本的來源。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：OpenAI Responses 的第一輪</span>
+        </div>
+        <div class="window-body">
+<pre><code>{
+  "model": "gpt-5.1",
+  "input": [
+    {
+      "role": "user",
+      "content": [{ "type": "input_text", "text": "review src/lib.rs" }]
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "name": "read_file",
+      "description": "...",
+      "parameters": { ... }
+    }
+  ],
+  "parallel_tool_calls": false
+}</code></pre>
+        </div>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：OpenAI Chat 的第一輪</span>
+        </div>
+        <div class="window-body">
+<pre><code>{
+  "model": "gpt-4.1",
+  "messages": [
+    { "role": "user", "content": "review src/lib.rs" }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "...",
+        "parameters": { ... }
+      }
+    }
+  ],
+  "temperature": 0.2,
+  "max_tokens": 8192
+}</code></pre>
+        </div>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：Gemini 的第一輪</span>
+        </div>
+        <div class="window-body">
+<pre><code>{
+  "contents": [
+    {
+      "role": "user",
+      "parts": [{ "text": "review src/lib.rs" }]
+    }
+  ],
+  "tools": [{
+    "functionDeclarations": [
+      {
+        "name": "read_file",
+        "description": "...",
+        "parameters": { ... }
+      }
+    ]
+  }],
+  "generationConfig": {
+    "temperature": 0.2,
+    "maxOutputTokens": 8192
+  }
+}</code></pre>
+        </div>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：Anthropic 的第一輪</span>
+        </div>
+        <div class="window-body">
+<pre><code>{
+  "model": "claude-3-7-sonnet",
+  "messages": [
+    { "role": "user", "content": "review src/lib.rs" }
+  ],
+  "tools": [
+    {
+      "name": "read_file",
+      "description": "...",
+      "input_schema": { ... }
+    }
+  ],
+  "max_tokens": 8192
+}</code></pre>
+        </div>
+    </div>
+
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">這裡最值得記住的事</div>
+        <p>光是第一輪的工具宣告，GCD 就要分別處理 <code>parameters</code>、<code>function.parameters</code>、<code>functionDeclarations</code>、<code>input_schema</code> 四種形狀。這還只是送 request，還沒開始處理 streaming 與 tool result。</p>
+    </div>
+
+    <h2>案例二：模型先呼叫 <code>read_file</code> 後，第二輪怎麼接回去</h2>
+    <p>真正能看出協定差異的，通常不是第一輪，而是工具跑完之後。這時候 執行時 要把 tool result 回送給模型，讓它在同一輪工作中繼續推理。四種協定在這裡就更不一樣了。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>協定</th>
+                    <th>GCD 目前怎麼回送 tool result</th>
+                    <th>這代表什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>OpenAI Responses</td>
+                    <td>如果已有 <code>previous_response_id</code>，第二輪只送 trailing tool outputs。</td>
+                    <td>這是最明顯的 stateful protocol 形狀，不必每次重灌完整歷史。</td>
+                </tr>
+                <tr>
+                    <td>OpenAI Chat</td>
+                    <td>重送完整 messages，包含 assistant tool call 與 tool role message。</td>
+                    <td>延續性主要靠完整訊息歷史，而不是 server 端 response id。</td>
+                </tr>
+                <tr>
+                    <td>Gemini</td>
+                    <td>把 tool result 轉成 user role 的 <code>functionResponse</code> part。</td>
+                    <td>模型會在 contents 中收到工具回應，而不是獨立 tool role。</td>
+                </tr>
+                <tr>
+                    <td>Anthropic</td>
+                    <td>assistant 會先有 <code>tool_use</code> block，下一則 user message 再帶 <code>tool_result</code>。</td>
+                    <td>工具呼叫與結果都被當成 content blocks，而不是外掛欄位。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：OpenAI Responses 第二輪為什麼特別薄</span>
+        </div>
+        <div class="window-body">
+<pre><code>{
+  "model": "gpt-5.1",
+  "previous_response_id": "resp_123",
+  "input": [
+    {
+      "type": "function_call_output",
+      "call_id": "call_1",
+      "output": "{\"content\":\"fn main() {}\"}"
+    }
+  ]
+}</code></pre>
+        </div>
+    </div>
+
+    <p>這是 GCD 在 OpenAI Responses 路徑裡最值得觀察的一個決策。如果已拿到 <code>previous_response_id</code>，<code>openai_response_input()</code> 會優先只送 trailing tool outputs，而不是把整段歷史訊息重新展開。這意味著 Responses path 在第二輪之後，理論上可以比 Chat path 更簡化，也更依賴 provider 自己保存前態。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：OpenAI Chat 第二輪仍保留完整對話歷史</span>
+        </div>
+        <div class="window-body">
+<pre><code>[
+  { "role": "user", "content": "review src/lib.rs" },
+  {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [{
+      "id": "call_1",
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "arguments": "{\"path\":\"src/lib.rs\"}"
+      }
+    }]
+  },
+  {
+    "role": "tool",
+    "tool_call_id": "call_1",
+    "content": "{\"content\":\"fn main() {}\"}"
+  }
+]</code></pre>
+        </div>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：Gemini 會把 tool result 放進 functionResponse</span>
+        </div>
+        <div class="window-body">
+<pre><code>{
+  "role": "user",
+  "parts": [{
+    "functionResponse": {
+      "name": "call_1",
+      "response": { "content": "fn main() {}" }
+    }
+  }]
+}</code></pre>
+        </div>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：Anthropic 以 block 方式接回工具結果</span>
+        </div>
+        <div class="window-body">
+<pre><code>{
+  "role": "assistant",
+  "content": [{
+    "type": "tool_use",
+    "id": "call_1",
+    "name": "read_file",
+    "input": { "path": "src/lib.rs" }
+  }]
+}
+{
+  "role": "user",
+  "content": [{
+    "type": "tool_result",
+    "tool_use_id": "call_1",
+    "content": "{\"content\":\"fn main() {}\"}"
+  }]
+}</code></pre>
+        </div>
+    </div>
+
+    <h2>案例三：Streaming 差異，比 request body 更容易踩雷</h2>
+    <p>如果說 request body 差異還能靠對照文件慢慢補，那 streaming parser 的差異通常更容易在真實工程裡出事。原因是工具參數常常會以 delta 形式碎片化出現，而 usage 也不見得在同一個事件裡回來。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>協定</th>
+                    <th>GCD 目前在等什麼事件</th>
+                    <th>教學上的重點</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>OpenAI Responses</td>
+                    <td><code>response.output_text.delta</code>、<code>response.function_call_arguments.delta</code>、<code>response.completed</code></td>
+                    <td>文字與工具參數是分開流的，usage 在完成事件才比較完整。</td>
+                </tr>
+                <tr>
+                    <td>OpenAI Chat</td>
+                    <td>delta content、delta tool_calls、額外 usage chunk</td>
+                    <td>如果沒開 <code>stream_options.include_usage</code>，你可能拿不到流式 usage。</td>
+                </tr>
+                <tr>
+                    <td>Gemini</td>
+                    <td>candidate parts 裡的 <code>text</code> 與 <code>functionCall</code>，以及 <code>usageMetadata</code></td>
+                    <td>工具呼叫不是獨立事件型別，而是長在 parts 裡。</td>
+                </tr>
+                <tr>
+                    <td>Anthropic</td>
+                    <td><code>content_block_start</code>、<code>content_block_delta</code>、<code>content_block_stop</code>、<code>message_delta</code></td>
+                    <td>tool JSON 常被分片送來，要自己把 <code>partial_json</code> 拼回去。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">整合成本最容易被低估的地方</div>
+        <p>很多人會以為接好非串流路徑就差不多了，但只要你真的把 streaming 打開，工具參數增量、usage 回補、結束事件、錯誤事件、以及跨 turn continuation 全都會冒出來。這也是為什麼 yage.ai 那類分析會說，模型整合成本遠不只是 API wrapper。</p>
+    </div>
+
+    <h2>Fallback 目前實際上怎麼工作</h2>
+    <p>GCD 的 fallback 有兩層值得分開看。第一層是「哪些錯誤算可重試」；第二層是「哪些 provider 會被放進候選清單」。這兩層都已經有主要流程實作，但都還有值得保守描述的地方。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>層次</th>
+                    <th>目前行為</th>
+                    <th>實況檢查</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>可重試錯誤判定</td>
+                    <td>靠錯誤字串比對 <code>429</code>、<code>500</code>、<code>502</code>、<code>503</code>、<code>timeout</code>、<code>connection refused</code> 等關鍵字。</td>
+                    <td>，但屬於偏務實的簡化策略。</td>
+                </tr>
+                <tr>
+                    <td>fallback 候選清單</td>
+                    <td>目前會收集所有「不是主 provider 且能成功讀到 API key」的 profile。</td>
+                    <td>，因為註解說 same-family，但實作尚未真的做 family 過濾。</td>
+                </tr>
+                <tr>
+                    <td>fallback 事件追蹤</td>
+                    <td>會寫入 <code>ProviderFallback</code> 事件，記下 from / to provider 與原因。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：fallback 判定大概在做什麼</span>
+        </div>
+        <div class="window-body">
+<pre><code>主 provider 先跑一次
+
+如果錯誤訊息包含：
+- 429
+- rate limit
+- 500 / 502 / 503
+- timeout / timed out
+- connection refused
+
+=> 才會進 fallback 流程
+
+接著：
+遍歷其他 provider profiles
+只要不是主 provider，且能讀到對應 API key
+就放進候選清單</code></pre>
+        </div>
+    </div>
+
+    <p>這裡最值得帶走的，不是「fallback 很厲害」，而是 <strong>fallback policy 本身也是 外殼 設計</strong>。如果未來要做得更保守，可能會改成同 family 優先、同 protocol 優先，或至少明確排除風格差太大的跨 family 退路。現在的實作則比較偏向「只要可用，就先保住任務不中斷」。</p>
+
+    <h2>同一個 fallback 事件，對工程師意味著什麼</h2>
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">F1</div>
+            <h3>功能面</h3>
+            <p>它提高了成功率，避免整輪任務因單一 provider 抽風而立刻失敗。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">F2</div>
+            <h3>成本面</h3>
+            <p>不同 provider 可能有不同計價、不同 token 行為與不同回覆風格，因此 fallback 不是免費午餐。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">F3</div>
+            <h3>可解釋性</h3>
+            <p>如果沒有 <code>ProviderFallback</code> 事件，團隊很難知道「為什麼今天同一任務忽然變得不一樣」。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">F4</div>
+            <h3>產品取捨</h3>
+            <p>你要的是「盡量不中斷」還是「盡量保持模型風格一致」？這會直接影響 fallback policy。</p>
+        </article>
+    </div>
+
+    <h2>如果今天要接一個新模型，你該先判斷它屬於哪一類工作</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>情境</th>
+                    <th>你該先檢查什麼</th>
+                    <th>通常要改哪些地方</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>只是換新的 OpenAI 相容端點</td>
+                    <td>它真的支援 Responses 還是只支援 Chat？tool payload 長得是否一致？</td>
+                    <td>多半是新增 profile，必要時修補 headers 或 base URL。</td>
+                </tr>
+                <tr>
+                    <td>接一個新的 Gemini 相容服務</td>
+                    <td>是否仍接受 <code>generateContent</code> / <code>streamGenerateContent</code> 這組形狀？</td>
+                    <td>profile 為主，少量 adapter 相容修補。</td>
+                </tr>
+                <tr>
+                    <td>接一個完全新的協定</td>
+                    <td>工具宣告、工具結果、streaming 事件、usage 欄位怎麼長？</td>
+                    <td>要新增 adapter、parser、測試與可能的新 protocol enum。</td>
+                </tr>
+                <tr>
+                    <td>接一個看似相容、但串流事件不同的供應商</td>
+                    <td>非串流與串流是否都真的相容？</td>
+                    <td>往往不是只改 profile，而是要動 parser 與錯誤處理。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-info revealable">
+        <div class="callout-title">給貢獻者的一個判讀捷徑</div>
+        <p>如果你只需要新增一個 <code>providers.conf</code> profile，這通常不是「新模型連接」的 hardest part。真正昂貴的，通常是第二輪工具結果如何回送、流式工具參數怎麼拼回來、以及失敗時該不該 fallback 到另一條完全不同的協定。</p>
+    </div>
+
+    <h2>實況檢查：這一章最想幫你分清楚的三件事</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>Profile 不是 protocol</h3>
+            <p>加一個 profile 有時只是在既有 adapter 上多一個設定入口；新增 protocol 則是另一個層級的工程。</p>
+        </div>
+        <div class="check-item">
+            <h3>Fallback 已經能工作，但 policy 還不算精雕細琢</h3>
+            <p>目前的 fallback 會保住可用性，但 family-aware、cost-aware、style-aware 的排序策略還沒有真正實際做出來。</p>
+        </div>
+        <div class="check-item">
+            <h3>Streaming parser 是整合成本的大頭</h3>
+            <p>只接好非串流 API 還不夠，真正要拿來做 AI 助手，串流工具參數與 usage 解析往往才是最容易磨人的地方。</p>
+        </div>
+    </div>
+
+    <h2>把這一章濃縮成一句話</h2>
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">多 provider 的難點不是選單，而是變形與收斂</div>
+        <p>同一個任務進入 OpenAI Responses、OpenAI Chat、Gemini、Anthropic 之後，會變成不同 request body、不同工具回送形狀、不同 streaming 事件與不同 fallback 風險。GCD 的 provider layer 正是在收斂這些差異，而不是只替 CLI 多加幾個 `--provider` 選項。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('providers')">← 切換 AI 模型</button>
+    <button class="btn btn-primary" onclick="navigateTo('runtime')">備援和保護機制 →</button>
+</div>

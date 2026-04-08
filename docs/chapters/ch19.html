@@ -1,0 +1,24 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 19 章</span>
+                <h1>外殼工程 原理總結</h1>
+                <p class="chapter-desc">從 GCD 提煉的 AI AI 助手 設計原理</p>
+            </div>
+            <div class="content-body">
+                <h2>十大設計原理</h2>
+                <div class="principle-list">
+                    <div class="principle"><div class="principle-num">1</div><div class="principle-body"><h3>分層安全 (Layered Security)</h3><p>Trust → Sandbox → Permission 三重閘門，永遠不把安全決策交給 LLM。</p></div></div>
+                    <div class="principle"><div class="principle-num">2</div><div class="principle-body"><h3>最小權限 (Least Privilege)</h3><p>預設 auto-edit + workspace-write，只在明確要求時才提升權限。</p></div></div>
+                    <div class="principle"><div class="principle-num">3</div><div class="principle-body"><h3>供應商無關 (Vendor Agnostic)</h3><p>透過統一的 Provider 介面，將 LLM 視為可替換的元件。</p></div></div>
+                    <div class="principle"><div class="principle-num">4</div><div class="principle-body"><h3>確定性優先 (Determinism First)</h3><p>所有非 LLM 的邏輯（工具執行、路徑解析、權限檢查）都是完全確定性的。</p></div></div>
+                    <div class="principle"><div class="principle-num">5</div><div class="principle-body"><h3>可觀測性 (Observability)</h3><p>Token 追蹤、事件日誌、Session 回放讓每次 Agent 執行都可審計。</p></div></div>
+                    <div class="principle"><div class="principle-num">6</div><div class="principle-body"><h3>優雅降級 (Graceful Degradation)</h3><p>Provider Fallback、Context 壓縮、輸出截斷 — 永遠不讓 Agent 完全失敗。</p></div></div>
+                    <div class="principle"><div class="principle-num">7</div><div class="principle-body"><h3>配置即代碼 (Config as Code)</h3><p>AGENTS.md、TOML 命令、SKILL.md — 所有配置都可版本控制。</p></div></div>
+                    <div class="principle"><div class="principle-num">8</div><div class="principle-body"><h3>漸進式自動化 (Progressive Automation)</h3><p>suggest → auto-edit → full-auto，讓使用者按自己的信任節奏逐步放手。</p></div></div>
+                    <div class="principle"><div class="principle-num">9</div><div class="principle-body"><h3>會話即歷史 (Session as History)</h3><p>每次互動自動持久化，支援 Fork/Resume/Replay。不浪費任何一次 LLM 呼叫。</p></div></div>
+                    <div class="principle"><div class="principle-num">10</div><div class="principle-body"><h3>工具組合性 (Tool Composability)</h3><p>內建工具 + MCP + 插件，三層可組合的工具架構讓擴充無上限。</p></div></div>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch18')">← 18：管線全景</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch20')">20：MCP 協議 →</button>
+            </div>

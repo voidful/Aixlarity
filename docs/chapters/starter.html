@@ -1,0 +1,184 @@
+<div class="chapter-header">
+    <span class="chapter-number">入門</span>
+    <h1>第一次接觸？先看這個小範例</h1>
+    <p class="chapter-desc">用一個「幫我 review 程式碼」的小例子，看看 AI 助手到底比聊天機器人多了什麼。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">放心，這一章不考你名詞</div>
+        <p>如果你現在還分不清 prompt、tool、session 這些詞，完全沒關係。這一章只有一個目標：讓你理解 <strong>AI 助手比普通聊天機器人多了哪幾件事</strong>。名詞後面會慢慢學。</p>
+    </div>
+
+    <h2>一個最簡單的例子</h2>
+    <p>你對 AI 說：<code>幫我 review src/app.rs</code></p>
+    <p>如果這只是 ChatGPT 網頁版，它只能根據你的描述猜測程式內容。但如果是一個真正的 AI 助手，它至少要多做四件事：</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">1</div>
+            <h3>真的打開檔案來看</h3>
+            <p>不是假裝看過 <code>src/app.rs</code>，而是真的透過讀檔工具把內容讀出來。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">2</div>
+            <h3>知道你的專案規則</h3>
+            <p>例如你的團隊規定「review 時先找 bug，再談程式風格」——這些規則會自動被加進提示詞裡。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">3</div>
+            <h3>控制它能做什麼</h3>
+            <p>如果 AI 想跑測試或修改檔案，系統會先檢查「這個操作允許嗎？」而不是直接放行。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">4</div>
+            <h3>記住這次做了什麼</h3>
+            <p>這次 review 的過程和結果會被保存下來，下一次工作時才知道之前做過什麼。</p>
+        </article>
+    </div>
+
+    <p>這四件事加起來，就是 AI 助手比聊天機器人多出來的東西——也就是我們說的 <strong>Harness（外殼）</strong>。</p>
+
+    <h2>先記住四個詞就夠了</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>名詞</th>
+                    <th>白話解釋</th>
+                    <th>在這個例子裡做什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Prompt（提示詞）</td>
+                    <td>AI 真正看到的那份完整任務說明</td>
+                    <td>把你的問題 + 專案規則 + 必要上下文，組合成一份完整任務。</td>
+                </tr>
+                <tr>
+                    <td>Tool（工具）</td>
+                    <td>AI 和真實世界互動的手段</td>
+                    <td>讀檔案、搜尋程式碼、跑終端機指令、修改檔案。</td>
+                </tr>
+                <tr>
+                    <td>Gate（安全檢查）</td>
+                    <td>執行操作前的「守門員」</td>
+                    <td>決定這次能不能跑 shell、能不能改檔、要不要先問你。</td>
+                </tr>
+                <tr>
+                    <td>Session（工作記錄）</td>
+                    <td>這次工作的完整紀錄</td>
+                    <td>保存整個過程，讓下次可以接著做、可以回放、可以分叉。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">對比：聊天機器人 vs AI 助手</span>
+        </div>
+        <div class="window-body">
+<pre><code>你說：幫我 review src/app.rs
+
+【聊天機器人】
+- 我沒有檔案內容
+- 只能給你一些一般性的建議
+
+【AI 助手】
+- 呼叫 read_file("src/app.rs") → 拿到真正的程式碼
+- 讀取 AGENTS.md → 知道專案的 review 規範
+- 需要時搜尋相關檔案 → 理解上下文
+- 想跑 cargo test → 先經過安全檢查
+- 完成後 → 把整個過程存進工作記錄</code></pre>
+        </div>
+    </div>
+
+    <h2>AI 助手的最小運作流程（五步）</h2>
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>組合提示詞</h3>
+                <p>你的輸入不會直接原封不動送給 AI。系統會加上專案規則、任務模板等資訊，組成一份完整的提示詞。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>AI 決定下一步</h3>
+                <p>AI 可能直接回答，也可能決定先讀個檔案、搜尋一下程式碼、或跑個測試。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>安全檢查</h3>
+                <p>不是 AI 想做什麼就做什麼。在真正執行前，系統會檢查權限、沙盒、信任等條件。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>執行工具，回傳結果</h3>
+                <p>通過安全檢查後，工具會真的去讀檔案、跑指令。結果會回傳給 AI，讓它接著判斷。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">05</div>
+            <div class="roadmap-content">
+                <h3>保存記錄</h3>
+                <p>這次做了什麼、呼叫了哪些工具、最後怎麼回答，全部存進工作記錄。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>三個常見的新手誤解</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>❌ 誤解：AI 助手就是模型加很多 prompt</h3>
+            <p>不對。只要它真的能讀檔案、跑指令、修改內容，背後就一定有工具系統、安全控制、記錄機制等工程層。</p>
+        </div>
+        <div class="check-item">
+            <h3>❌ 誤解：看到檔案名就代表功能存在</h3>
+            <p>不對。例如看到 <code>memory.rs</code> 不代表系統已經有完整的長期記憶。要看那個模組有沒有被呼叫、有沒有影響到實際行為。</p>
+        </div>
+        <div class="check-item">
+            <h3>❌ 誤解：安全控制是最後才加的</h3>
+            <p>不對。AI 一旦能真的執行操作，安全就不是選配而是必要。信任、權限、沙盒要和工具系統一起設計。</p>
+        </div>
+    </div>
+
+    <h2>帶走這一句話就夠了</h2>
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">核心觀念</div>
+        <p>聊天機器人回答的是「我覺得怎麼做」；AI 助手還要處理<strong>「我怎麼真的去做、誰允許我做、做完要不要記住」</strong>。後面這些東西加起來，就是 Harness（外殼）。</p>
+    </div>
+
+    <h2>接下來看什麼</h2>
+    <div class="reading-paths wide">
+        <article class="path-card revealable">
+            <div class="path-duration">3 分鐘</div>
+            <h3>搞懂常見名詞</h3>
+            <p>trust、permission、sandbox、session⋯ 這些名詞很容易搞混。下一章幫你一次分清楚。</p>
+            <button class="btn btn-outline" onclick="navigateTo('faq')">名詞速查 →</button>
+        </article>
+        <article class="path-card revealable">
+            <div class="path-duration">5 分鐘</div>
+            <h3>看完整架構</h3>
+            <p>你已經知道 AI 助手多了哪些東西，接著看 GCD 實際上是怎麼把這些東西組起來的。</p>
+            <button class="btn btn-outline" onclick="navigateTo('overview')">架構全貌 →</button>
+        </article>
+        <article class="path-card revealable">
+            <div class="path-duration">10 分鐘</div>
+            <h3>看完整流程</h3>
+            <p>想知道這五個步驟在真正的程式碼裡怎麼執行？看完整的 Pipeline。</p>
+            <button class="btn btn-outline" onclick="navigateTo('pipeline')">完整流程 →</button>
+        </article>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('intro')">← AI 助手的外殼是什麼</button>
+    <button class="btn btn-primary" onclick="navigateTo('faq')">名詞速查 →</button>
+</div>

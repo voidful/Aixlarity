@@ -1,0 +1,49 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 10 章</span>
+                <h1>命令目錄系統</h1>
+                <p class="chapter-desc">自訂斜線命令 — <code>commands.rs</code></p>
+            </div>
+            <div class="content-body">
+                <h2>命令定義格式</h2>
+                <p>命令以 TOML 格式定義，放置於 <code>.gcd/commands/</code> 或 <code>~/.gcd/commands/</code>：</p>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">.gcd/commands/test.toml</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-toml">description = "執行測試並修復失敗"
+prompt = """
+請執行 cargo test，分析所有失敗的測試，
+然後逐一修復。修復後重新執行測試確認。
+"""</code></pre>
+                    </div>
+                </div>
+
+                <h2>命令呼叫語法</h2>
+                <p>使用 <code>/命令名 [參數]</code> 語法呼叫。參數會附加到命令的 prompt 之後：</p>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">terminal</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-bash"><span class="token comment"># 呼叫 review 命令，附帶目標檔案</span>
+gcd exec <span class="token string">"/review src/agent.rs"</span>
+
+<span class="token comment"># 呼叫 test 命令</span>
+gcd exec <span class="token string">"/test"</span></code></pre>
+                    </div>
+                </div>
+
+                <h2>載入優先順序</h2>
+                <p>工作區命令 (<code>.gcd/commands/</code>) 優先於全域命令 (<code>~/.gcd/commands/</code>)。同名時工作區版本覆蓋全域版本。</p>
+
+                <div class="source-ref">
+                    <strong>原始碼</strong>：<code>crates/gcd-core/src/commands.rs</code>、<code>crates/gcd-core/src/prompt/command_invocation.rs</code>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch9')">← 09：指令載入</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch11')">11：技能系統 →</button>
+            </div>

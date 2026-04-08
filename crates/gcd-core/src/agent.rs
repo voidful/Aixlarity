@@ -1,395 +1,306 @@
 // GemiClawDex — Agent Loop
 //
 // Core execution loop: prompt → API → parse tool calls → execute → loop.
-// Supports Gemini GenerateContent protocol as the primary adapter.
+// Supports Gemini, OpenAI, and Anthropic with full tool calling.
+// Features: permission prompt, streaming, context window management,
+// token tracking, git integration, planning mode, MCP, plugins,
+// coordinator sub-agents, provider fallback, and undercover mode.
 
-use std::path::PathBuf;
+mod adapters;
+pub mod memory;
+mod permissions;
+mod runtime_support;
+mod types;
 
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use crate::mcp;
+use crate::tools::{all_tools, ToolContext};
+use adapters::{call_provider_api, execute_tool_call};
+use permissions::{check_always_upgrade, needs_confirmation};
+use runtime_support::{
+    compact_messages, estimate_total_tokens, git_auto_commit_safe, CONTEXT_WINDOW_BUDGET,
+};
 
-use crate::config::SandboxPolicy;
-use crate::providers::ProviderProfile;
-use crate::tools::{builtin_tools, ToolContext, Tool};
-
-// ---------------------------------------------------------------------------
-// Configuration
-// ---------------------------------------------------------------------------
-
-/// Maximum number of agent turns before forced stop (safety limit).
-const DEFAULT_MAX_TURNS: usize = 10;
-
-/// Options controlling a single agent execution run.
-#[derive(Clone, Debug)]
-pub struct AgentRunOptions {
-    pub provider: ProviderProfile,
-    pub workspace_root: PathBuf,
-    pub sandbox: SandboxPolicy,
-    pub initial_prompt: String,
-    pub max_turns: usize,
-    pub api_key: String,
-}
-
-impl AgentRunOptions {
-    pub fn with_defaults(provider: ProviderProfile, workspace: PathBuf, prompt: String, api_key: String) -> Self {
-        Self {
-            sandbox: SandboxPolicy::WorkspaceWrite,
-            workspace_root: workspace,
-            initial_prompt: prompt,
-            max_turns: DEFAULT_MAX_TURNS,
-            provider,
-            api_key,
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Agent state & messages
-// ---------------------------------------------------------------------------
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct AgentMessage {
-    pub role: String,
-    pub content: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tool_calls: Option<Vec<ToolCall>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tool_call_id: Option<String>,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ToolCall {
-    pub id: String,
-    pub name: String,
-    pub arguments: Value,
-}
-
-/// The result of a complete agent run.
-#[derive(Clone, Debug, Serialize)]
-pub struct AgentRunResult {
-    pub turns_used: usize,
-    pub final_response: String,
-    pub messages: Vec<AgentMessage>,
-    pub tool_invocations: Vec<ToolInvocationRecord>,
-}
-
-#[derive(Clone, Debug, Serialize)]
-pub struct ToolInvocationRecord {
-    pub turn: usize,
-    pub tool_name: String,
-    pub arguments: Value,
-    pub result: Value,
-}
-
-// ---------------------------------------------------------------------------
-// Agent execution
-// ---------------------------------------------------------------------------
+pub use types::{
+    AgentEvent, AgentMessage, AgentRunOptions, AgentRunResult, PermissionLevel, TokenUsage,
+    ToolCall, ToolInvocationRecord,
+};
 
 /// Run the agent loop to completion.
-pub async fn run_agent(options: AgentRunOptions) -> anyhow::Result<AgentRunResult> {
-    let tools = builtin_tools();
+///
+/// `plugin_tools` are dynamically loaded from `.gcd/plugins/` and passed by the caller.
+pub async fn run_agent(
+    mut options: AgentRunOptions,
+    plugin_tools: Vec<Box<dyn crate::tools::Tool>>,
+) -> anyhow::Result<AgentRunResult> {
+    // Load MCP tools from workspace configuration
+    let mcp_tools = mcp::load_mcp_tools(&options.workspace_root);
+
+    // Merge builtin + plugin + MCP tools
+    let tools = all_tools(plugin_tools, mcp_tools);
+
+    let hooks_config = crate::hooks::HooksConfig::load(
+        &options.workspace_root.join(".config").join("gcd"),
+        &options.workspace_root,
+    );
+
     let tool_ctx = ToolContext {
         workspace_root: options.workspace_root.clone(),
         sandbox: options.sandbox.clone(),
+        coordinator_provider: Some(options.provider.clone()),
+        coordinator_api_key: Some(options.api_key.clone()),
+        coordinator_permission: Some(options.permission.clone()),
+        coordinator_fallback_providers: options.fallback_providers.clone(),
+        coordinator_plugin_definitions: options.plugin_definitions.clone(),
+        coordinator_depth: options.coordinator_depth,
+        coordinator_prompt_context: inherited_prompt_context(&options.initial_prompt),
+        hooks: hooks_config,
+    };
+
+    let initial_prompt = if options.planning {
+        format!(
+            "You are in PLANNING MODE. Before executing any changes:\n\
+             1. Analyze the task thoroughly\n\
+             2. List all files that need to be modified\n\
+             3. Describe the changes for each file\n\
+             4. Ask for user confirmation before proceeding\n\n\
+             Task: {}",
+            options.initial_prompt
+        )
+    } else {
+        options.initial_prompt.clone()
     };
 
     let mut messages = vec![AgentMessage {
         role: "user".to_string(),
-        content: options.initial_prompt.clone(),
+        content: initial_prompt,
         tool_calls: None,
         tool_call_id: None,
     }];
-
     let mut tool_records = Vec::new();
     let mut final_response = String::new();
+    let mut token_usage = TokenUsage::default();
+    let mut previous_response_id: Option<String> = None;
+    let mut events = vec![AgentEvent::RunStarted {
+        provider_id: options.provider.id.clone(),
+        model: options.provider.model.clone(),
+        protocol: options.provider.protocol.as_str().to_string(),
+        sandbox: options.sandbox.as_str().to_string(),
+        permission: options.permission.as_str().to_string(),
+        max_turns: options.max_turns,
+        planning: options.planning,
+        streaming: options.streaming,
+    }];
 
+    let mut turns_executed = 0usize;
     for turn in 0..options.max_turns {
-        // 1. Call the provider API
-        let response = call_provider_api(&options, &messages, &tools).await?;
+        let turn_number = turn + 1;
+        turns_executed = turn_number;
+        if !options.quiet {
+            eprintln!(
+                "\x1b[2m[Turn {}/{}] Calling {} ({})...\x1b[0m",
+                turn_number,
+                options.max_turns,
+                options.provider.model,
+                options.provider.family.as_str(),
+            );
+        }
+        events.push(AgentEvent::TurnStarted {
+            turn: turn_number,
+            max_turns: options.max_turns,
+            message_count: messages.len(),
+        });
 
-        // 2. Check if the model wants to call tools
-        if let Some(ref calls) = response.tool_calls {
+        let estimated_tokens = estimate_total_tokens(&messages);
+        if estimated_tokens > CONTEXT_WINDOW_BUDGET {
+            if !options.quiet {
+                eprintln!(
+                    "\x1b[33m⚡ Context window near limit (~{} tokens). Compacting...\x1b[0m",
+                    estimated_tokens
+                );
+            }
+            compact_messages(&mut messages);
+            events.push(AgentEvent::ContextCompacted {
+                turn: turn_number,
+                estimated_tokens,
+                budget: CONTEXT_WINDOW_BUDGET,
+            });
+        }
+
+        events.push(AgentEvent::ProviderCalled {
+            turn: turn_number,
+            protocol: options.provider.protocol.as_str().to_string(),
+            message_count: messages.len(),
+        });
+
+        // call_provider_api now supports fallback
+        let (response, usage, response_id) = call_provider_api(
+            &options,
+            &messages,
+            &tools,
+            previous_response_id.as_deref(),
+            turn_number,
+            &mut events,
+        )
+        .await?;
+        token_usage.add(usage.0, usage.1);
+        previous_response_id = response_id;
+        events.push(AgentEvent::AssistantMessage {
+            turn: turn_number,
+            content: response.content.clone(),
+            tool_call_count: response.tool_calls.as_ref().map_or(0, Vec::len),
+        });
+
+        if let Some(calls) = &response.tool_calls {
             messages.push(response.clone());
 
-            // 3. Execute each tool call
             for call in calls {
-                let result = execute_tool_call(call, &tools, &tool_ctx).await;
+                events.push(AgentEvent::ToolCallRequested {
+                    turn: turn_number,
+                    call_id: call.id.clone(),
+                    tool_name: call.name.clone(),
+                    arguments: call.arguments.clone(),
+                });
+                if needs_confirmation(&call.name, &options.permission) {
+                    let (allowed, upgrade) = check_always_upgrade(call);
+                    if upgrade {
+                        options.permission = PermissionLevel::FullAuto;
+                    }
+                    if !allowed {
+                        if !options.quiet {
+                            eprintln!("\x1b[31m✗ Denied: {}\x1b[0m", call.name);
+                        }
+                        events.push(AgentEvent::ToolCallDenied {
+                            turn: turn_number,
+                            call_id: call.id.clone(),
+                            tool_name: call.name.clone(),
+                        });
+                        messages.push(AgentMessage {
+                            role: "tool".to_string(),
+                            content: serde_json::json!({"error": "User denied this tool call"})
+                                .to_string(),
+                            tool_calls: None,
+                            tool_call_id: Some(call.id.clone()),
+                        });
+                        continue;
+                    }
+                }
+
+                // Run PreToolUse hooks
+                let hook_result = crate::hooks::run_pre_tool_hooks(
+                    &tool_ctx.hooks,
+                    &call.name,
+                    &call.arguments,
+                    &tool_ctx.workspace_root,
+                );
+                if let crate::hooks::PreToolHookResult::Deny { stderr, .. } = hook_result {
+                    if !options.quiet {
+                        eprintln!("\x1b[31m🪝 Hook denied: {}\x1b[0m", call.name);
+                    }
+                    events.push(AgentEvent::ToolCallDenied {
+                        turn: turn_number,
+                        call_id: call.id.clone(),
+                        tool_name: call.name.clone(),
+                    });
+                    messages.push(AgentMessage {
+                        role: "tool".to_string(),
+                        content:
+                            serde_json::json!({"error": format!("Hook denied: {}", stderr.trim())})
+                                .to_string(),
+                        tool_calls: None,
+                        tool_call_id: Some(call.id.clone()),
+                    });
+                    continue;
+                }
+
+                if !options.quiet {
+                    eprintln!("\x1b[32m⚡ Executing: {}\x1b[0m", call.name);
+                }
+                let tool_outcome = execute_tool_call(call, &tools, &tool_ctx).await;
+
+                // Run PostToolUse hooks
+                crate::hooks::run_post_tool_hooks(
+                    &tool_ctx.hooks,
+                    &call.name,
+                    &call.arguments,
+                    &tool_outcome.result,
+                    &tool_ctx.workspace_root,
+                );
+
+                events.extend(tool_outcome.emitted_events.clone());
+
+                events.push(AgentEvent::ToolCallCompleted {
+                    turn: turn_number,
+                    call_id: call.id.clone(),
+                    tool_name: call.name.clone(),
+                    result: tool_outcome.result.clone(),
+                });
 
                 tool_records.push(ToolInvocationRecord {
                     turn,
                     tool_name: call.name.clone(),
                     arguments: call.arguments.clone(),
-                    result: result.clone(),
+                    result: tool_outcome.result.clone(),
                 });
 
-                // 4. Feed tool result back as a message
                 messages.push(AgentMessage {
                     role: "tool".to_string(),
-                    content: serde_json::to_string(&result).unwrap_or_default(),
+                    content: serde_json::to_string(&tool_outcome.result).unwrap_or_default(),
                     tool_calls: None,
                     tool_call_id: Some(call.id.clone()),
                 });
             }
-            // Continue the loop — model will process tool results
         } else {
-            // No tool calls — this is the final text response
             final_response = response.content.clone();
             messages.push(response);
             break;
         }
     }
 
+    // Git auto-commit with undercover mode (sanitizes commit messages for public repos)
+    if options.auto_git {
+        git_auto_commit_safe(&options.workspace_root, &final_response);
+    }
+
+    if !options.quiet {
+        eprintln!();
+        eprintln!(
+            "\x1b[2m📊 Token usage: {} prompt + {} completion = {} total ({} API calls)\x1b[0m",
+            token_usage.prompt_tokens,
+            token_usage.completion_tokens,
+            token_usage.total_tokens,
+            token_usage.api_calls,
+        );
+    }
+    events.push(AgentEvent::RunCompleted {
+        turns_used: turns_executed,
+        tool_invocation_count: tool_records.len(),
+        total_tokens: token_usage.total_tokens,
+        api_calls: token_usage.api_calls,
+        final_response: final_response.clone(),
+    });
+
     Ok(AgentRunResult {
-        turns_used: tool_records.len().max(1),
+        turns_used: turns_executed,
         final_response,
         messages,
         tool_invocations: tool_records,
+        token_usage,
+        events,
     })
 }
 
-// ---------------------------------------------------------------------------
-// Provider API adapters
-// ---------------------------------------------------------------------------
-
-/// Send messages to the provider and parse the response.
-/// Currently implements the Gemini GenerateContent protocol.
-async fn call_provider_api(
-    options: &AgentRunOptions,
-    messages: &[AgentMessage],
-    tools: &[Box<dyn Tool>],
-) -> anyhow::Result<AgentMessage> {
-    match options.provider.family {
-        crate::providers::ProviderFamily::Gemini => {
-            call_gemini_api(options, messages, tools).await
-        }
-        crate::providers::ProviderFamily::OpenAiCompatible => {
-            call_openai_api(options, messages, tools).await
-        }
-        crate::providers::ProviderFamily::Anthropic => {
-            call_anthropic_api(options, messages, tools).await
-        }
-    }
-}
-
-/// Gemini GenerateContent API adapter.
-async fn call_gemini_api(
-    options: &AgentRunOptions,
-    messages: &[AgentMessage],
-    tools: &[Box<dyn Tool>],
-) -> anyhow::Result<AgentMessage> {
-    let url = format!(
-        "{}/v1beta/models/{}:generateContent?key={}",
-        options.provider.api_base, options.provider.model, options.api_key
-    );
-
-    // Convert messages to Gemini format
-    let contents: Vec<Value> = messages
-        .iter()
-        .map(|msg| {
-            let role = match msg.role.as_str() {
-                "user" => "user",
-                "assistant" | "model" => "model",
-                "tool" => "user", // tool results go back as user messages in Gemini
-                _ => "user",
-            };
-            serde_json::json!({
-                "role": role,
-                "parts": [{ "text": msg.content }]
-            })
-        })
-        .collect();
-
-    // Build tool declarations for Gemini format
-    let tool_decls: Vec<Value> = tools
-        .iter()
-        .map(|t| {
-            serde_json::json!({
-                "name": t.name(),
-                "description": t.description(),
-                "parameters": t.parameters_schema()
-            })
-        })
-        .collect();
-
-    let body = serde_json::json!({
-        "contents": contents,
-        "tools": [{ "functionDeclarations": tool_decls }],
-        "generationConfig": {
-            "temperature": 0.2,
-            "maxOutputTokens": 8192
-        }
-    });
-
-    let client = reqwest::Client::new();
-    let resp = client.post(&url).json(&body).send().await?;
-    let status = resp.status();
-    let resp_text = resp.text().await?;
-
-    if !status.is_success() {
-        anyhow::bail!("Gemini API error ({}): {}", status, resp_text);
+fn inherited_prompt_context(prompt: &str) -> Option<String> {
+    let trimmed = prompt.trim();
+    if trimmed.is_empty() {
+        return None;
     }
 
-    let resp_json: Value = serde_json::from_str(&resp_text)?;
-    parse_gemini_response(&resp_json)
-}
-
-/// Parse a Gemini generateContent response into an AgentMessage.
-fn parse_gemini_response(resp: &Value) -> anyhow::Result<AgentMessage> {
-    let candidate = &resp["candidates"][0];
-    let parts = candidate["content"]["parts"]
-        .as_array()
-        .ok_or_else(|| anyhow::anyhow!("No parts in Gemini response"))?;
-
-    let mut text_parts = Vec::new();
-    let mut tool_calls = Vec::new();
-
-    for (idx, part) in parts.iter().enumerate() {
-        if let Some(text) = part["text"].as_str() {
-            text_parts.push(text.to_string());
-        }
-        if let Some(fc) = part.get("functionCall") {
-            let name = fc["name"].as_str().unwrap_or("").to_string();
-            let args = fc.get("args").cloned().unwrap_or(Value::Object(Default::default()));
-            tool_calls.push(ToolCall {
-                id: format!("call_{}", idx),
-                name,
-                arguments: args,
-            });
+    if let Some((prefix, _)) = trimmed.split_once("\n\n# Task\n") {
+        let prefix = prefix.trim();
+        if !prefix.is_empty() {
+            return Some(prefix.to_string());
         }
     }
 
-    Ok(AgentMessage {
-        role: "assistant".to_string(),
-        content: text_parts.join(""),
-        tool_calls: if tool_calls.is_empty() { None } else { Some(tool_calls) },
-        tool_call_id: None,
-    })
-}
-
-/// OpenAI Chat/Responses API adapter (scaffold).
-async fn call_openai_api(
-    options: &AgentRunOptions,
-    messages: &[AgentMessage],
-    _tools: &[Box<dyn Tool>],
-) -> anyhow::Result<AgentMessage> {
-    let url = format!("{}/chat/completions", options.provider.api_base);
-
-    let msgs: Vec<Value> = messages
-        .iter()
-        .map(|msg| {
-            serde_json::json!({
-                "role": msg.role,
-                "content": msg.content,
-            })
-        })
-        .collect();
-
-    let body = serde_json::json!({
-        "model": options.provider.model,
-        "messages": msgs,
-        "temperature": 0.2,
-        "max_tokens": 4096,
-    });
-
-    let client = reqwest::Client::new();
-    let resp = client
-        .post(&url)
-        .header("Authorization", format!("Bearer {}", options.api_key))
-        .json(&body)
-        .send()
-        .await?;
-
-    let status = resp.status();
-    let resp_text = resp.text().await?;
-
-    if !status.is_success() {
-        anyhow::bail!("OpenAI API error ({}): {}", status, resp_text);
-    }
-
-    let resp_json: Value = serde_json::from_str(&resp_text)?;
-    let content = resp_json["choices"][0]["message"]["content"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
-
-    Ok(AgentMessage {
-        role: "assistant".to_string(),
-        content,
-        tool_calls: None,
-        tool_call_id: None,
-    })
-}
-
-/// Anthropic Messages API adapter (scaffold).
-async fn call_anthropic_api(
-    options: &AgentRunOptions,
-    messages: &[AgentMessage],
-    _tools: &[Box<dyn Tool>],
-) -> anyhow::Result<AgentMessage> {
-    let url = format!("{}/v1/messages", options.provider.api_base);
-
-    let msgs: Vec<Value> = messages
-        .iter()
-        .map(|msg| {
-            serde_json::json!({
-                "role": if msg.role == "assistant" { "assistant" } else { "user" },
-                "content": msg.content,
-            })
-        })
-        .collect();
-
-    let body = serde_json::json!({
-        "model": options.provider.model,
-        "messages": msgs,
-        "max_tokens": 4096,
-    });
-
-    let client = reqwest::Client::new();
-    let resp = client
-        .post(&url)
-        .header("x-api-key", &options.api_key)
-        .header("anthropic-version", "2023-06-01")
-        .json(&body)
-        .send()
-        .await?;
-
-    let status = resp.status();
-    let resp_text = resp.text().await?;
-
-    if !status.is_success() {
-        anyhow::bail!("Anthropic API error ({}): {}", status, resp_text);
-    }
-
-    let resp_json: Value = serde_json::from_str(&resp_text)?;
-    let content = resp_json["content"][0]["text"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
-
-    Ok(AgentMessage {
-        role: "assistant".to_string(),
-        content,
-        tool_calls: None,
-        tool_call_id: None,
-    })
-}
-
-// ---------------------------------------------------------------------------
-// Tool dispatch
-// ---------------------------------------------------------------------------
-
-async fn execute_tool_call(
-    call: &ToolCall,
-    tools: &[Box<dyn Tool>],
-    ctx: &ToolContext,
-) -> Value {
-    let tool = tools.iter().find(|t| t.name() == call.name);
-
-    match tool {
-        Some(t) => match t.execute(call.arguments.clone(), ctx).await {
-            Ok(result) => result,
-            Err(e) => serde_json::json!({ "error": e.to_string() }),
-        },
-        None => serde_json::json!({ "error": format!("Unknown tool: {}", call.name) }),
-    }
+    Some(trimmed.to_string())
 }

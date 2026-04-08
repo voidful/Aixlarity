@@ -1,0 +1,21 @@
+<div class="chapter-header"><span class="chapter-number">第 25 章</span><h1>Undercover 模式與相容性</h1><p class="chapter-desc">偽裝為其他 Agent 的相容層</p></div>
+            <div class="content-body">
+                <h2>Undercover 模式</h2>
+                <p>GCD 支援 Undercover 模式，讓它能在 Gemini CLI 或 Claude Code 的工作區配置下運作。偵測到 <code>.gemini/</code> 或 <code>.claude/</code> 配置目錄時，GCD 會自動適配對應的指令格式。</p>
+                <h2>相容性矩陣</h2>
+                <div class="comparison-table">
+                    <table>
+                        <thead><tr><th>配置</th><th>GCD 等價</th><th>自動轉換</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>.gemini/settings.json</code></td><td><code>.gcd/providers.conf</code></td><td class="ok">✓</td></tr>
+                            <tr><td><code>GEMINI.md</code></td><td><code>AGENTS.md</code></td><td class="ok">✓</td></tr>
+                            <tr><td><code>CLAUDE.md</code></td><td><code>AGENTS.md</code></td><td class="ok">✓</td></tr>
+                            <tr><td><code>.claude/commands/</code></td><td><code>.gcd/commands/</code></td><td class="warn">部分</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch24')">← 24：降級</button>
+                <button class="btn btn-primary" onclick="navigateTo('comp')">競品全景對比 →</button>
+            </div>

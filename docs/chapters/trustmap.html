@@ -1,0 +1,388 @@
+<div class="chapter-header">
+    <span class="chapter-number">Trust Map</span>
+    <h1>信任規則總表</h1>
+    <p class="chapter-desc">這一章專門回答一個常被講得太含糊的問題：GCD 的 trust 到底在擋什麼？它擋的是整個 runtime，還是特定類型的工作區來源？</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">先講最重要的現況</div>
+        <p>GCD 的 trust 目前不是一個包山包海的總開關，而是比較接近「哪些 <strong>repo-owned / workspace-scoped 設定</strong> 可以進入 runtime」的前置 gate。這個功能已經很有用，但還不是完全完全統一的機制，因為像 <code>.gcd/mcp.json</code>、global plugins、session reuse、<code>MEMORY.md</code> 就不完全走同一套規則。</p>
+    </div>
+
+    <h2>為什麼 trust 值得單獨成章</h2>
+    <p>很多文件談 trust 時，只會說「有 trusted folders」或「untrusted repo 會被限制」。但對工程師來說，真正重要的是更細的問題：<strong>到底哪些檔案會被相信？哪些設定可以改變 prompt？哪些能力就算在 untrusted workspace 裡還是會繼續存在？</strong></p>
+
+    <p>如果這些問題講不清楚，讀者很容易把 trust 誤解成 sandbox，或者以為所有 workspace 來源都會被全部擋下。GCD 的原始碼剛好很適合拿來教這件事，因為它既有明確的 信任檢查，也有幾個很值得如實標記的不對稱路徑。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>如果你問的是</th>
+                    <th>真正該回去看哪一層</th>
+                    <th>原因</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>這個 repo 的規則能不能進 prompt</td>
+                    <td>Trust + instructions / commands / skills loader</td>
+                    <td>這是 trust 最直接影響的地方。</td>
+                </tr>
+                <tr>
+                    <td>工具能不能碰磁碟或進容器</td>
+                    <td>Sandbox</td>
+                    <td>這不是 trust 在回答的問題。</td>
+                </tr>
+                <tr>
+                    <td>某個 tool call 要不要人工批准</td>
+                    <td>Permission</td>
+                    <td>這是 approval 流程，不是 workspace 信任問題。</td>
+                </tr>
+                <tr>
+                    <td>某些 workspace 設定為什麼沒被 trust 擋下</td>
+                    <td>各 loader 的實際連接位置</td>
+                    <td>GCD 目前不是所有來源都共用同一個 gate。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>TrustState 目前有哪幾種狀態</h2>
+    <p><code>TrustStore::evaluate()</code> 目前會回傳四種常見可見狀態，再加上一種重要但常被忽略的 <code>disabled</code>。這些狀態不只是 UI 字串，而是會直接影響 loader 行為。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>如何出現</th>
+                    <th>對 workspace config 的意義</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>trusted</code></td>
+                    <td>有明確的 trusted 規則命中目前 workspace。</td>
+                    <td>workspace config 可進主要流程。</td>
+                </tr>
+                <tr>
+                    <td><code>trusted-via-parent</code></td>
+                    <td>命中的是父層目錄的 parent-trusted 規則。</td>
+                    <td>workspace config 同樣可進主要流程。</td>
+                </tr>
+                <tr>
+                    <td><code>untrusted</code></td>
+                    <td>命中 untrusted 規則。</td>
+                    <td>會限制大部分 workspace-scoped config。</td>
+                </tr>
+                <tr>
+                    <td><code>unknown</code></td>
+                    <td>trust 功能開啟，但找不到任何匹配規則。</td>
+                    <td>目前也會被視為受限制狀態。</td>
+                </tr>
+                <tr>
+                    <td><code>disabled</code></td>
+                    <td><code>GCD_TRUST</code> 被關閉。</td>
+                    <td>整條 信任檢查 失效，所有 loader 都當成未受限制。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-info revealable">
+        <div class="callout-title">一個很重要的細節</div>
+        <p><code>restricts_project_config()</code> 的條件不是「只擋 untrusted」，而是「只放行 trusted 與 trusted-via-parent」。換句話說，只要 trust 功能有開，而且不是這兩種狀態，workspace config 就會被縮減。這也包含了 <code>unknown</code>。</p>
+    </div>
+
+    <h2>Parent 規則與最長匹配，決定了 trust 不是平面列表</h2>
+    <p>TrustStore 不是遇到第一條規則就停下來，而是會找所有可匹配路徑中「最深的一條」。這意味著 trust 更像路徑樹的覆寫規則，而不是簡單白名單。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：最長匹配如何影響結果</span>
+        </div>
+        <div class="window-body">
+<pre><code>trusted-folders.txt
+parent   /Users/alice/work
+untrusted /Users/alice/work/3rd-party/danger-repo
+
+情境 A
+workspace = /Users/alice/work/my-app
+=> trusted-via-parent
+
+情境 B
+workspace = /Users/alice/work/3rd-party/danger-repo
+=> untrusted
+
+重點：
+不是先看到 parent-trusted 就結束，
+而是更深的 untrusted 規則會覆蓋前者。</code></pre>
+        </div>
+    </div>
+
+    <p>這種設計很實用，因為它允許你把大範圍開成可用，再對特定高風險子目錄做更嚴格的覆蓋。所以，文件在描述 trust 時不能只說「有沒有 trusted folder」，而要說清楚它其實是一套路徑優先順序。</p>
+
+    <h2>真正重要的地方：哪些來源會被 信任檢查 擋下</h2>
+    <p>GCD 最值得教學的，不是它有 trust 這個詞，而是不同來源進 執行時 的方式真的不一樣。下面這張表，就是整站最核心的 trust matrix 之一。</p>
+
+    <div class="comparison-table">
+        <table data-compare="trust-matrix">
+            <thead>
+                <tr>
+                    <th>來源</th>
+                    <th>是否受 信任檢查 影響</th>
+                    <th>GCD 目前行為</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Built-in tools</td>
+                    <td>否</td>
+                    <td>每次 執行時 都存在，不看 workspace trust。</td>
+                </tr>
+                <tr>
+                    <td>Built-in / env / global providers</td>
+                    <td>否</td>
+                    <td>built-in profiles、環境變數 providers、全域 providers.conf 都會載入。</td>
+                </tr>
+                <tr>
+                    <td>workspace providers.conf</td>
+                    <td>是</td>
+                    <td>只有在 trusted / trusted-via-parent 時才載入。</td>
+                </tr>
+                <tr>
+                    <td>workspace active-provider.txt</td>
+                    <td>是</td>
+                    <td>untrusted / unknown workspace 不會讀，也不能用 workspace scope 寫入。</td>
+                </tr>
+                <tr>
+                    <td><code>AGENTS.md</code> / <code>GEMINI.md</code> / <code>CLAUDE.md</code> / <code>GCD.md</code></td>
+                    <td>是</td>
+                    <td>受限時直接回空 bundle，不進 prompt。</td>
+                </tr>
+                <tr>
+                    <td>commands catalog</td>
+                    <td>是，但方式比想像更強</td>
+                    <td>一旦受限，整份 catalog 直接回空，不只 workspace commands 消失，連 global commands 也不載。</td>
+                    <td> / 行為值得特別標註</td>
+                </tr>
+                <tr>
+                    <td>skills catalog</td>
+                    <td>是，但方式比想像更強</td>
+                    <td>和 commands 一樣，受限時整份 catalog 直接回空。</td>
+                    <td> / 行為值得特別標註</td>
+                </tr>
+                <tr>
+                    <td>global plugins</td>
+                    <td>否</td>
+                    <td>無論 workspace trust 如何都會載入。</td>
+                </tr>
+                <tr>
+                    <td>workspace plugins</td>
+                    <td>是</td>
+                    <td>只在未受限制時載入。</td>
+                </tr>
+                <tr>
+                    <td>workspace hooks <code>.gcd/hooks.json</code></td>
+                    <td>目前看起來不是同一套 gate</td>
+                    <td><code>run_agent()</code> 內的 <code>HooksConfig::load()</code> 會直接讀 workspace hooks。</td>
+                </tr>
+                <tr>
+                    <td><code>.gcd/mcp.json</code></td>
+                    <td>目前看起來不是同一套 gate</td>
+                    <td><code>run_agent()</code> 直接對 workspace root 呼叫 <code>load_mcp_tools()</code>。</td>
+                </tr>
+                <tr>
+                    <td>session resume / fork</td>
+                    <td>否</td>
+                    <td>只檢查 session 屬於同一個 workspace，不看 trust 狀態。</td>
+                </tr>
+                <tr>
+                    <td><code>MEMORY.md</code></td>
+                    <td>目前尚未形成主要流程含義</td>
+                    <td>有讀寫介面，但沒有穩定進 prompt / 代理迴圈，trust 規則也尚未被主要流程定義。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>最容易被忽略的細節：commands / skills 和 plugins 的 trust 行為不一樣</h2>
+    <p>這裡有一個非常值得教學化指出的差異。很多人會直覺以為「untrusted workspace 只是不讀 workspace-local 設定，global 設定仍可用」，但 GCD 對不同來源的做法並不完全相同。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>來源類型</th>
+                    <th>untrusted / unknown workspace 下會發生什麼</th>
+                    <th>對使用者體感的影響</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Commands</td>
+                    <td>整份 command catalog 變空。</td>
+                    <td>你連 global command 都看不到。</td>
+                </tr>
+                <tr>
+                    <td>Skills</td>
+                    <td>整份 skill catalog 變空。</td>
+                    <td>你連 global skill 都不能選。</td>
+                </tr>
+                <tr>
+                    <td>Plugins</td>
+                    <td>global plugins 照常存在，只是不讀 workspace plugins。</td>
+                    <td>某些擴充工具仍可能出現。</td>
+                </tr>
+                <tr>
+                    <td>Providers</td>
+                    <td>built-in / env / global provider 仍存在，只是不讀 workspace provider 設定。</td>
+                    <td>agent 仍可跑，但專案特化 provider 不會生效。</td>
+                </tr>
+                <tr>
+                    <td>Hooks</td>
+                    <td>global hooks 與 workspace hooks 都可能仍被載入。</td>
+                    <td>工作區層政策未必像 commands / skills 那樣被一起限制。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>這種不對稱本身不一定是錯，但它很重要所以需要寫清楚。因為如果文件只說「untrusted 會限制 workspace config」，讀者可能不會想到 commands / skills 的限制比 plugins 更強。</p>
+
+    <h2>三個具體例子，幫你建立直覺</h2>
+
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>同一個陌生 repo，在 trust 關閉時會突然變得很“完整”</h3>
+                <p>如果 <code>GCD_TRUST=0</code>，<code>status_label()</code> 會變成 <code>disabled</code>。這時 instructions、workspace providers、workspace commands、workspace skills、workspace plugins 都不再被 信任檢查 擋下。這對測試很方便，但對陌生 repo 風險也最高。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>不可信 repo 下，global plugin 還在，但 global command 反而不見</h3>
+                <p>這是目前 GCD 很值得被文件化的一個行為差異。對讀者來說，這能幫助他們理解 信任檢查 不只是「global vs workspace」，還牽涉各 catalog loader 是在哪裡做 early return。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>工作接續 不看 trust，而是看 workspace 身分</h3>
+                <p><code>load_session_for_workspace()</code> 只確認 session 屬於同一個 workspace root，不會再額外檢查 trusted / untrusted。這表示 session 是以工作區一致性為主，而不是把 trust 當作 resume 的必要條件。</p>
+            </div>
+        </article>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：同一個工作區，在不同 trust 狀態下的差異</span>
+        </div>
+        <div class="window-body">
+<pre><code>情境：/review src/app.rs
+
+Case A: trusted-via-parent
+- AGENTS.md 會進 prompt
+- workspace providers 會載入
+- commands / skills 會可用
+- workspace plugins 會可用
+
+Case B: unknown
+- instructions bundle 變空
+- workspace providers 不載
+- commands / skills catalog 直接變空
+- global plugins 仍存在
+- MCP 目前仍要保守看待是否會被一起擋下
+
+Case C: disabled
+- 信任檢查 失效
+- 所有 workspace 設定都會照常進主要流程</code></pre>
+        </div>
+    </div>
+
+    <h2>MCP 與 Hooks，為什麼是 trust 含義中最值得特別標記的例外</h2>
+    <p>從 教學範例 的角度來看，MCP 與 hooks 很值得被拿出來單講，因為它們正好示範了一種常見的開發中的狀態：系統已經有 信任檢查，但新擴充路徑還沒有完全併進同一套含義。</p>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>載入位置不同</h3>
+            <p>commands / skills / instructions / plugins 都是在 <code>App::exec</code> 前半段配合 <code>TrustState</code> 載入；MCP 與 hooks 則是在更靠近 執行時 的位置，直接用 workspace root 去找 <code>.gcd/mcp.json</code> 與 <code>.gcd/hooks.json</code>。</p>
+        </div>
+        <div class="check-item">
+            <h3>設定來源同樣屬於 workspace</h3>
+            <p>從使用者觀點看，<code>.gcd/mcp.json</code> 與 <code>.gcd/hooks.json</code> 顯然也都是 repo-owned config；也正因如此，它們沒有和其他 workspace config 共用同一套 gate，才更值得文件保守描述。</p>
+        </div>
+        <div class="check-item">
+            <h3>影響層級很高</h3>
+            <p>MCP 不是單純讀一份說明文件，而是可能啟動外部子程序、動態引入新的工具集合；hooks 則能在工具前後插入額外政策與阻擋。這代表它們如果未與 trust 含義對齊，文件就不能用過度簡化的口氣帶過。</p>
+        </div>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">這裡最誠實的說法是什麼</div>
+        <p>最誠實的描述不是「MCP 與 hooks 完全不受 trust 影響」，而是「目前 <code>.gcd/mcp.json</code> 與 <code>.gcd/hooks.json</code> 沒有明顯走進和 instructions / commands / skills / workspace providers / workspace plugins 完全一致的 信任檢查，因此應保守標成 <code>Implemented</code> 的邊界」。</p>
+    </div>
+
+    <h2><code>MEMORY.md</code> 則是另一種不同的問題</h2>
+    <p>Memory 與 MCP 的 trust 整合狀態不同。MCP 是主要流程有實際路徑且 trust 含義已對齊；<code>MEMORY.md</code> 則已透過 <code>read_memory</code> 接入 <code>App::exec</code> 與 提示詞組裝 主要流程，其內容會在每次執行時注入 prompt。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>來源</th>
+                    <th>目前主要問題</th>
+                    <th>對 trust 文件的意思</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>MCP</td>
+                    <td>主要流程有載入，但 trust 對齊未完全一致。</td>
+                    <td>要標成例外與中間態。</td>
+                </tr>
+                <tr>
+                    <td><code>MEMORY.md</code></td>
+                    <td>主要流程尚未穩定讀取。</td>
+                    <td>不要過度延伸 trust 含義，先標 <code>Implemented</code> 即可。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>對貢獻者最有用的設計問題</h2>
+    <p>如果你之後要在 GCD 加新的 workspace source，這一章其實提供了一套很好用的檢查表。不要先問「這功能酷不酷」，先問它應不應該進同一套 trust 含義。</p>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>這個來源是 user-owned global config，還是 repo-owned workspace config？</h3>
+            <p>如果是後者，就很難完全跳過 trust 問題。</p>
+        </div>
+        <div class="check-item">
+            <h3>它只影響 observability，還是會改變 prompt / tools / provider / 執行時 行為？</h3>
+            <p>越接近 執行時 主要流程，越需要明確 trust 含義。</p>
+        </div>
+        <div class="check-item">
+            <h3>它是否和既有 workspace config 共享同一個風險等級？</h3>
+            <p>如果和 commands、skills、workspace providers 一樣都能改變 agent 行為，卻不走同一套 gate，就該至少在文件裡誠實標示原因。</p>
+        </div>
+        <div class="check-item">
+            <h3>它在 untrusted / unknown / disabled 三種狀態下，各自會怎麼表現？</h3>
+            <p>如果這三種情境答不出來，通常表示設計還沒有真正定型。</p>
+        </div>
+    </div>
+
+    <h2>把這一章濃縮成一句話</h2>
+    <div class="callout callout-info revealable">
+        <div class="callout-title">Trust 在 GCD 裡主要是在管「哪些工作區來源可以改變 agent」</div>
+        <p>它不是 sandbox，也不是 approval；它更像一張 source boundary 地圖。Instructions、workspace providers、workspace plugins 類型已經清楚接上，commands / skills 有更強的整體被限縮行為，MCP 仍是值得保守標記的例外，而 <code>MEMORY.md</code> 則還沒真正進主要流程。把這些差異講清楚，讀者才會真的懂 trust，而不是只記得一個標籤名。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('extensions')">← 工具擴充方式</button>
+    <button class="btn btn-primary" onclick="navigateTo('container')">Docker 容器沙盒 →</button>
+</div>

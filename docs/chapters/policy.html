@@ -1,0 +1,499 @@
+<div class="chapter-header">
+    <span class="chapter-number">Policy</span>
+    <h1>Hooks 和 Sub-Agent</h1>
+    <p class="chapter-desc">Hooks、權限確認、Sub-agent——這三個機制讓你可以在 AI 執行操作之前介入，決定要不要放行。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先講結論</div>
+        <p>GCD 已經不只是「模型 + 工具」的直線系統。它另外有三種會改變執行路徑的 執行過程中的管理機制：<code>permission prompt</code> 決定要不要先問人、<code>hooks</code> 允許本地政策在工具前後插入、<code>spawn_agent</code> 則讓一段任務能被委派給有上限的 sub-agent。這三者加總起來，才構成比較接近產品等級的系統 的管理層。</p>
+    </div>
+
+    <h2>先把這一章想成「誰可以插手 代理迴圈」</h2>
+    <p>如果前面工具章主要在回答「模型能用哪些能力」，這一章就在回答另一個更接近 production 的問題：<strong>當模型已經決定要做某件事時，還有哪些層可以在最後一刻改變執行結果</strong>。這些層不是可有可無的，而是實際的 執行時 管理層面。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">P1</div>
+            <h3>Permission prompt</h3>
+            <p>把高風險工具交還給人類拍板，處理的是「誰同意」。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P2</div>
+            <h3>Hooks</h3>
+            <p>在工具執行前後插入本地政策，處理的是「團隊想額外加什麼規則」。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P3</div>
+            <h3>ToolContext</h3>
+            <p>把 workspace、sandbox、hooks、coordinator provider / key / permission 帶進工具執行當下。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P4</div>
+            <h3><code>spawn_agent</code></h3>
+            <p>在主 代理迴圈 內開出一條有上限的委派路徑，處理的是「哪些工作值得切成子任務」。</p>
+        </article>
+    </div>
+
+    <h2>主要流程上，這些政策插點插在哪裡</h2>
+    <p>把 <code>App::exec</code> 與 <code>run_agent()</code> 串起來看，會發現 執行時 政策不是散落在各處，而是有清楚的插入時機。<code>App::exec</code> 先做 workspace / trust / providers / commands / skills / instructions / plugins 的前置載入；真正進到 <code>run_agent()</code> 後，才再把 MCP tools 與 hooks 載進來，並建立一個附帶 coordinator 資訊的 <code>ToolContext</code>。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：Runtime 政策插點的進場順序</span>
+        </div>
+        <div class="window-body">
+<pre><code>App::exec
+1. discover workspace / trust
+2. load providers / commands / skills / instructions
+3. load plugin catalog
+4. assemble prompt
+5. build AgentRunOptions
+6. run_agent(agent_options, plugins.into_tools())
+
+run_agent
+7. load_mcp_tools(workspace_root)
+8. HooksConfig::load(...)
+9. build ToolContext { sandbox, hooks, coordinator_provider, ... }
+10. provider response -> permission check -> pre-hook -> tool execute -> post-hook
+11. if tool == spawn_agent -> run_agent(sub_options, Vec::new())
+
+重點：
+- plugin tools 在 App::exec 前段進來
+- MCP 與 hooks 在 執行時 內部才進來
+- sub-agent 不是另一個 App::exec，而是直接重走 run_agent()</code></pre>
+        </div>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">這裡最值得注意的差別</div>
+        <p><code>spawn_agent</code> 走的是 <code>run_agent(sub_options, Vec::new())</code>，不是回到 <code>App::exec</code>。因此它不會重新跑 commands / skills / instructions / plugin catalog 那段前置載入，但會重新載入 MCP tools 與 hooks。這個差別會直接影響 sub-agent 手上到底有哪些能力。</p>
+    </div>
+
+    <h2>Hooks：真正的定位是本地政策注入，不只是記錄</h2>
+    <p>很多文件提到 hooks 時，會把它寫成「可接日誌」或「可做整合」。這樣不算錯，但太輕了。從實作來看，GCD 的 hooks 真正價值在於：它允許團隊在不改每個工具實作的情況下，對工具的執行前後加上自己的政策。例如阻擋危險 shell pattern、在 patch 後觸發額外檢查、或把工具結果送到外部稽核流程。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Hook 點位</th>
+                    <th>何時觸發</th>
+                    <th>能不能阻擋</th>
+                    <th>它適合做什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>PreToolUse</code></td>
+                    <td>工具真正執行之前</td>
+                    <td>可以，<code>exit 2</code> 即 deny</td>
+                    <td>政策檢查、風險攔截、命令審核、額外批准。</td>
+                </tr>
+                <tr>
+                    <td><code>PostToolUse</code></td>
+                    <td>工具執行完成之後</td>
+                    <td>不可以</td>
+                    <td>通知、稽核、同步外部系統、附加檢查。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Hook 載入路徑，有一個非常值得誠實寫出的 實況檢查</h2>
+    <p><code>hooks.rs</code> 裡的註解說的是「從 global config dir 與 workspace <code>.gcd/hooks.json</code> 載入」，檔頭註解甚至還提到舊的 <code>.toml</code> 路徑；但真正的 call site 在 <code>agent.rs</code>，傳進去的「global」路徑其實是 <code>workspace_root/.config/gcd</code>。換句話說，<strong>目前 hooks 的實際載入含義，比較像工作區相對的「類全域 + 工作區本地」兩層合併</strong>，而不是使用者 home 目錄下那種真正的全域設定。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>層次</th>
+                    <th>實際路徑</th>
+                    <th>程式行為</th>
+                    <th>判讀</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>類全域 hooks</td>
+                    <td><code>workspace_root/.config/gcd/hooks.json</code></td>
+                    <td><code>run_agent()</code> 會先讀這裡，再讀 workspace hooks。</td>
+                    <td> 的現況，但不是典型使用者全域目錄含義。</td>
+                </tr>
+                <tr>
+                    <td>workspace hooks</td>
+                    <td><code>workspace_root/.gcd/hooks.json</code></td>
+                    <td>如果檔案存在，會 append 在前者之後，兩層都跑。</td>
+                </tr>
+                <tr>
+                    <td>真正使用者全域 hooks</td>
+                    <td><code>~/.config/gcd/hooks.json</code> 之類</td>
+                    <td>從目前 call site 看，主要流程沒有明確走到這條路徑。</td>
+                    <td> 的命名 / 文件含義。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">註解漂移本身就是文件應該教的事</div>
+        <p>這就是 外殼工程 文件最值得誠實的地方之一。對讀者來說，重要的不是抓出「誰寫錯」，而是學會辨識：程式註解、配置命名、實際 call site 有時不完全一致，真正該相信的是執行路徑。所以，hooks 的「全域設定」目前只能保守描述。</p>
+    </div>
+
+    <h2>PreToolUse 的退出碼，決定它到底是 gate 還是 advisory</h2>
+    <p>只知道「PreToolUse 可以 deny」還不夠。真正影響完整功能的，是各種退出結果怎麼被 執行時 解讀。GCD 目前的行為相當清楚，但也有一個容易被忽略的細節：<strong>只有 <code>exit 2</code> 會真的阻擋工具；其他非零或 timeout 都只會留下 warning，工具仍繼續走</strong>。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Hook 結果</th>
+                    <th>Runtime 反應</th>
+                    <th>工具會不會繼續執行</th>
+                    <th>這代表什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>exit 0</code></td>
+                    <td>Allow</td>
+                    <td>會</td>
+                    <td>hook 把這次工具呼叫放行。</td>
+                </tr>
+                <tr>
+                    <td><code>exit 2</code></td>
+                    <td>Deny</td>
+                    <td>不會</td>
+                    <td>這是明確阻擋工具的唯一硬 gate。</td>
+                </tr>
+                <tr>
+                    <td>其他非零退出碼</td>
+                    <td>Error</td>
+                    <td>會</td>
+                    <td>hook 失敗只會留下警告，不會自動 fail-closed。</td>
+                </tr>
+                <tr>
+                    <td>timeout / 執行錯誤</td>
+                    <td>Error</td>
+                    <td>會</td>
+                    <td>目前設計偏向 fail-open，而不是 fail-closed。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：同一個 shell call，兩種 hook 寫法差很多</span>
+        </div>
+        <div class="window-body">
+<pre><code>例子 A：嚴格阻擋
+{
+  "pre_tool_use": [
+    {
+      "command": "echo \"$GCD_TOOL_ARGS\" | grep -q 'rm -rf' && exit 2 || exit 0",
+      "tools": ["shell"]
+    }
+  ]
+}
+=> 匹配到時，shell 真的不會執行
+
+例子 B：只留下警告
+{
+  "pre_tool_use": [
+    {
+      "command": "echo 'suspicious shell' >&2; exit 1",
+      "tools": ["shell"]
+    }
+  ]
+}
+=> 執行時 會印 warning，但 shell 仍會繼續跑
+
+這代表：
+hook 寫法不只是語法問題，而是直接決定政策是 fail-open 還是 fail-closed</code></pre>
+        </div>
+    </div>
+
+    <h2>Hook 比 plugin 更接近「真 shell」</h2>
+    <p>這裡有個很容易被忽略、但非常值得拿來教學的差異。plugin tools 執行時，會先做 tokenization，再以 <code>Command::new(program).args(...)</code> 的方式執行；hooks 則是直接走 <code>sh -c</code>。因此兩者雖然都叫做「可擴充」，風險程度卻不同。plugin 比較像受控的命令封裝；hook 則更像把一段 shell 政策插進 runtime。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>面向</th>
+                    <th>Plugin tool</th>
+                    <th>Hook command</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>執行方式</td>
+                    <td><code>Command::new(program).args(...)</code></td>
+                    <td><code>sh -c</code></td>
+                </tr>
+                <tr>
+                    <td>用途</td>
+                    <td>把一個本地能力包成新工具</td>
+                    <td>在既有工具前後插入政策</td>
+                </tr>
+                <tr>
+                    <td>資料來源</td>
+                    <td>schema + command template</td>
+                    <td><code>GCD_TOOL_NAME</code>、<code>GCD_TOOL_ARGS</code>、<code>GCD_TOOL_RESULT</code></td>
+                </tr>
+                <tr>
+                    <td>風險程度</td>
+                    <td>偏向受控命令封裝</td>
+                    <td>更接近直接 shell 政策</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>事件層的可以觀察性，目前還有一個盲點</h2>
+    <p>從 agent events 看，無論是使用者在 permission prompt 按下拒絕，還是 hook 用 <code>exit 2</code> 擋下來，runtime 都只會送出同一種 <code>ToolCallDenied</code> 事件。換句話說，對 replay / JSONL 讀者而言，<strong>「被誰擋下來」這個拒絕來源目前不會進事件 schema</strong>。主程式會把 hook 拒絕寫成工具訊息內容，但如果你只看 events，仍會丟失原因。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：同一個 denied event，可能來自不同來源</span>
+        </div>
+        <div class="window-body">
+<pre><code>情境 A：使用者拒絕 shell
+AgentEvent::ToolCallDenied { tool_name: "shell", ... }
+
+情境 B：PreToolUse hook exit 2
+AgentEvent::ToolCallDenied { tool_name: "shell", ... }
+
+差別只存在於：
+- stderr 上的提示
+- 給模型看的 tool error message
+
+如果只看事件流：
+你無法直接分辨 deny 是來自人工批准還是本地政策</code></pre>
+        </div>
+    </div>
+
+    <p>這個盲點不代表 hooks 不可用，而是提醒我們：當一個 agent 開始引入更多 執行時 政策時，事件 schema 也要跟著成長。否則 debugging 會愈來愈倚賴 stderr 或人工推理，而不是結構化證據。</p>
+
+    <h2><code>spawn_agent</code>：它是 有限制的委派，不是完整多代理平台</h2>
+    <p>GCD 的 <code>spawn_agent</code> 已經能把子任務交出去，但最誠實的理解方式不是「已經有完整多代理系統」，而是「已有一個帶上限的委派工具」。這個差異很重要，因為它決定你怎麼設計例子、怎麼讀 執行時 evidence，也決定文件能不能保持可信。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>面向</th>
+                    <th>目前行為</th>
+                    <th>判讀</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>工具名稱</td>
+                    <td><code>spawn_agent</code></td>
+                    <td>已經是 built-in tool，可直加入主要流程。</td>
+                </tr>
+                <tr>
+                    <td>預設回合數</td>
+                    <td>5</td>
+                    <td>代表它被設計成短任務委派，不是長程常駐工作代理。</td>
+                </tr>
+                <tr>
+                    <td>最大回合數</td>
+                    <td>10</td>
+                    <td>有明確上限，避免委派無限膨脹。</td>
+                </tr>
+                <tr>
+                    <td>最大深度</td>
+                    <td>2</td>
+                    <td>再下一層就會被硬擋，屬於 有限制的委派。</td>
+                </tr>
+                <tr>
+                    <td>輸出模式</td>
+                    <td>不串流</td>
+                    <td>較像背景工作摘要，而不是完整互動工作台。</td>
+                </tr>
+                <tr>
+                    <td>auto-git</td>
+                    <td>強制關閉</td>
+                    <td>避免子任務直接替主要流程做提交。</td>
+                </tr>
+                <tr>
+                    <td>回傳形式</td>
+                    <td>摘要 JSON</td>
+                    <td>會回傳 <code>status</code>、<code>turns_used</code>、<code>response</code>、前 10 筆工具摘要與 token 用量。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Sub-agent 到底繼承了什麼，又失去了什麼</h2>
+    <p>從 <code>ToolContext</code> 與 <code>CoordinatorTool</code> 的實作來看，sub-agent 會繼承不少父層執行條件，但也明確失去一些能力。這就是 教學範例 很值得拿來教的地方：委派不是「再開一個一模一樣的 agent」，而是「在有限條件下開一個新的 runtime」。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>項目</th>
+                    <th>sub-agent 是否繼承</th>
+                    <th>說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>workspace root</td>
+                    <td>會</td>
+                    <td>仍在同一個工作區裡工作。</td>
+                </tr>
+                <tr>
+                    <td>primary provider / API key</td>
+                    <td>會</td>
+                    <td>來自 <code>ToolContext.coordinator_provider</code> 與 <code>coordinator_api_key</code>。</td>
+                </tr>
+                <tr>
+                    <td>permission level</td>
+                    <td>通常會</td>
+                    <td>主要流程會把父層 permission 放進 context；如果 context 沒填，才回退到 <code>auto-edit</code>。</td>
+                </tr>
+                <tr>
+                    <td>sandbox</td>
+                    <td>會</td>
+                    <td>子代理仍跑在同一套 sandbox policy 下。</td>
+                </tr>
+                <tr>
+                    <td>hooks</td>
+                    <td>會重新載入</td>
+                    <td>因為 sub-agent 直接再跑一次 <code>run_agent()</code>。</td>
+                </tr>
+                <tr>
+                    <td>MCP tools</td>
+                    <td>會重新載入</td>
+                    <td><code>run_agent()</code> 會再讀一次 workspace <code>.gcd/mcp.json</code>。</td>
+                </tr>
+                <tr>
+                    <td>plugin tools</td>
+                    <td>不會</td>
+                    <td><code>spawn_agent</code> 呼叫的是 <code>run_agent(sub_options, Vec::new())</code>，沒有把 plugin catalog 傳下去。</td>
+                </tr>
+                <tr>
+                    <td>fallback providers</td>
+                    <td>不會</td>
+                    <td><code>CoordinatorTool</code> 只用 <code>with_defaults()</code> 建 options，沒有補回父層 fallback list。</td>
+                </tr>
+                <tr>
+                    <td>session / checkpoint persistence</td>
+                    <td>不會是第一級能力</td>
+                    <td>sub-agent 不經過 <code>App::exec</code>，因此不會自動走 checkpoint / session 存檔流程。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：父代理把 repo 掃描委派給 sub-agent</span>
+        </div>
+        <div class="window-body">
+<pre><code>父代理工具呼叫：
+spawn_agent({
+  "task": "掃描 src/ 目錄，列出最值得先 review 的三個檔案與原因",
+  "max_turns": 4
+})
+
+sub-agent 真的會得到：
+- 同一個 workspace
+- 同一個 primary provider
+- 同一套 sandbox
+- 重新載入的 hooks
+- 重新載入的 MCP tools
+
+sub-agent 不會自動得到：
+- 父層 plugin tools
+- 父層 fallback provider list
+- 獨立 checkpoint / session 記錄
+- 串流到主終端的完整逐步輸出
+
+所以它比較像：
+一個受限的委派工作代理
+不是完整平行工作平台</code></pre>
+        </div>
+    </div>
+
+    <h2>Hooks 與 sub-agent 放在一起看，會更像真正的管理層</h2>
+    <p>把兩者分開看，你會覺得一個是 shell hook、一個是協調工具；放在一起看，才會發現它們其實都在回答同一件事：<strong>runtime 裡還有誰可以在模型之外重新塑形這條執行路徑</strong>。hook 影響的是工具前後的政策；sub-agent 影響的是任務分工的形狀。兩者都不是 prompt 文案本身，但都會改變最後發生的事。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">G1</div>
+            <h3>Hook 是局部政策</h3>
+            <p>它在單一工具呼叫前後介入，讓團隊把管理規則插進 runtime。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">G2</div>
+            <h3>Sub-agent 是任務切分政策</h3>
+            <p>它不是直接改單一工具，而是決定哪些工作值得交出去做。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">G3</div>
+            <h3>兩者都受限於可以觀察性</h3>
+            <p>如果事件 schema 不記拒絕來源，或 sub-agent 沒有第一級 session 證據，debugging 仍會有斷點。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">G4</div>
+            <h3>兩者都和 trust 有邊界張力</h3>
+            <p>workspace hooks 與 workspace MCP config 目前沒有和 commands / skills / providers 完全共用同一套 信任檢查。</p>
+        </article>
+    </div>
+
+    <h2>實況檢查：這一層哪些能力成熟，哪些還需要保守描述</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>能力</th>
+                    <th>判讀</th>
+                    <th>說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>PreToolUse / PostToolUse lifecycle</td>
+                    <td>兩種 hook 都已在主 執行時 生效，且帶有 timeout 與 tool-specific matching。</td>
+                </tr>
+                <tr>
+                    <td>Hook deny 作為硬 gate</td>
+                    <td><code>exit 2</code> 會真的擋下工具執行。</td>
+                </tr>
+                <tr>
+                    <td>Hook trust / global path 含義</td>
+                    <td>call site、註解、命名之間仍有落差，workspace-owned hooks 也未與其他 config 完全同 gate。</td>
+                </tr>
+                <tr>
+                    <td>Bounded sub-agent delegation</td>
+                    <td>有 max turns、max depth、provider / sandbox / permission 繼承與摘要回傳。</td>
+                </tr>
+                <tr>
+                    <td>Sub-agent 作為第一級工作代理</td>
+                    <td>已有事件與工具摘要，但沒有自動 checkpoint / 工作記錄保存，也不繼承 plugin / fallback 全貌。</td>
+                </tr>
+                <tr>
+                    <td>結構化事件中的拒絕來源</td>
+                    <td><code>ToolCallDenied</code> 目前不區分人工拒絕與 hook 拒絕。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>把這一章濃縮成一句話</h2>
+    <div class="callout callout-info revealable">
+        <div class="callout-title">真正的 外殼，不只會做事，也要會管理做事的方式</div>
+        <p>Hooks、permission prompt、sub-agent 這些層的存在，說明 GCD 已經開始從「能呼叫工具的 agent」走向「能管理安全、任務分配和本地規則的完整系統」。但這個部分也還沒走完，尤其是 trust 對齊、拒絕來源與 sub-agent 證據模型，都是下一步最值得持續補強的地方。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('tools')">← 工具和權限</button>
+    <button class="btn btn-primary" onclick="navigateTo('extensions')">工具擴充方式 →</button>
+</div>

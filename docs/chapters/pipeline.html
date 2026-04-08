@@ -1,0 +1,499 @@
+<div class="chapter-header">
+    <span class="chapter-number">流程</span>
+    <h1>完整流程</h1>
+    <p class="chapter-desc">從你打一句話，到 AI 真的改了你的檔案，中間經過哪些步驟？這一章帶你走一遍完整流程。</p>
+</div>
+
+<div class="content-body">
+    <h2>完整的執行流程</h2>
+    <p>這條流程回答四個問題：<strong>①</strong> 哪些設定在 AI 回答前就決定好了？<strong>②</strong> 提示詞是怎麼組裝出來的？<strong>③</strong> 哪些操作會在執行前被安全檢查擋住？<strong>④</strong> 哪些結果會被保存？</p>
+
+    <p>GCD 的好處是，這些步驟在原始碼裡都看得到。你不用猜「大概會有信任檢查」，而是能直接找到 <code>Workspace::discover</code>、<code>TrustStore::evaluate</code>、<code>assemble_prompt</code>、<code>run_agent</code> 這些函式。</p>
+
+    <div class="story" data-story="pipeline">
+        <div class="story-visual">
+            <div class="story-panel active" data-step-panel="1">
+                <div class="story-kicker">Step 1</div>
+                <h3>工作區與信任判定</h3>
+                <p><code>Workspace::discover</code> 找根目錄，<code>TrustStore::evaluate</code> 決定可不可以讀 repo instructions 與 workspace config。沒有這一層，AI 助手可能把不可信的 prompt 當成操作規則。</p>
+                <div class="status-line"><code>workspace.rs</code> / <code>trust.rs</code></div>
+            </div>
+            <div class="story-panel" data-step-panel="2">
+                <div class="story-kicker">Step 2</div>
+                <h3>載入 provider 與 catalog</h3>
+                <p><code>App::exec</code> 會載入 providers、commands、skills、instructions、plugins，並把這些變成可用的 執行設定。這一步決定 agent 的可用工具與上下文來源。</p>
+                <div class="status-line"><code>app.rs</code> / <code>providers.rs</code> / <code>commands.rs</code> / <code>skills.rs</code></div>
+            </div>
+            <div class="story-panel" data-step-panel="3">
+                <div class="story-kicker">Step 3</div>
+                <h3>組裝最終 prompt</h3>
+                <p>專案規範、命令模板、技能包、附件等資訊，會被組合成一份完整的提示詞送給 AI。這是整個系統最核心的一步——把不同來源的資訊合併成一次請求。</p>
+                <div class="status-line"><code>prompt.rs</code> / <code>prompt/expansion.rs</code></div>
+            </div>
+            <div class="story-panel" data-step-panel="4">
+                <div class="story-kicker">Step 4</div>
+                <h3>呼叫 provider，必要時 fallback</h3>
+                <p>轉接器（adapter）會按照不同 AI 模型的 API 格式發送請求，並解析回覆。如果某個模型暫時故障，系統可以自動切換到備用模型。</p>
+                <div class="status-line"><code>agent/adapters/</code></div>
+            </div>
+            <div class="story-panel" data-step-panel="5">
+                <div class="story-kicker">Step 5</div>
+                <h3>工具執行前的三層 gate</h3>
+                <p>AI 提出的工具呼叫不會直接執行。系統會先檢查三件事：沙盒（在哪裡跑？）、權限（需不需要先問你？）、Hooks（有沒有自訂檢查規則？）。這一層把「AI 想做什麼」和「系統允許什麼」分開。</p>
+                <div class="status-line"><code>agent/permissions.rs</code> / <code>hooks.rs</code> / <code>tools/context.rs</code></div>
+            </div>
+            <div class="story-panel" data-step-panel="6">
+                <div class="story-kicker">Step 6</div>
+                <h3>Session 與事件持久化</h3>
+                <p>執行結果會保存到工作記錄裡：包括提示詞、回覆、工具呼叫次數、token 用量等。這些記錄讓你可以回放、接續、分叉之前的工作。</p>
+                <div class="status-line"><code>session/storage.rs</code> / <code>output.rs</code></div>
+            </div>
+        </div>
+
+        <div class="story-steps">
+            <article class="story-step active revealable" data-step="1">
+                <span class="story-index">01</span>
+                <div>
+                    <h3>Workspace 與 Trust</h3>
+                    <p>先判定哪個目錄是專案邊界，再決定 repo 指令可不可以影響 agent。</p>
+                </div>
+            </article>
+            <article class="story-step revealable" data-step="2">
+                <span class="story-index">02</span>
+                <div>
+                    <h3>Catalog 載入</h3>
+                    <p>provider、commands、skills、plugins 與 instructions 在這裡被併成執行前狀態。</p>
+                </div>
+            </article>
+            <article class="story-step revealable" data-step="3">
+                <span class="story-index">03</span>
+                <div>
+                    <h3>Prompt 組裝</h3>
+                    <p>把任務、附件、命令模板與 repo instructions 寫成可送出的最終 prompt。</p>
+                </div>
+            </article>
+            <article class="story-step revealable" data-step="4">
+                <span class="story-index">04</span>
+                <div>
+                    <h3>Provider 執行</h3>
+                    <p>adapter 依協定解析 response / SSE，並在需要時切 provider。</p>
+                </div>
+            </article>
+            <article class="story-step revealable" data-step="5">
+                <span class="story-index">05</span>
+                <div>
+                    <h3>Permission 與 Tool Gate</h3>
+                    <p>模型提出 tool call 後，系統才開始判斷是否允許執行與是否需要人工確認。</p>
+                </div>
+            </article>
+            <article class="story-step revealable" data-step="6">
+                <span class="story-index">06</span>
+                <div>
+                    <h3>Session 回寫</h3>
+                    <p>把 prompt、結果與事件保存下來，讓未來的回放、fork 與教學都站得住腳。</p>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <h2>讀這條 pipeline 時，要特別看哪四件事</h2>
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">A</div>
+            <h3>輸入不是直接送模型</h3>
+            <p>真正的輸入其實包含工作區根目錄、trust 狀態、provider profile、指令檔、命令模板、技能與附件。使用者打出的那一行文字，只是其中一塊。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">B</div>
+            <h3>工具不是模型自己執行</h3>
+            <p>模型只會提出 tool call；真正是否執行、怎麼執行、在哪個 sandbox 執行，都由 執行時 決定。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">C</div>
+            <h3>安全界線分成多層</h3>
+            <p>Trust 決定哪些設定可以進 prompt；sandbox 決定工具能碰哪些資源；permission 決定某個 call 要不要人工批准。三者不是同義詞。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">D</div>
+            <h3>session 是下一輪工作的基礎</h3>
+            <p>GCD 不是把 session 當旁邊的紀錄檔，而是能在 resume / fork 時把摘要重新插回 prompt，讓 workflow 有延續性。</p>
+        </article>
+    </div>
+
+    <h2>用一個具體任務走一次 pipeline</h2>
+    <p>假設使用者輸入 <code>/review src/app.rs</code>，我們可以把整條路徑拆得很具體：</p>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>第一步：命令文字先被翻成 workflow 模板</h3>
+            <p><code>assemble_prompt</code> 會先試著解析 slash command。如果符合 <code>/review</code>，GCD 不是把這行文字原封不動丟給模型，而是從命令目錄找對應模板，再把 <code>{{args}}</code> 換成 <code>src/app.rs</code>。</p>
+        </div>
+        <div class="check-item">
+            <h3>第二步：repo instructions 決定回答風格與工作方式</h3>
+            <p>如果工作區可信，像 <code>AGENTS.md</code> 這類檔案就會在 提示詞前段被載入。這一層的作用是把團隊規範、提交方式、測試要求、語言風格變成 AI 可遵守的行為規範。</p>
+        </div>
+        <div class="check-item">
+            <h3>第三步：檔案與 shell 區塊被轉成受控上下文</h3>
+            <p>如果命令模板內含 <code>@{...}</code> 檔案注入，GCD 會展開成有行號的文字片段或目錄 listing；如果包含 <code>!{...}</code> shell 區塊，則不會直接執行，而是被轉寫成 待審核指令 與 approval 區段。</p>
+        </div>
+        <div class="check-item">
+            <h3>第四步：模型提出 tool call，runtime 才開始真正做事</h3>
+            <p>當 provider response 解析出 tool calls 後，<code>run_agent</code> 會逐一檢查 permission、執行 hooks，再交給具體工具。這裡可以清楚看到「模型請求」與「系統操作影響」之間有一層可以看到的機制。</p>
+        </div>
+        <div class="check-item">
+            <h3>第五步：工具結果回傳為下一輪決策基礎</h3>
+            <p>每個工具結果都會被轉成 工具回覆訊息 推回對話狀態，讓模型在下一輪根據真實檔案內容、指令輸出與錯誤訊息再做判斷。這才是 工具迴圈，而不是只做一次 工具呼叫展示。</p>
+        </div>
+        <div class="check-item">
+            <h3>第六步：整輪執行被寫入 checkpoint、events 與 session turn</h3>
+            <p>如果使用者開啟 checkpoint 或 工作記錄保存，GCD 會把 prompt、tool 次數、token 用量、events 與最終回答一併保存。這使得失敗執行也能被 replay，而不只是留下模糊印象。</p>
+        </div>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：<code>/review src/app.rs</code> 可能被組成的 prompt 形狀</span>
+        </div>
+        <div class="window-body">
+<pre><code># Runtime
+Provider: Gemini 2.5 Pro
+Sandbox: workspace-write
+Trust: trusted
+
+# Repository Instructions
+## AGENTS.md
+- 修改前先理解現有結構
+- 變更後要跑對應測試
+
+# Task
+Review src/app.rs and explain risks in Traditional Chinese.
+
+# 待審核指令
+- cargo test -p gcd-core</code></pre>
+        </div>
+    </div>
+
+    <h2>三個很實務的情境例子</h2>
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">T1</div>
+            <h3>不可信倉庫想塞規則給 agent</h3>
+            <p>如果陌生 repo 內含一份要求「先執行安裝腳本」的 <code>AGENTS.md</code>，信任檢查 會先決定這份檔案能不能進 prompt。沒有這層，風險不是模型回答怪，而是整個 workflow 被外部專案重寫。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">T2</div>
+            <h3>模型要求套 patch</h3>
+            <p>在 <code>suggest</code> 或 <code>auto-edit</code> 模式下，<code>apply_patch</code> 是否需要人工確認會不同。這讓「我願意讓 agent 幫忙到哪裡」能被明確表達，而不是只剩全開或全關。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">T3</div>
+            <h3>主 provider 臨時失敗</h3>
+            <p>如果某個 provider 在可重試錯誤上失敗，fallback provider 清單可以接手。這不是多模型展示，而是讓 執行時 不至於因單點供應商問題整輪中斷。</p>
+        </article>
+    </div>
+
+    <h2>Trust / Sandbox / Permission 模擬器</h2>
+    <p>這個模擬器想傳達的是：<strong>「安全」在 AI 助手 裡不是單一開關，而是三種不同問題的疊加答案</strong>。Trust 問的是「這個工作區的規則能不能信」；sandbox 問的是「工具可不可以碰這些資源」；permission 問的是「這次呼叫要不要人工批准」。</p>
+
+    <div class="gate-simulator revealable" data-gate-sim>
+        <div class="gate-grid">
+            <div class="gate-control">
+                <div class="gate-label">Trust 狀態</div>
+                <div class="chip-row">
+                    <button type="button" class="chip active" data-group="trust" data-value="trusted">trusted</button>
+                    <button type="button" class="chip" data-group="trust" data-value="trusted-via-parent">trusted-via-parent</button>
+                    <button type="button" class="chip" data-group="trust" data-value="untrusted">untrusted</button>
+                </div>
+            </div>
+
+            <div class="gate-control">
+                <div class="gate-label">Sandbox 模式</div>
+                <div class="chip-row">
+                    <button type="button" class="chip" data-group="sandbox" data-value="read-only">read-only</button>
+                    <button type="button" class="chip active" data-group="sandbox" data-value="workspace-write">workspace-write</button>
+                    <button type="button" class="chip" data-group="sandbox" data-value="container">container</button>
+                </div>
+            </div>
+
+            <div class="gate-control">
+                <div class="gate-label">Permission Level</div>
+                <div class="chip-row">
+                    <button type="button" class="chip" data-group="permission" data-value="suggest">suggest</button>
+                    <button type="button" class="chip active" data-group="permission" data-value="auto-edit">auto-edit</button>
+                    <button type="button" class="chip" data-group="permission" data-value="full-auto">full-auto</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="gate-output" id="gateOutput">
+            <h3>Gate 結果</h3>
+            <ul class="gate-results"></ul>
+        </div>
+    </div>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Gate</th>
+                    <th>它攔的是什麼</th>
+                    <th>在 GCD 的原始碼依據</th>
+                    <th>如果沒有這層會怎樣</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Trust</td>
+                    <td>工作區 instructions、skills、workspace providers、workspace commands 是否能影響 agent。</td>
+                    <td><code>trust.rs</code>、<code>instructions.rs</code>、各 catalog loader</td>
+                    <td>未知 repo 只要放一份指令檔，就可能重寫 AI 的行為的優先順序。</td>
+                </tr>
+                <tr>
+                    <td>Sandbox</td>
+                    <td>工具能否寫檔、是否能進容器、能否在工作區外操作。</td>
+                    <td><code>config.rs</code>、<code>tools/</code>、<code>tools/container.rs</code></td>
+                    <td>模型提出的操作影響會直接落到主機工作區，失去隔離與可預測性。</td>
+                </tr>
+                <tr>
+                    <td>Permission</td>
+                    <td>這次 tool call 需不需要人類點頭。</td>
+                    <td><code>agent/permissions.rs</code></td>
+                    <td>使用者無法在高風險操作前介入，agent 也缺少在工作過程中逐步建立信任的方式。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：同一個 tool call 在不同 gate 下的結果</span>
+        </div>
+        <div class="window-body">
+<pre><code>Tool call: apply_patch({ ... })
+
+Case A
+trust=trusted
+sandbox=workspace-write
+permission=full-auto
+=> 可直接執行，並寫回 tool result
+
+Case B
+trust=trusted
+sandbox=workspace-write
+permission=suggest
+=> 需要人工確認，否則不執行
+
+Case C
+trust=untrusted
+sandbox=read-only
+permission=auto-edit
+=> 即使模型提出修改意圖，實際可用上下文與可執行動作都會被縮減</code></pre>
+        </div>
+    </div>
+
+    <h2>提示詞是怎麼組裝出來的</h2>
+    <p>「組提示詞」聽起來好像只是把幾段文字串在一起，但實際上做了三件事：①　把不同來源的資訊（專案規範、任務模板、技能包、附件、歷史記錄）整合起來；②　標記哪些操作需要審核；③　把所有東西轉成 AI 模型 API 能吃的格式。</p>
+
+    <div class="assembly-explorer revealable" data-assembly>
+        <div class="assembly-tabs">
+            <button type="button" class="assembly-tab active" data-assembly-tab="instructions">Repo Instructions</button>
+            <button type="button" class="assembly-tab" data-assembly-tab="commands">Commands</button>
+            <button type="button" class="assembly-tab" data-assembly-tab="skills">Skills</button>
+            <button type="button" class="assembly-tab" data-assembly-tab="attachments">Attachments</button>
+            <button type="button" class="assembly-tab" data-assembly-tab="session">Session Context</button>
+            <button type="button" class="assembly-tab" data-assembly-tab="final">最終提示詞</button>
+        </div>
+
+        <div class="assembly-panel active" data-assembly-panel="instructions">
+            <div class="assembly-meta">
+                
+                <span>來源：<code>instructions.rs</code></span>
+            </div>
+            <p>當工作區被視為可信，GCD 會讀 <code>AGENTS.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code>、<code>GCD.md</code>。如果沒有 信任檢查，惡意專案就能直接把模型操作規則塞進執行流程。</p>
+        </div>
+
+        <div class="assembly-panel" data-assembly-panel="commands">
+            <div class="assembly-meta">
+                
+                <span>來源：<code>commands.rs</code>、<code>prompt/command_invocation.rs</code></span>
+            </div>
+            <p>使用者輸入如果以 <code>/</code> 開頭，會被視為 自訂命令呼叫，並把 <code>{{args}}</code> 替換進模板。這讓 workflow 可以被文件化，不必每次都重打長 prompt。</p>
+        </div>
+
+        <div class="assembly-panel" data-assembly-panel="skills">
+            <div class="assembly-meta">
+                
+                <span>來源：<code>skills.rs</code></span>
+            </div>
+            <p>技能目前是顯式選用，而不是自動推斷。這代表 GCD 比比較保守，避免把 技能注入 變成難追蹤的看不見的提示詞演算法。</p>
+        </div>
+
+        <div class="assembly-panel" data-assembly-panel="attachments">
+            <div class="assembly-meta">
+                
+                <span>來源：<code>prompt/expansion.rs</code></span>
+            </div>
+            <p><code>@{...}</code> 會把文字檔做行號注入、把目錄展成 listing，二進位檔則記成 attachment metadata。文字注入很完整；二進位附件是否真正被各 provider adapter 使用，則要保守標為 <code>Implemented</code>。</p>
+        </div>
+
+        <div class="assembly-panel" data-assembly-panel="session">
+            <div class="assembly-meta">
+                
+                <span>來源：<code>session/render.rs</code>、<code>app.rs</code></span>
+            </div>
+            <p>resume / fork 時，系統會在 最終提示詞 前插入 工作接續摘要。這使 GCD 的 session 不是單純歷史檔案，而是會回傳到後續決策的 執行時的上下文。</p>
+        </div>
+
+        <div class="assembly-panel" data-assembly-panel="final">
+            <div class="assembly-meta">
+                
+                <span>來源：<code>prompt.rs</code></span>
+            </div>
+            <div class="code-window slim">
+                <div class="window-header">
+                    <span class="window-title">最終提示詞 shape</span>
+                </div>
+                <div class="window-body">
+<pre><code># Runtime
+Provider: OpenAI Codex (codex-latest)
+Sandbox: workspace-write
+Trust: trusted
+
+# Repository Instructions
+## AGENTS.md
+...
+
+# Loaded Skill
+Name: code-review
+
+# Task
+/review src/app.rs
+
+# 待審核指令
+- git status</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>Repo Instructions 的作用：把團隊規範變成 執行時 契約</h3>
+            <p>這些檔案不是參考資料，而是會進入 最終提示詞 的重要上下文。這意味著 repo instructions 的載入條件與信任檢查，實際上就是安全設計的一部分。</p>
+        </div>
+        <div class="check-item">
+            <h3>Commands 的作用：把 workflow 檔案化</h3>
+            <p>一個 slash command 的價值，不只是少打一點字，而是把常見任務的輸入結構、附件需求與 shell 建議固定下來。這會直接降低團隊工作流的不一致性。</p>
+        </div>
+        <div class="check-item">
+            <h3>Skills 的作用：帶入可選用的專題能力</h3>
+            <p>GCD 目前採顯式選用，而不是自動幫你猜。這個設計的取捨是可追蹤性優先，讓你知道是哪一個 skill 進了 prompt，而不是把 技能注入 變成看不透的推薦機制。</p>
+        </div>
+        <div class="check-item">
+            <h3>Attachments 與 Session Context 的作用：讓一次任務不再只是當下輸入</h3>
+            <p>附件解決的是「模型看不到檔案」；工作接續 解決的是「模型忘了上次做到哪」。兩者都在補足單輪對話天生的上下文不連續。</p>
+        </div>
+    </div>
+
+    <p>你也可以把 提示詞組裝 想成一個「資訊整合站」。它不是任意亂加東西，而是在做資訊分工。repo instructions 提供團隊規範，commands 提供任務模板，skills 提供專題能力，attachments 提供局部證據，工作接續 提供歷史摘要。當這幾種來源混在一起時，才值得特別要求可追蹤與可以觀察。</p>
+
+    <h2>Tool call 從 request 到 操作影響，中間經過了什麼</h2>
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">1</div>
+            <h3>Provider 先把回應解析成 tool call</h3>
+            <p>不同 provider 的 function calling / tool use 協定不同，因此 GCD 需要 adapter 去把它們整理成統一的 <code>ToolCall</code> 形狀。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">2</div>
+            <h3>Permission 先決定需不需要問人</h3>
+            <p><code>suggest</code>、<code>auto-edit</code>、<code>full-auto</code> 對不同工具有不同要求。這層把「授權範圍」和「模型能力」切開。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">3</div>
+            <h3>Hooks 能在工具前後插入額外政策</h3>
+            <p>PreToolUse / PostToolUse 讓團隊可以在不改動每個工具的情況下，加上額外檢查、紀錄或攔截規則。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">4</div>
+            <h3>結果被寫回對話與事件流</h3>
+            <p>工具結果不只回給模型，也被寫進 工具記錄 與 events。這讓後續 replay 與教學回放有具體材料，而不是只剩最終回答。</p>
+        </article>
+    </div>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>如果讀者只看到</th>
+                    <th>其實還應該追問</th>
+                    <th>原因</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>「模型呼叫了 <code>shell</code>」</td>
+                    <td>在哪個 sandbox？有沒有 permission prompt？有沒有 hooks？</td>
+                    <td>這些條件會直接改變同一個 tool call 的安全意義。</td>
+                </tr>
+                <tr>
+                    <td>「provider 回了一個 function call」</td>
+                    <td>不同 provider 的事件格式如何被整理成統一形狀？</td>
+                    <td>如果沒有這層，runtime 很快就會被供應商綁死。</td>
+                </tr>
+                <tr>
+                    <td>「結果保存到 session」</td>
+                    <td>只是存檔，還是會回到下一輪 prompt？</td>
+                    <td>這區分 logging 與真正的 continuation。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>為什麼切換 AI 模型不是小事</h2>
+    <p>你可能以為「換個 API key 就好」，但實際上不同模型的工具呼叫格式、串流回覆方式、錯誤處理方式都完全不同。GCD 在 <code>run_agent</code> 裡統一處理這些差異，讓你可以一鍵切換 GPT、Gemini、Claude，而不用改任何其他程式碼。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>連接問題</th>
+                    <th>如果只把它當 API wrapper 會怎樣</th>
+                    <th>GCD 現在怎麼處理</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>工具呼叫格式不同</td>
+                    <td>每換一家 provider，就得重寫 tool parsing 與工具回傳格式。</td>
+                    <td>由 adapter 層整理成統一 tool call 形狀，再交給 runtime。</td>
+                </tr>
+                <tr>
+                    <td>streaming / response event 差異</td>
+                    <td>UI 與 執行時 會被單一 provider 的事件格式綁死。</td>
+                    <td>在 provider 呼叫與 agent event 之間做了重新包裝，讓 session replay 保有一致事件格式。</td>
+                </tr>
+                <tr>
+                    <td>錯誤與 fallback</td>
+                    <td>主 provider 一出錯就整輪失敗，或只能在上層寫大量特判。</td>
+                    <td>GCD 會建立 fallback provider 清單，遇到可重試失敗時交由 adapter 層處理。</td>
+                </tr>
+                <tr>
+                    <td>上下文爆量</td>
+                    <td>最終只能靠使用者自己縮 prompt，runtime 沒有自我保護。</td>
+                    <td><code>estimate_total_tokens</code> 與 <code>compact_messages</code> 會在迴圈中主動處理 上下文預算。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">模型整合比想像中複雜</div>
+        <p>把 Provider 轉接、回覆解析、備援切換和提示詞組裝放在同一章，是因為它們都是「讓 AI 助手穩定運作」的必要工程。不是接上 API 就結束了——格式轉換、串流處理、錯誤恢復這些看不見的工作，才是真正花時間的地方。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('overview')">← 架構全貌</button>
+    <button class="btn btn-primary" onclick="navigateTo('providers')">切換 AI 模型 →</button>
+</div>

@@ -1,0 +1,64 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 01 章</span>
+                <h1>專案概觀與設計哲學</h1>
+                <p class="chapter-desc">GCD 為何存在，以及它的設計核心信念</p>
+            </div>
+            <div class="content-body">
+                <h2>為什麼要重造輪子？</h2>
+                <p>2025-2026 年，AI AI 助手 生態已有 Claude Code、Gemini CLI、OpenAI Codex 三大產品。GCD 並非要取代它們，而是要<strong>統合三者的精華</strong>，並以 Rust 解決它們的共同痛點：</p>
+                <ul>
+                    <li><strong>被單一供應商綁住</strong>：Claude Code 只能用 Anthropic、Gemini CLI 只能用 Google、Codex 只能用 OpenAI。GCD 讓你自由切換。</li>
+                    <li><strong>啟動開銷</strong>：Node.js/TypeScript 實作的 Agent 啟動需要數百毫秒。Rust 原生二進位啟動僅需幾毫秒。</li>
+                    <li><strong>記憶體效率</strong>：Rust 的零成本抽象讓 GCD 在長時間 session 中保持低記憶體佔用。</li>
+                    <li><strong>安全保證</strong>：Rust 的型別系統從編譯期就排除大量 執行時 錯誤。</li>
+                </ul>
+
+                <h2>五大設計原則</h2>
+                <div class="principle-list">
+                    <div class="principle">
+                        <div class="principle-num">1</div>
+                        <div class="principle-body">
+                            <h3>安全第一 (Security First)</h3>
+                            <p>每個破壞性操作都經過 Trust → Sandbox → Permission 三重閘門。不信任就不執行。靈感來自 Claude Code 的 Trust 系統與 Codex 的 Sandbox 分級。</p>
+                        </div>
+                    </div>
+                    <div class="principle">
+                        <div class="principle-num">2</div>
+                        <div class="principle-body">
+                            <h3>供應商無關 (Vendor Agnostic)</h3>
+                            <p>LLM 供應商是可插拔的。今天用 Gemini，明天切 Claude，後天換 OpenAI。程式碼不需要任何修改。</p>
+                        </div>
+                    </div>
+                    <div class="principle">
+                        <div class="principle-num">3</div>
+                        <div class="principle-body">
+                            <h3>會話即歷史 (Session as History)</h3>
+                            <p>每次互動都自動持久化。任何 session 都可以 resume、fork、replay。靈感來自 Claude Code 的 Session 分支機制。</p>
+                        </div>
+                    </div>
+                    <div class="principle">
+                        <div class="principle-num">4</div>
+                        <div class="principle-body">
+                            <h3>漸進式信任 (Progressive Trust)</h3>
+                            <p>從最保守的 suggest 模式開始，隨著信任建立逐步放寬到 full-auto。靈感來自 Codex 的 Permission 模型。</p>
+                        </div>
+                    </div>
+                    <div class="principle">
+                        <div class="principle-num">5</div>
+                        <div class="principle-body">
+                            <h3>可觀測性 (Observability)</h3>
+                            <p>Token 用量、工具呼叫、API 計時、事件日誌 — 一切操作都可追蹤與回放。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>名稱由來</h2>
+                <blockquote>
+                    <strong>Gemi</strong>ni + <strong>Claw</strong> (Claude 的爪) + Co<strong>dex</strong> = <strong>GemiClawDex</strong><br>
+                    三大 AI AI 助手 的融合，螃蟹 (🦀 Ferris) 精神的 Rust 實作。
+                </blockquote>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('u4')">← U4：客製化</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch2')">02：技術棧 →</button>
+            </div>

@@ -1,0 +1,98 @@
+<div class="chapter-header">
+                <span class="chapter-number">使用者指南 · 第 1 章</span>
+                <h1>安裝與快速開始</h1>
+                <p class="chapter-desc">從零開始，五分鐘內讓 GCD 跑起來</p>
+            </div>
+            <div class="content-body">
+                <h2>系統需求</h2>
+                <ul>
+                    <li><strong>Rust 工具鏈</strong>：1.75+ (stable channel)</li>
+                    <li><strong>作業系統</strong>：macOS / Linux / WSL2</li>
+                    <li><strong>API 金鑰</strong>（至少一個）：<code>GEMINI_API_KEY</code>、<code>OPENAI_API_KEY</code> 或 <code>ANTHROPIC_API_KEY</code></li>
+                </ul>
+
+                <h2>編譯安裝</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">terminal</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-bash"><span class="token comment"># 克隆專案</span>
+git clone https://github.com/voidful/ClaudeCode.git
+<span class="token keyword">cd</span> ClaudeCode
+
+<span class="token comment"># 編譯 release 版本（約 30-60 秒）</span>
+cargo build --release
+
+<span class="token comment"># 產出的二進位檔</span>
+ls -la target/release/gcd
+
+<span class="token comment"># 加入 PATH（可選）</span>
+<span class="token keyword">export</span> PATH=<span class="token string">"$PWD/target/release:$PATH"</span></code></pre>
+                    </div>
+                </div>
+
+                <h2>設定 API 金鑰</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">~/.bashrc 或 ~/.zshrc</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-bash"><span class="token comment"># Gemini（免費額度最高）</span>
+<span class="token keyword">export</span> GEMINI_API_KEY=<span class="token string">"AIza..."</span>
+
+<span class="token comment"># OpenAI</span>
+<span class="token keyword">export</span> OPENAI_API_KEY=<span class="token string">"sk-..."</span>
+
+<span class="token comment"># Anthropic</span>
+<span class="token keyword">export</span> ANTHROPIC_API_KEY=<span class="token string">"sk-ant-..."</span></code></pre>
+                    </div>
+                </div>
+
+                <h2>驗證安裝</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">terminal</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-bash"><span class="token comment"># 檢查版本與工作區資訊</span>
+gcd overview
+
+<span class="token comment"># 檢查供應商狀態</span>
+gcd providers doctor
+
+<span class="token comment"># 列出所有可用供應商</span>
+gcd providers list</code></pre>
+                    </div>
+                </div>
+
+                <h2>第一次執行</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">terminal</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-bash"><span class="token comment"># 進入任何專案目錄</span>
+<span class="token keyword">cd</span> ~/my-project
+
+<span class="token comment"># 啟動互動式 REPL</span>
+gcd
+
+<span class="token comment"># 或執行單次任務</span>
+gcd exec <span class="token string">"解釋這個專案的架構"</span></code></pre>
+                    </div>
+                </div>
+
+                <div class="callout callout-tip">
+                    <div class="callout-title">小提示</div>
+                    <p>GCD 會自動偵測專案根目錄（透過 <code>.git/</code>、<code>Cargo.toml</code>、<code>package.json</code> 等標記檔案），無需手動指定工作區。</p>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('intro')">← 前言</button>
+                <button class="btn btn-primary" onclick="navigateTo('u2')">U2：互動模式 →</button>
+            </div>

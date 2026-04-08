@@ -1,0 +1,48 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 03 章</span>
+                <h1>工作區發現機制</h1>
+                <p class="chapter-desc">GCD 如何找到你的專案根目錄 — <code>workspace.rs</code></p>
+            </div>
+            <div class="content-body">
+                <h2>偵測策略</h2>
+                <p>GCD 從當前目錄開始往上搜尋，尋找以下標記檔案來識別專案根目錄：</p>
+                <div class="pipeline">
+                    <div class="pipeline-step"><div class="pipeline-num">1</div><div class="pipeline-content"><strong><code>.gcd/</code></strong> — GCD 專屬配置目錄（最高優先）</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">2</div><div class="pipeline-content"><strong><code>.git/</code></strong> — Git 倉庫根目錄</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">3</div><div class="pipeline-content"><strong><code>Cargo.toml</code></strong> — Rust 專案根</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">4</div><div class="pipeline-content"><strong><code>package.json</code></strong> — Node.js 專案根</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">5</div><div class="pipeline-content">如果都找不到，使用<strong>當前目錄</strong>作為工作區</div></div>
+                </div>
+
+                <h2>原始碼解析</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">crates/gcd-core/src/workspace.rs</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-rust"><span class="token keyword">pub</span> <span class="token keyword">fn</span> <span class="token function">discover</span>(start: &amp;Path) -&gt; PathBuf {
+    <span class="token keyword">let</span> markers = [<span class="token string">".gcd"</span>, <span class="token string">".git"</span>, <span class="token string">"Cargo.toml"</span>, <span class="token string">"package.json"</span>];
+    <span class="token keyword">let</span> <span class="token keyword">mut</span> dir = start.to_path_buf();
+    <span class="token keyword">loop</span> {
+        <span class="token keyword">for</span> m <span class="token keyword">in</span> &amp;markers {
+            <span class="token keyword">if</span> dir.join(m).exists() {
+                <span class="token keyword">return</span> dir;
+            }
+        }
+        <span class="token keyword">if</span> !dir.pop() { <span class="token keyword">break</span>; }
+    }
+    start.to_path_buf() <span class="token comment">// fallback</span>
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="callout callout-info">
+                    <div class="callout-title">為什麼重要？</div>
+                    <p>工作區根目錄決定了 Sandbox 的讀寫範圍、Trust 規則的評估、AGENTS.md 的載入位置、Session 的歸屬。它是整個安全設計的起點。</p>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch2')">← 02：技術棧</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch4')">04：組態管理 →</button>
+            </div>

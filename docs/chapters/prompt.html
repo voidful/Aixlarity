@@ -1,0 +1,73 @@
+<div class="chapter-header">
+                <span class="chapter-number">附錄 A</span>
+                <h1>AI 深度分析 Prompt</h1>
+                <p class="chapter-desc">給 GPT / Codex / Claude / Gemini 的長版分析任務書，而不是只有幾句泛用提示詞</p>
+            </div>
+            <div class="content-body">
+                <div class="callout callout-tip">
+                    <div class="callout-title">這份 prompt 的核心差異</div>
+                    <p>它強制模型做三件事：第一，對照實際原始碼判斷功能狀態；第二，把你列出的每一份參考資料都納入 coverage matrix；第三，直接產出文件網站的 IA、章節規劃與設計 brief。</p>
+                </div>
+
+                <h2>它會要求模型輸出什麼</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-num">A</div>
+                        <h3>Codebase 實況檢查</h3>
+                        <p>區分「已完成」、「部分實作」與「研究方向」，避免把基本架構誤寫成已上線功能。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-num">B</div>
+                        <h3>Reference Coverage Matrix</h3>
+                        <p>每一份參考來源都要對應出「提取到的訊號、對 GCD 的借鏡點、建議實際做出來位置」。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-num">C</div>
+                        <h3>Borrow / Build / Avoid</h3>
+                        <p>不是只比較功能，而是整理成可執行的工程決策矩陣。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-num">D</div>
+                        <h3>文件網站設計 Brief</h3>
+                        <p>同步產出章節順序、讀者分層、視覺方向與動態互動建議。</p>
+                    </div>
+                </div>
+
+                <h2>Prompt 片段預覽</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">ANALYSIS_PROMPT.md</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-text">你現在是「AI AI 助手 首席架構分析師 + 技術總編輯 + 文件網站策展人」。
+
+硬性規則：
+1. 不得把「有檔案 / 有型別 / 有註解」直接視為「功能已完整上線」。
+2. 每個重要判斷都要標註來源：原始碼路徑或外部參考連結。
+3. 必須把功能狀態分成：
+   - Implemented
+   - Implemented
+   - Implemented
+   - Implemented
+4. 必須完整覆蓋所有參考資料；如果連結失效，也要在 Reference Coverage Matrix 保留該列。
+5. 最後要產出文件網站 IA、章節規劃與設計 brief。</code></pre>
+                    </div>
+                </div>
+
+                <h2>建議搭配的輸入</h2>
+                <ul>
+                    <li><code>README.md</code> 與 <code>docs/architecture.md</code></li>
+                    <li><code>crates/gcd-core/src/app.rs</code>、<code>agent.rs</code>、<code>prompt.rs</code>、<code>providers.rs</code>、<code>session.rs</code></li>
+                    <li><code>plugins.rs</code>、<code>mcp.rs</code>、<code>tools/registry.rs</code> 等擴充點</li>
+                    <li>整個 <code>docs/</code> 目錄，讓模型能同時比對「現有文件」與「實際實作」</li>
+                </ul>
+
+                <div class="source-ref">
+                    <strong>完整檔案</strong>：<a href="ANALYSIS_PROMPT.md" target="_blank"><code>docs/ANALYSIS_PROMPT.md</code></a>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('roadmap')">← 路線圖</button>
+                <button class="btn btn-primary" onclick="navigateTo('refs')">參考矩陣 →</button>
+            </div>

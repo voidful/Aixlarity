@@ -1,0 +1,483 @@
+<div class="chapter-header">
+    <span class="chapter-number">執行證據</span>
+    <h1>執行記錄和回放</h1>
+    <p class="chapter-desc">一個可教、可 debug 的 外殼，不能只會執行，還要能留下足夠好的證據。這一章專門講 GCD 事前、事中、事後各留下了什麼，以及你該怎麼讀。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">這一章在補哪個缺口</div>
+        <p>前面幾章已經把 prompt、tools、trust、sandbox、provider、session 的結構分開了，但很多讀者到這裡還會卡在同一個問題：<strong>如果我真的跑了一次任務，事後要去哪裡確認它到底做了什麼？</strong> 這一章就是在回答這個問題。你可以把它當成 外殼 的觀測與鑑識手冊。</p>
+    </div>
+
+    <h2>為什麼執行證據值得單獨成章</h2>
+    <p>很多 agent 展示都把重點放在「看起來很會做事」，但對工程團隊來說，真正重要的是另外三件事：第一，我能不能在執行前先看 prompt 與設定大致長什麼樣子；第二，我能不能在執行後追查某個工具為什麼被允許或拒絕；第三，我能不能把一次成功或失敗的 run 重播給別人看。如果做不到這些，agent 就很難進入團隊 workflow，也很難成為教材。</p>
+
+    <p>GCD 在這條線上其實已經有一套很務實的證據鏈：<strong>prompt preview</strong>、<strong>checkpoint</strong>、<strong>session record</strong>、<strong>session replay</strong>、<strong>JSON / JSONL 輸出</strong>。這些東西不是附加裝飾，而是讓 外殼 從「一次性執行器」變成「可觀測系統」的關鍵層。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>證據形態</th>
+                    <th>它回答的問題</th>
+                    <th>在 GCD 的現況</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Prompt preview</td>
+                    <td>這輪真正送進模型前，prompt 大致長什麼樣子？</td>
+                </tr>
+                <tr>
+                    <td>Checkpoint</td>
+                    <td>我能不能把執行前的組裝結果先快照下來？</td>
+                </tr>
+                <tr>
+                    <td>Session record</td>
+                    <td>這輪 run 的輸入、輸出、tokens、events 有沒有被正式保存？</td>
+                </tr>
+                <tr>
+                    <td>Replay</td>
+                    <td>事後能不能把事件流重新走一遍給人看？</td>
+                </tr>
+                <tr>
+                    <td>更細緻的 trace UI</td>
+                    <td>有沒有像專門 observability 產品那樣的視覺化時間線？</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>先把五種輸出看成同一條證據鏈</h2>
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>Prompt preview 是你看到的第一個快照</h3>
+                <p>在 CLI 執行時，如果沒有加上 <code>--no-prompt</code>，輸出會包含 <code>Prompt preview</code>。REPL 預設也是開啟的。這能讓你在模型真正執行前，先檢查 prompt 組裝是否大致合理。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>Checkpoint 把「執行前」寫成檔案</h3>
+                <p>如果加上 <code>--checkpoint</code>，GCD 會把 workspace、provider、trust、sandbox 與完整 prompt 保存到 <code>~/.gcd/checkpoints</code>。這很適合做教學快照、prompt 比對或執行前驗證。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>Session 把「執行後」保存成正式紀錄</h3>
+                <p>只要 session 持久化有開，輸入、完整 prompt、最終回答、tool count、token 用量、events 都會進 <code>~/.gcd/sessions</code>。這是後續 resume、fork、replay 的基礎。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>Replay 把 session 重新轉成人可讀說明</h3>
+                <p><code>gcd sessions replay &lt;id&gt;</code> 會把 events 重新列出，並以 turn 為單位整理。這是最適合教學、除錯與 code review 的入口。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">05</div>
+            <div class="roadmap-content">
+                <h3>JSON / JSONL 則把同一份證據變成可機讀資料</h3>
+                <p>這對自動化、批次分析與未來 trace UI 很重要。人類先看文字版，工具再吃機讀版，兩條線最好指向同一套事件格式。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>用一個例子把這條證據鏈走一遍</h2>
+    <p>假設你要驗證某次修補任務到底有沒有照預期工作，你可以故意分三步做，而不是一口氣直接跑到底。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示例：同一個任務的三段式觀測</span>
+        </div>
+        <div class="window-body">
+<pre><code># 第一步：先看規劃與 prompt 快照
+gcd exec --plan --checkpoint \
+  "review crates/gcd-core/src/app.rs 並列出 providers doctor 的修補方案"
+
+# 第二步：真的執行
+gcd exec --sandbox workspace-write --permission auto-edit \
+  "修補 providers doctor 的錯誤訊息，並補一個最小測試"
+
+# 第三步：回頭追查事件
+gcd sessions list
+gcd sessions show &lt;session-id&gt;
+gcd sessions replay &lt;session-id&gt;</code></pre>
+        </div>
+    </div>
+
+    <p>這種三段式流程的好處，是你能把「我以為 prompt 會長這樣」「我以為工具會這樣被批准」「我以為這輪會留下哪些痕跡」分開驗證。對 外殼 工程 來說，能分層驗證，比一次跑通更有教育與除錯價值。</p>
+
+    <h2>Checkpoint 不是 session 的簡化版，它專門記錄「執行前」</h2>
+    <p><code>save_checkpoint()</code> 會把組裝完成的 prompt 寫成 Markdown 檔，放在 <code>~/.gcd/checkpoints</code>。檔名會帶時間戳與 slug，內容則包含 workspace、provider、trust、sandbox 與 <code>## Prompt</code> 區塊。這表示 checkpoint 的角色很明確：它是 preflight snapshot，而不是完整執行紀錄。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：checkpoint 檔大概會長什麼樣子</span>
+        </div>
+        <div class="window-body">
+<pre><code># GemiClawDex Checkpoint
+
+- Workspace: /workspace/project
+- Provider: OpenAI Codex
+- Trust: trusted
+- Sandbox: workspace-write
+
+## Prompt
+
+[完整 最終提示詞 內容]</code></pre>
+        </div>
+    </div>
+
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">Checkpoint 最適合拿來做什麼</div>
+        <p>當你懷疑 prompt 組裝有問題、想比較不同 provider 或 skill 下的 prompt 差異、或想在不真正打 API 的情況下保存一次組裝結果時，checkpoint 會比 session 更好用。因為它刻意只關注「送出去之前」的世界。</p>
+    </div>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>如果你想知道的是</th>
+                    <th>比較該看什麼</th>
+                    <th>原因</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>prompt 最後到底被組成什麼樣子</td>
+                    <td>Prompt preview 或 checkpoint</td>
+                    <td>兩者都直接呈現 最終提示詞；checkpoint 則多了一個可留存檔案。</td>
+                </tr>
+                <tr>
+                    <td>執行過程中到底叫了哪些工具</td>
+                    <td>Session replay</td>
+                    <td>checkpoint 不含 執行時 事件。</td>
+                </tr>
+                <tr>
+                    <td>這輪總共用掉多少 tokens、幾次 API call</td>
+                    <td>Session 或 exec 結果 JSON</td>
+                    <td>這些屬於執行後資料，不在 checkpoint 範圍內。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Session 是正式的執行檔案，不只是人類回憶輔助</h2>
+    <p>和 checkpoint 相比，session 保存的是「這輪實際發生了什麼」。它不只記錄使用者輸入與模型回答，還把 provider、sandbox、trust、active command、active skill、完整 prompt、token 用量、tool invocation count、API calls 與整串 events 一起保存下來。</p>
+
+    <p>這使 GCD 的 session 比一般聊天記錄更接近一份可審核執行紀錄。你可以說，checkpoint 在記錄「我要怎麼出發」，session 在記錄「我實際怎麼走」。兩者互補，而不是互相取代。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>項目</th>
+                    <th>Checkpoint</th>
+                    <th>Session</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>保存時機</td>
+                    <td>執行前</td>
+                    <td>執行後</td>
+                </tr>
+                <tr>
+                    <td>主要內容</td>
+                    <td>prompt 組裝結果與執行條件</td>
+                    <td>輸入、prompt、最終回覆、tokens、events</td>
+                </tr>
+                <tr>
+                    <td>適合用途</td>
+                    <td>prompt 檢查、教學快照、前置驗證</td>
+                    <td>resume、fork、replay、稽核、除錯</td>
+                </tr>
+                <tr>
+                    <td>目前完成度</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2><code>gcd sessions show</code> 與 <code>gcd sessions replay</code> 的差別</h2>
+    <p>這兩個指令都在讀 session，但定位不同。<code>sessions show</code> 比較像摘要頁，幫你快速看最新 turn 的模式、任務、回應、工具數與事件數；<code>sessions replay</code> 則像回放器，把保存下來的 events 重新列成一段可閱讀說明。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">R1</div>
+            <h3><code>sessions list</code></h3>
+            <p>先找出最近有哪些 session，包含最新摘要與 turn 數。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">R2</div>
+            <h3><code>sessions show</code></h3>
+            <p>快速檢查某個 session 最新 turn 的總覽，不必先進到完整 replay。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">R3</div>
+            <h3><code>sessions replay</code></h3>
+            <p>把事件流以 turn 為單位重放，適合做教學、除錯與執行稽核。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">R4</div>
+            <h3><code>sessions replay --turn N</code></h3>
+            <p>只看特定 turn，避免長 session 把焦點沖散。</p>
+        </article>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：replay 文字輸出大概會長什麼樣子</span>
+        </div>
+        <div class="window-body">
+<pre><code>Session replay
+ID: 1712440000-review-app-rs
+Workspace: /workspace/project
+Turns selected: 1
+
+Turn 2 :: live :: 修補 providers doctor 的錯誤訊息，並補一個最小測試
+- prepared live execution with provider openai-env (0 attachments)
+- run started with gpt-5.1 via responses (max 8 turns)
+- turn 1 started with 2 messages
+- turn 1 called provider via responses
+- turn 1 assistant replied (1 tool calls, 我會先讀 app.rs...)
+- turn 1 requested tool read_file
+- turn 1 completed tool read_file
+- turn 1 requested tool apply_patch
+- turn 1 completed tool apply_patch
+- turn 1 requested tool shell
+- turn 1 denied tool shell
+- run completed after 1 turns, 2 tool calls, 1432 total tokens
+- session updated as 1712440000-review-app-rs (2 turns)</code></pre>
+        </div>
+    </div>
+
+    <p>這種 replay 語言有兩個好處。第一，它直接把抽象 event 名稱翻成工程上能讀的句子；第二，它很容易拿來教人理解 gate。你一眼就能看到某次 shell 被拒絕，不必猜到底是模型沒想跑、permission 擋了，還是 sandbox 擋了。</p>
+
+    <h2>最值得學會讀的事件，不是全部，而是這幾類</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>事件</th>
+                    <th>它回答的問題</th>
+                    <th>什麼時候最該看它</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>ExecutionPrepared</code></td>
+                    <td>這輪執行的工作區、provider、sandbox、trust、prompt 是什麼？</td>
+                    <td>你懷疑 提示詞來源、skill、工作接續 沒有照預期進入時。</td>
+                </tr>
+                <tr>
+                    <td><code>CheckpointSaved</code></td>
+                    <td>這次有沒有留下 preflight snapshot？</td>
+                    <td>你在做文件驗證或 prompt 比對時。</td>
+                </tr>
+                <tr>
+                    <td><code>RunStarted</code></td>
+                    <td>實際執行時採用的 model、protocol、permission、streaming 是什麼？</td>
+                    <td>你懷疑 CLI 參數或 provider 切換沒有落實時。</td>
+                </tr>
+                <tr>
+                    <td><code>ContextCompacted</code></td>
+                    <td>系統有沒有因為脈絡過長而做壓縮？</td>
+                    <td>你覺得模型開始忘記前文或 token 飆高時。</td>
+                </tr>
+                <tr>
+                    <td><code>ToolCallRequested</code></td>
+                    <td>模型到底想做什麼？</td>
+                    <td>你想區分「模型沒想到」與「模型想到但沒成功」時。</td>
+                </tr>
+                <tr>
+                    <td><code>ToolCallDenied</code></td>
+                    <td>它被哪個 gate 擋下來了？</td>
+                    <td>你在追查 permission / sandbox 行為時。</td>
+                </tr>
+                <tr>
+                    <td><code>ToolCallCompleted</code></td>
+                    <td>工具實際回傳了什麼結果？</td>
+                    <td>你在調查工具是否給了模型足夠證據時。</td>
+                </tr>
+                <tr>
+                    <td><code>ProviderFallback</code></td>
+                    <td>這輪有沒有發生 provider 切換？理由是什麼？</td>
+                    <td>你覺得同一任務行為突然變了，想排除供應商差異時。</td>
+                </tr>
+                <tr>
+                    <td><code>RunCompleted</code></td>
+                    <td>總共幾輪、幾次工具、多少 tokens、幾次 API calls？</td>
+                    <td>你在做成本或效率判讀時。</td>
+                </tr>
+                <tr>
+                    <td><code>SessionPersisted</code></td>
+                    <td>這輪結果最後有沒有真的寫進 session？</td>
+                    <td>你在查 persist / no-session 行為時。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>如何用這些事件做五種常見 debug</h2>
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>懷疑 repo instructions 沒進 prompt</h3>
+                <p>先看 <code>ExecutionPrepared</code> 的 trust、active command、active skill 與 prompt 本體。如果工作區是不受信任狀態，instructions、commands、skills 被收掉是合理行為，不一定是 bug。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>懷疑 shell 為什麼沒跑</h3>
+                <p>先確認有沒有 <code>ToolCallRequested(shell)</code>。如果連 requested 都沒有，代表模型根本沒想跑；如果有 requested 但接著是 denied，就回去看 permission 與 sandbox，而不是怪模型不會用工具。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>懷疑 provider 變了，導致結果不同</h3>
+                <p>看 <code>RunStarted</code> 與 <code>ProviderFallback</code>。如果某輪中途從同 family 的另一個 profile 接手，這應該被明確記錄，而不是只留在使用者猜測裡。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>懷疑 工作接續 不對勁</h3>
+                <p>檢查 <code>ExecutionPrepared</code> 裡的 <code>source_session_id</code>、<code>source_mode</code>，再回頭看 prompt 中的 <code># Session Continuation</code> 區塊。這能分清楚是 session 沒接上，還是接上了但摘要不夠好。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">05</div>
+            <div class="roadmap-content">
+                <h3>懷疑成本太高或上下文膨脹</h3>
+                <p>看 <code>ContextCompacted</code>、<code>RunCompleted</code> 與 token 用量。這能幫你判斷問題比較像 prompt 過肥、工具來回太多，還是 provider 行為差異。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>Planning mode 與 live mode，證據語言其實不同</h2>
+    <p>GCD 的 規劃模式 不是假的空殼，但它也不是 live execution。<code>--plan</code> 會走到 提示詞組裝、checkpoint 與事件建立這些步驟，然後把規劃階段的結果輸出；它不會真的去呼叫 provider，也不會產生完整的 執行時 tool events。這表示 規劃模式 很適合做文件驗證與教學，但如果你要看 permission、tool call、fallback 的真實行為，就還是要回到 live mode。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>你想觀察的事</th>
+                    <th>比較適合 plan mode</th>
+                    <th>比較適合 live mode</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>prompt 是否組裝正確</td>
+                    <td>是</td>
+                    <td>也可以，但成本較高</td>
+                </tr>
+                <tr>
+                    <td>tool call 是否被 permission 擋下</td>
+                    <td>否</td>
+                    <td>是</td>
+                </tr>
+                <tr>
+                    <td>provider fallback 是否真的發生</td>
+                    <td>否</td>
+                    <td>是</td>
+                </tr>
+                <tr>
+                    <td>session replay 是否有完整 執行時 events</td>
+                    <td>有限</td>
+                    <td>完整</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>JSON 與 JSONL 的價值，不只是方便整合</h2>
+    <p>很多人會把 <code>--json</code> / <code>--jsonl</code> 視為輸出格式選項，但在 外殼 工程 的語境裡，它其實代表另一件事：<strong>同一份執行證據是否能同時服務人類閱讀與機器分析</strong>。GCD 在這件事上做得很實際，文字輸出給人看，JSON 給整體摘要，JSONL 則把事件分成一行一筆。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：同一份 replay 用 JSONL 觀看時會更像事件串流</span>
+        </div>
+        <div class="window-body">
+<pre><code>gcd sessions replay 1712440000-review-app-rs --jsonl
+
+{"session_id":"1712440000-review-app-rs","turn_index":2,"turn_mode":"live","input":"修補...","payload":{"type":"execution_prepared",...}}
+{"session_id":"1712440000-review-app-rs","turn_index":2,"turn_mode":"live","input":"修補...","payload":{"type":"run_started",...}}
+{"session_id":"1712440000-review-app-rs","turn_index":2,"turn_mode":"live","input":"修補...","payload":{"type":"tool_call_requested",...}}</code></pre>
+        </div>
+    </div>
+
+    <p>這讓未來的 trace viewer、統計腳本、失敗模式分析，都不需要從人類描述裡硬拆訊息。對教學型專案來說，這也很重要，因為它表示文件站與原始碼不是兩套平行世界，而是在共享同一套事件格式。</p>
+
+    <h2>實況檢查：這條證據鏈已經做到了哪裡</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>能力</th>
+                    <th>判讀</th>
+                    <th>原因</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Checkpoint 檔案快照</td>
+                    <td>可透過 <code>--checkpoint</code> 實際生成，且內容有明確結構。</td>
+                </tr>
+                <tr>
+                    <td>Session 持久化與 resume / fork</td>
+                    <td>session 檔案格式、fork、replay 與 continuation 都已加入主要流程。</td>
+                </tr>
+                <tr>
+                    <td>事件格式的一致性</td>
+                    <td><code>ExecutionPrepared</code> 到 <code>RunCompleted</code> 的語言可被文字版、JSON 與 JSONL 共用。</td>
+                </tr>
+                <tr>
+                    <td>視覺化 trace explorer</td>
+                    <td>網站有教學性視覺與案例，但還不是專門的 session trace 工具。</td>
+                </tr>
+                <tr>
+                    <td>跨 session 的記憶與事件整合</td>
+                    <td>session 很完整，但 memory 還沒穩定進入同一條觀測主要流程。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>如果你要用這一章帶團隊做一次讀檔練習</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>先跑一次 <code>--plan --checkpoint</code></h3>
+            <p>讓大家先看 prompt 組裝，避免一開始就被 執行時 細節淹沒。</p>
+        </div>
+        <div class="check-item">
+            <h3>再跑一次 live execution</h3>
+            <p>刻意選一個會觸發工具與 gate 的任務，像是「可自動 patch，但 shell 要批准」的案例。</p>
+        </div>
+        <div class="check-item">
+            <h3>最後用 replay 回頭驗證大家的猜測</h3>
+            <p>把「我以為這裡會被 permission 擋」與實際事件對起來，這一步最能幫團隊建立共同語言。</p>
+        </div>
+    </div>
+
+    <h2>把這一章濃縮成一句話</h2>
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">AI 助手不只要會執行，還要留下可以回查的記錄</div>
+        <p>Checkpoint 幫你看見出發前的 prompt，session 幫你保存執行後的事實，replay 與 JSONL 則把這些事實轉成可教、可 debug、可分析的事件格式。這條證據鏈越完整，系統就越像工程產品，而不是一次性的模型表演。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('cases')">← 案例導讀：三個任務的完整流程</button>
+    <button class="btn btn-primary" onclick="navigateTo('modes')">不同模式和輸出格式 →</button>
+</div>

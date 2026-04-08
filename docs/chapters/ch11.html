@@ -1,0 +1,46 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 11 章</span>
+                <h1>技能系統 (Skills)</h1>
+                <p class="chapter-desc">可選注入的專業知識 — <code>skills.rs</code></p>
+            </div>
+            <div class="content-body">
+                <h2>技能 vs 命令</h2>
+                <div class="comparison-table">
+                    <table>
+                        <thead><tr><th>維度</th><th>命令 (Commands)</th><th>技能 (Skills)</th></tr></thead>
+                        <tbody>
+                            <tr><td>格式</td><td>TOML</td><td>Markdown (SKILL.md)</td></tr>
+                            <tr><td>觸發方式</td><td>主動呼叫 (<code>/command</code>)</td><td>選擇注入</td></tr>
+                            <tr><td>注入位置</td><td>替換使用者輸入</td><td>追加到 System Prompt</td></tr>
+                            <tr><td>用途</td><td>定義任務模板</td><td>提供專業知識上下文</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>技能目錄結構</h2>
+                <p>技能可以是單一 .md 檔案，或包含 <code>SKILL.md</code> 的目錄：</p>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">技能目錄結構</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-text">.gcd/skills/
+├── rust-patterns.md           ← 單檔技能
+├── security-audit/
+│   └── SKILL.md               ← 目錄技能
+└── api-design/
+    └── SKILL.md               ← 目錄技能</code></pre>
+                    </div>
+                </div>
+
+                <p>技能的第一個非空行會被擷取為摘要描述，供選擇時顯示。完整內容在選中後注入到 prompt 中。</p>
+
+                <div class="source-ref">
+                    <strong>原始碼</strong>：<code>crates/gcd-core/src/skills.rs</code>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch10')">← 10：命令系統</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch12')">12：提示詞組裝 →</button>
+            </div>

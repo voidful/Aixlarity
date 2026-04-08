@@ -1,0 +1,129 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 13 章</span>
+                <h1>Agent 迴圈</h1>
+                <p class="chapter-desc">GCD 的心臟 — <code>agent.rs</code> 深度解析</p>
+            </div>
+            <div class="content-body">
+                <h2>迴圈概覽</h2>
+                <div class="agent-loop-diagram">
+                    <div class="loop-step">
+                        <div class="loop-num">1</div>
+                        <div class="loop-content">
+                            <h4>組裝訊息</h4>
+                            <p>將 system prompt + 使用者輸入 + 歷史對話組裝為 messages 陣列</p>
+                        </div>
+                    </div>
+                    <div class="loop-arrow">↓</div>
+                    <div class="loop-step">
+                        <div class="loop-num">2</div>
+                        <div class="loop-content">
+                            <h4>呼叫 LLM</h4>
+                            <p>透過 Provider Adapter 發送 API 請求，支援 SSE Streaming</p>
+                        </div>
+                    </div>
+                    <div class="loop-arrow">↓</div>
+                    <div class="loop-step">
+                        <div class="loop-num">3</div>
+                        <div class="loop-content">
+                            <h4>解析回覆</h4>
+                            <p>從回覆中提取文字內容與 Tool Calls（工具呼叫請求）</p>
+                        </div>
+                    </div>
+                    <div class="loop-arrow">↓</div>
+                    <div class="loop-step">
+                        <div class="loop-num">4</div>
+                        <div class="loop-content">
+                            <h4>權限檢查</h4>
+                            <p>根據 PermissionLevel 決定是否需要使用者確認（suggest / auto-edit / full-auto）</p>
+                        </div>
+                    </div>
+                    <div class="loop-arrow">↓</div>
+                    <div class="loop-step">
+                        <div class="loop-num">5</div>
+                        <div class="loop-content">
+                            <h4>執行工具</h4>
+                            <p>在 ToolContext（含 Sandbox 限制）下執行工具，收集結果</p>
+                        </div>
+                    </div>
+                    <div class="loop-arrow">↓</div>
+                    <div class="loop-step">
+                        <div class="loop-num">6</div>
+                        <div class="loop-content">
+                            <h4>Context 管理</h4>
+                            <p>檢查 token 用量，必要時自動壓縮歷史訊息</p>
+                        </div>
+                    </div>
+                    <div class="loop-back">↑ 如果還有 Tool Calls 且未達最大輪次 (10)，回到步驟 1</div>
+                </div>
+
+                <h2>關鍵程式碼路徑</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">agent.rs — 簡化的核心迴圈</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-rust"><span class="token keyword">pub</span> <span class="token keyword">async</span> <span class="token keyword">fn</span> <span class="token function">run</span>(&amp;<span class="token keyword">self</span>, opts: AgentRunOptions) -&gt; Result&lt;AgentResult&gt; {
+    <span class="token keyword">let</span> <span class="token keyword">mut</span> messages = <span class="token function">build_initial_messages</span>(&amp;opts);
+    <span class="token keyword">let</span> <span class="token keyword">mut</span> turn = <span class="token number">0</span>;
+
+    <span class="token keyword">loop</span> {
+        turn += <span class="token number">1</span>;
+        <span class="token keyword">if</span> turn > MAX_TURNS { <span class="token keyword">break</span>; }
+
+        <span class="token comment">// 呼叫 LLM (含 Streaming + Fallback)</span>
+        <span class="token keyword">let</span> response = <span class="token function">call_provider</span>(&amp;messages).await?;
+
+        <span class="token comment">// 提取工具呼叫</span>
+        <span class="token keyword">let</span> tool_calls = <span class="token function">extract_tool_calls</span>(&amp;response);
+        <span class="token keyword">if</span> tool_calls.is_empty() { <span class="token keyword">break</span>; }
+
+        <span class="token comment">// 逐一執行工具</span>
+        <span class="token keyword">for</span> call <span class="token keyword">in</span> &amp;tool_calls {
+            <span class="token keyword">if</span> <span class="token function">needs_permission</span>(call, &amp;opts.permission) {
+                <span class="token function">prompt_user</span>(call).await?;
+            }
+            <span class="token keyword">let</span> result = <span class="token function">execute_tool</span>(call).await?;
+            messages.<span class="token function">push</span>(<span class="token function">tool_result_message</span>(result));
+        }
+
+        <span class="token comment">// Context Window 管理</span>
+        <span class="token keyword">if</span> <span class="token function">exceeds_budget</span>(&amp;messages) {
+            messages = <span class="token function">compact_history</span>(messages);
+        }
+    }
+
+    Ok(<span class="token function">build_result</span>(messages, token_usage))
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2>Provider Fallback 機制</h2>
+                <p>當 LLM API 返回 429 (Rate Limit)、500 (Server Error) 或連線逾時時，Agent 會自動嘗試備用供應商：</p>
+                <div class="arch-flow">
+                    <div class="flow-step">主要供應商 失敗</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">等待 + 重試</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">切換備用供應商</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">繼續 代理迴圈</div>
+                </div>
+
+                <h2>Context 壓縮策略</h2>
+                <p>當訊息歷史超過 token 預算時，<code>runtime_support.rs</code> 會保留第一則訊息與最近尾段，再把中段對話濃縮成摘要。這裡保留的是「目前 messages 陣列中的第一則訊息」，不是額外獨立的 system prompt 物件：</p>
+                <ol>
+                    <li>保留第一則訊息</li>
+                    <li>保留最近尾端的幾則對話</li>
+                    <li>將中段 assistant / tool 互動改寫為摘要</li>
+                    <li>用新的 user-style summary message 取代中段歷史</li>
+                </ol>
+
+                <div class="source-ref">
+                    <strong>原始碼</strong>：<code>crates/gcd-core/src/agent.rs</code>、<code>crates/gcd-core/src/agent/adapters.rs</code>、<code>crates/gcd-core/src/agent/permissions.rs</code>、<code>crates/gcd-core/src/agent/runtime_support.rs</code>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch12')">← 12：提示詞組裝</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch14')">14：工具系統 →</button>
+            </div>

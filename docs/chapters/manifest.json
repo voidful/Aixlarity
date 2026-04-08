@@ -1,0 +1,56 @@
+{
+  "nav": [
+    {
+      "title": "入門",
+      "items": [
+        { "id": "home", "icon": "00", "label": "首頁" },
+        { "id": "intro", "icon": "01", "label": "AI 助手的外殼是什麼？" },
+        { "id": "starter", "icon": "02", "label": "第一個小範例" },
+        { "id": "faq", "icon": "03", "label": "8 個常見名詞速查" }
+      ]
+    },
+    {
+      "title": "架構",
+      "items": [
+        { "id": "overview", "icon": "04", "label": "GCD 完整架構一覽" },
+        { "id": "pipeline", "icon": "05", "label": "從輸入到執行的完整流程" }
+      ]
+    },
+    {
+      "title": "細節",
+      "items": [
+        { "id": "providers", "icon": "06", "label": "切換不同 AI 模型" },
+        { "id": "providerlab", "icon": "07", "label": "四種 API 格式的差異" },
+        { "id": "runtime", "icon": "08", "label": "備援和保護機制" },
+        { "id": "state", "icon": "09", "label": "工作記錄和記憶" },
+        { "id": "tools", "icon": "10", "label": "工具、沙盒和權限" },
+        { "id": "policy", "icon": "11", "label": "Hooks 和 Sub-Agent" },
+        { "id": "extensions", "icon": "12", "label": "三種工具擴充方式" },
+        { "id": "trustmap", "icon": "13", "label": "信任規則總表" },
+        { "id": "container", "icon": "14", "label": "Docker 容器沙盒" },
+        { "id": "sources", "icon": "15", "label": "設定檔和提示詞來源" },
+        { "id": "workflow", "icon": "16", "label": "專案規範、命令和技能包" },
+        { "id": "promptlab", "icon": "17", "label": "提示詞怎麼被組裝的" },
+        { "id": "attachments", "icon": "18", "label": "圖片和檔案附件處理" },
+        { "id": "cases", "icon": "19", "label": "三個實際案例" },
+        { "id": "evidence", "icon": "20", "label": "執行記錄和回放" },
+        { "id": "modes", "icon": "21", "label": "不同模式和輸出格式" }
+      ]
+    },
+    {
+      "title": "比較",
+      "items": [
+        { "id": "comp", "icon": "22", "label": "和三大產品的比較" },
+        { "id": "strategy", "icon": "23", "label": "設計決策的來源" },
+        { "id": "refs", "icon": "24", "label": "參考來源和出處" }
+      ]
+    },
+    {
+      "title": "學習",
+      "items": [
+        { "id": "learn", "icon": "25", "label": "從文件走到原始碼" },
+        { "id": "roadmap", "icon": "26", "label": "下一步要做什麼" }
+      ]
+    }
+  ]
+}

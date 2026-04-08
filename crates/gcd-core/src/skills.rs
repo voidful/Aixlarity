@@ -45,7 +45,7 @@ fn load_skills_from_dir(root: &Path, skills: &mut Vec<SkillDefinition>) -> io::R
     let mut files = walk_markdown_files(root)?;
     files.sort();
     for file in files {
-        let relative = file.strip_prefix(root).unwrap_or_else(|_| file.as_path());
+        let relative = file.strip_prefix(root).unwrap_or(file.as_path());
         let file_name = file
             .file_name()
             .and_then(|name| name.to_str())

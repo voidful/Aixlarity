@@ -1,0 +1,255 @@
+<div class="chapter-header">
+    <span class="chapter-number">Roadmap</span>
+    <h1>實況檢查 後，GCD 下一步應該補哪裡</h1>
+    <p class="chapter-desc">先補會影響主要流程的缺口，再談更大的產品野心。這一章故意把「應該先做什麼」講得比「未來可以做什麼」更清楚。</p>
+</div>
+
+<div class="content-body">
+    <h2>優先順序不是由酷炫程度決定</h2>
+    <p>Roadmap 最容易寫成願望清單，但對教學型專案來說，真正重要的是先補那些會讓讀者與使用者誤判系統能力的缺口。GCD 的下一步，不應該先問「哪個功能最帥」，而是先問「哪個缺口最影響主要流程的可信度、可維護性與可教性」。</p>
+
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>把文件與主要流程再對齊</h3>
+                <p>持續校正文實落差，例如 container sandbox 的邊界、memory integration 的現況、MCP 相容度的描述。這能立即降低誤解成本。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>補強真正影響 執行時 的缺口</h3>
+                <p> 的項目裡，最值得先補的是 container 邊界一致性、MCP 穩定度、memory 與 prompt / session 的整合方式。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>把成本與可擴充性拉進第核心設計</h3>
+                <p> 的 token caching、請求簽名 穩定策略、擴充生命週期，都是整合成本管理的一部分，不該永遠留在 README 願景裡。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>最後才是高階玩法</h3>
+                <p>worktree isolation、Dream-style memory consolidation、更多 subagent coordination 可以做，但前提是主要流程已足夠清楚、可測、可教。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>如果只能做一個兩週衝刺，應該先做什麼</h2>
+    <p>Roadmap 真正難的地方不是列想法，而是有限工期下怎麼排。如果 GCD 只有一個短衝刺可以投入，我會建議先把會直接改變使用者認知與安全意義的項目排進去。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>優先項目</th>
+                    <th>為什麼先做</th>
+                    <th>完成後會改善什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Container sandbox 含義補齊或明確收斂</td>
+                    <td>這是最容易被誤解成「已完整隔離」的地方。</td>
+                    <td>安全設計會更誠實，文件也能更明確說清楚哪些工具在哪裡執行。</td>
+                </tr>
+                <tr>
+                    <td>MCP client 穩定度</td>
+                    <td>它牽涉未來擴充脈絡，但現在含義還偏簡化。</td>
+                    <td>可擴充性會從「可演示」往「可依賴」前進一步。</td>
+                </tr>
+                <tr>
+                    <td>Memory 與 prompt / session 的正式連接</td>
+                    <td>現在最像有能力名稱、但尚未真正參與主要流程決策。</td>
+                    <td>能把記憶從孤立檔案提升為有工程意義的上下文層。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>為什麼這樣排優先順序</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>原則</th>
+                    <th>對 GCD 的意思</th>
+                    <th>如果忽略它，會出現什麼問題</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>先補主要流程缺口</td>
+                    <td>container 一致性、MCP 穩定度、memory integration 都比高階功能更值得先做。</td>
+                    <td>文件會愈寫愈難誠實，使用者也會誤判安全與完成度。</td>
+                </tr>
+                <tr>
+                    <td>先解決解釋成本高的地方</td>
+                    <td>像 規劃模式、工作接續、sandbox 邊界都需要更清楚含義。</td>
+                    <td>讀者會以為功能很多，實際上卻不知道哪些真的能依賴。</td>
+                </tr>
+                <tr>
+                    <td>把整合成本當成核心設計</td>
+                    <td>token caching、請求格式調整、provider fallback 不是附帶優化，而是可擴充性的基礎。</td>
+                    <td>每接一個 provider 或新能力，都會重新付一次不必要的工程成本。</td>
+                </tr>
+                <tr>
+                    <td>最後才做高階玩法</td>
+                    <td>Dream-style memory consolidation、worktree isolation、更多 sub-agent 協調應建立在穩主要流程之後。</td>
+                    <td>系統表面上變強，底層卻越來越難測、難教、難維護。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>什麼事情故意不該先做</h2>
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">N1</div>
+            <h3>先做超多高階模式</h3>
+            <p>在 container、MCP、memory 這些邊界仍模糊時，太早衝 multi-agent / dream pass，只會讓主要流程更難解釋。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">N2</div>
+            <h3>先補齊三大產品所有 feature 名稱</h3>
+            <p>這會把 roadmap 變成功能集郵，而不是工程問題排序。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">N3</div>
+            <h3>先把文件寫得比實作更滿</h3>
+            <p>對 教學範例 來說，這是最危險的債，因為一旦文實脫節，整站可信度會快速下滑。</p>
+        </article>
+    </div>
+
+    <h2>具體的工程重點</h2>
+    <div class="comparison-table">
+        <table data-compare="roadmap">
+            <thead>
+                <tr>
+                    <th>主題</th>
+                    <th>為什麼重要</th>
+                    <th>下一步建議</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Container sandbox 一致性</td>
+                    <td>現在只有 <code>shell</code> 真正進容器，容易讓使用者誤以為所有操作影響都被隔離。</td>
+                    <td>明確定義哪些工具能進容器，哪些必須留在 host，並同步更新 UI 與文件。</td>
+                </tr>
+                <tr>
+                    <td>MCP client 穩定度</td>
+                    <td>MCP 是 GCD 向外擴充的重要接口，但目前描述應維持保守。</td>
+                    <td>補強 framing、錯誤處理、server capability negotiation，再擴大文件承諾。</td>
+                </tr>
+                <tr>
+                    <td>Memory integration</td>
+                    <td><code>MEMORY.md</code> 如果不回傳到 prompt / sessions，就只是孤立檔案。</td>
+                    <td>先定 memory read/write 進入哪條主要流程，再談 consolidation 或 dream pass。</td>
+                </tr>
+                <tr>
+                    <td>Token caching 與 請求格式調整</td>
+                    <td>這會直接影響成本、速度與 provider 切換穩定性。</td>
+                    <td>先定 快取金鑰 與 請求簽名 策略，再做 provider-specific 實作。</td>
+                </tr>
+                <tr>
+                    <td>Multimodal attachment path</td>
+                    <td>目前附件 metadata、prompt placeholder 與 exec JSON 已存在，但 provider adapter 對二進位附件仍主要停在文字主要流程。</td>
+                    <td>從單一 provider 的圖片 / PDF 路徑開始做完整連接，並同步補 replay / session 可追蹤證據。</td>
+                </tr>
+                <tr>
+                    <td>Hook / sub-agent 政策證據模型</td>
+                    <td>現在已有 hook deny 與 有限制的委派，但事件層仍不易看出拒絕來源，sub-agent 也還不是第一級 session 工作單元。</td>
+                    <td>把拒絕來源、hook 層級與 sub-agent lineage 補進事件與 replay 證據，再決定是否升級為更完整的工作代理模型。</td>
+                </tr>
+                <tr>
+                    <td>Worktree isolation</td>
+                    <td>這會改變 git、session、sandbox 與路徑策略，是大工程。</td>
+                    <td>先把現有工作區內的 trust / sandbox 邏輯穩住，再決定是否導入。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：同樣叫 memory，工程差異可能很大</span>
+        </div>
+        <div class="window-body">
+<pre><code>版本 A
+- 每輪結束後 append 一段摘要到 MEMORY.md
+- 下一輪完全不讀
+=> 這比較像紀錄檔，不是決策記憶
+
+版本 B
+- 啟動時讀 MEMORY.md
+- 只把相關片段注入 prompt
+- session turn 也記錄 memory 讀寫事件
+=> 這才開始接近真正的 memory integration
+
+GCD 目前較接近版本 A 到 B 之間的過渡態</code></pre>
+        </div>
+    </div>
+
+    <h2>如果把 roadmap 換成教學語言，它其實在說什麼</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>第一，先把「會被誤會成完整能力」的部分說清楚</h3>
+            <p>像 container sandbox、memory、MCP 都不是不能做，而是現在更需要先把邊界講清楚，避免設計語言先跑到實作前面。</p>
+        </div>
+        <div class="check-item">
+            <h3>第二，讓多 provider 與整合成本進入核心設計</h3>
+            <p>這會決定 GCD 未來是「每接新模型就重做一遍」還是「真正有一個穩定的 外殼 底座」。</p>
+        </div>
+        <div class="check-item">
+            <h3>第三，只有在主要流程清楚後，高階能力才有學習價值</h3>
+            <p>如果底層邊界還沒穩，太早談 dream memory 或 worktree isolation，讀者只會得到一個看似雄心勃勃但難以實作的願景。</p>
+        </div>
+    </div>
+
+    <h2>如果把 roadmap 當成教學地圖，下一輪章節最值得補哪裡</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>延伸 container 章到真正的 worktree / snapshot 設計</h3>
+            <p>現在已經把 shell 容器化邊界講清楚；下一步如果要再升級，就要處理工作區複製、git 回寫與 session 含義。</p>
+        </div>
+        <div class="check-item">
+            <h3>把 provider 解剖室往 快取金鑰 / retry 策略再推深一層</h3>
+            <p>請求格式調整 與 fallback 案例已補上；下一步最值得寫的是 快取金鑰、header 差異與更細的 retry 策略，讓整合成本不只停在協定層。</p>
+        </div>
+        <div class="check-item">
+            <h3>把 Runtime Guardrails 章再往 sub-agent / 成本策略推深</h3>
+            <p>現在已經把 context compaction、fallback、token accounting、undercover auto-git 講清楚；下一步最值得補的是 cost-aware fallback、provider family 策略與更精細的 budget 策略。</p>
+        </div>
+        <div class="check-item">
+            <h3>把政策插點章再往拒絕來源 / 子任務血緣推深</h3>
+            <p>現在已經把 hooks、permission prompt、sub-agent delegation 的現況講清楚；下一步最值得補的是事件層拒絕來源、政策設定檔與 replay 中的子任務血緣。</p>
+        </div>
+        <div class="check-item">
+            <h3>把工作流語言章再往命令衝突 / skill 指派 推深</h3>
+            <p>現在已經把 instructions、commands、skills 的分工講清楚；下一步最值得補的是重名衝突規則、catalog 優先順序與未來是否導入自動 skill 指派。</p>
+        </div>
+        <div class="check-item">
+            <h3>把 Attachment 章再往 provider-native upload / replay persistence 推深</h3>
+            <p>現在已經把 binary reference、prompt placeholder、exec JSON 與 adapter 斷點講清楚；下一步最值得補的是單一 provider 的真正 payload 與 session 證據模型。</p>
+        </div>
+        <div class="check-item">
+            <h3>把 Trust Matrix 再往 MCP / memory / session 的統一含義推深</h3>
+            <p>現在已把 instructions、commands、skills、providers、plugins、MCP、session、memory 的 trust 差異講清楚；下一步最值得補的是把例外路徑逐步收斂成更一致的 gate 規則。</p>
+        </div>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">不要把 borrowed features 當 roadmap 自動選單</div>
+        <p>GCD 參考三大產品，不代表每個 feature 都應該補齊。真正應該先做的，是那些能讓主要流程更可信、更可教、更不容易被誤解的工程工作。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('learn')">← 學習路徑</button>
+    <button class="btn btn-primary" onclick="navigateTo('home')">回到首頁</button>
+</div>

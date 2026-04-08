@@ -1,0 +1,394 @@
+<div class="chapter-header">
+    <span class="chapter-number">Extensions</span>
+    <h1>工具擴充方式</h1>
+    <p class="chapter-desc">GCD 有三種工具：內建的、Plugin 擴充的、MCP 連接的。它們載入方式不同、安全規則也不同。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">先講最重要的 實況檢查</div>
+        <p>GCD 的「可擴充性」不是一條單線能力。built-in tools、plugin tools、MCP tools 雖然最後都會出現在同一個 tool registry 裡，但它們的載入來源、信任規則、執行方式、命名規則與安全意義並不一樣。如果把它們都簡化成「外部工具」，文件就會不準確。</p>
+    </div>
+
+    <h2>先把三層工具面分開看</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>層次</th>
+                    <th>它從哪裡來</th>
+                    <th>它怎麼進 runtime</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Built-in tools</td>
+                    <td><code>tools/registry.rs</code> 硬編碼</td>
+                    <td>每次 <code>run_agent()</code> 都一定存在</td>
+                </tr>
+                <tr>
+                    <td>Plugin tools</td>
+                    <td>全域 <code>~/.gcd/plugins</code> 與 workspace <code>.gcd/plugins</code></td>
+                    <td><code>App::exec</code> 先載入，再傳進 <code>run_agent()</code></td>
+                </tr>
+                <tr>
+                    <td>MCP tools</td>
+                    <td>workspace <code>.gcd/mcp.json</code></td>
+                    <td><code>run_agent()</code> 啟動時動態連線與發現</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>工具註冊表是怎麼合併的</h2>
+    <p>GCD 不是讓三種工具各走各的執行路徑，而是最後都合併進同一份工具清單。<code>builtin_tools()</code> 先建立 8 個內建工具，接著 <code>all_tools(plugin_tools, mcp_tools)</code> 會依序把 plugins 與 MCP tools append 到後面。這表示「所有工具都長得像 Tool trait」，但不代表它們擁有相同的風險程度。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：工具合併順序</span>
+        </div>
+        <div class="window-body">
+<pre><code>1. built-in tools
+   - read_file
+   - write_file
+   - list_dir
+   - shell
+   - search_files
+   - fetch_url
+   - apply_patch
+   - spawn_agent
+
+2. plugin tools
+   - 由 PluginCatalog 載入
+
+3. MCP tools
+   - 由 .gcd/mcp.json 啟動伺服器後動態發現</code></pre>
+        </div>
+    </div>
+
+    <p>這裡有一個很重要所以需要寫清楚的細節：<code>execute_tool_call()</code> 會用 <code>tools.iter().find(...)</code> 找第一個同名工具。換句話說，如果發生命名衝突，目前是靠註冊順序決定誰先被找到，而不是有一套明確的名稱衝突檢查。</p>
+
+    <div class="callout callout-info revealable">
+        <div class="callout-title">這個順序的實際意義</div>
+        <p>Built-in tools 會先於 plugins 被找到，plugins 又會先於 MCP。換句話說，如果有人真的用相同名字定義 plugin 或 MCP tool，它不一定能覆蓋前面的工具，甚至可能只是被悄悄 shadow。註解說名稱應唯一，但目前沒有強制驗證。</p>
+    </div>
+
+    <h2>Built-in tools：最完整，也最像 GCD 的正式含義</h2>
+    <p>內建工具是目前最成熟、也最接近 GCD 官方含義的工具層。它們共享 <code>ToolContext</code>、多數會檢查 sandbox，並與 permission / hooks / session events 有最完整的連接。網站前面那些對 <code>read_file</code>、<code>write_file</code>、<code>apply_patch</code>、<code>shell</code>、<code>spawn_agent</code> 的分析，基本上都是以 built-in path 為準。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">B1</div>
+            <h3>命名穩定</h3>
+            <p>工具名稱固定，provider adapters 與 permission 邏輯都以這些名稱為基礎。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">B2</div>
+            <h3>Sandbox 含義最清楚</h3>
+            <p>至少 <code>read-only</code>、<code>workspace-write</code>、<code>container</code> 的主要差異，都是從 built-in tools 看得最清楚。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">B3</div>
+            <h3>Permission 對照最完整</h3>
+            <p><code>suggest</code>、<code>auto-edit</code>、<code>full-auto</code> 的設計主要就是圍繞這批內建工具定義出來的。</p>
+        </article>
+    </div>
+
+    <h2>Plugins：比較像本地命令擴充，不是新的協定層</h2>
+    <p>Plugins 的定位，和 MCP 很不一樣。它們不是去連外部協定，而是把一個 JSON 定義包成新的 Tool。定義中包含工具名稱、描述、JSON Schema、命令模板、可選工作目錄與輸出上限。執行時則會把命令切成 program + args，再做 placeholder 置換，最後用 <code>Command::new(program).args(...)</code> 執行。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：一個 plugin JSON</span>
+        </div>
+        <div class="window-body">
+<pre><code>{
+  "name": "lint_code",
+  "description": "Run ESLint on a file",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "file": { "type": "string" }
+    },
+    "required": ["file"]
+  },
+  "command": "npx eslint {{file}}",
+  "cwd": "frontend",
+  "max_output_bytes": 8192
+}</code></pre>
+        </div>
+    </div>
+
+    <p>這個設計有一個很實用的優點：它不是把整串命令交給 <code>sh -c</code>，而是先做簡單 tokenization，再把參數以字面值放進 argv。這大幅降低了傳統 shell template 最直接的字串插值風險，也表示 plugin 比「把模板塞進 shell 工具」更收斂一些。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Plugin 層的優點</th>
+                    <th>對教學與工程有什麼幫助</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>不走 <code>sh -c</code></td>
+                    <td>降低最直接的 shell string injection 風險。</td>
+                </tr>
+                <tr>
+                    <td>可以定義自己的 schema</td>
+                    <td>讓 provider 看見一個具名、具參數結構的新工具，而不是模糊文字說明。</td>
+                </tr>
+                <tr>
+                    <td>可指定 <code>cwd</code></td>
+                    <td>適合把某些前端或子模組工作封裝成本地工具。</td>
+                </tr>
+                <tr>
+                    <td>全域與 workspace 可分開載入</td>
+                    <td>兼顧個人習慣與專案特化。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>但 plugin 的安全意義，目前不能講得太滿</h2>
+    <p>這裡有兩個很重要的 實況檢查。第一，plugin 執行時目前沒有像 built-in <code>shell</code> 那樣依 <code>ctx.sandbox</code> 去改走 container，也沒有明確阻擋 <code>read-only</code>。第二，permission prompt 的 <code>needs_confirmation()</code> 目前只認得 <code>write_file</code>、<code>apply_patch</code>、<code>shell</code> 這幾個名字，因此一般 plugin tool 預設不會自動落入那套批准含義。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>面向</th>
+                    <th>Built-in shell</th>
+                    <th>一般 plugin tool</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>在 <code>read-only</code> 下</td>
+                    <td>會直接拒絕</td>
+                    <td>目前程式碼裡沒有同等檢查</td>
+                </tr>
+                <tr>
+                    <td>在 <code>container</code> 下</td>
+                    <td>可改走 Docker / Podman</td>
+                    <td>目前仍直接在 host 上執行</td>
+                </tr>
+                <tr>
+                    <td>Permission prompt</td>
+                    <td>依名稱命中 <code>shell</code> 邏輯</td>
+                    <td>除非名稱剛好撞到既有高風險工具，否則不會自動套入</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">這不代表 plugins 不能用，而是含義還沒完全統一</div>
+        <p>Plugins 已經能在主要流程工作，但如果要把它們描述成「與 built-in tools 共享同一套 sandbox / permission 安全設計」，目前會過度樂觀。比較誠實的說法是：plugins 目前是功能可用、邊界仍需精煉的實驗中的工具層。</p>
+    </div>
+
+    <h2>MCP：不是本地命令模板，而是外部工具協定橋接</h2>
+    <p>MCP 路徑和 plugins 最大的差別，在於它不是直接執行一個命令模板，而是先讀 <code>.gcd/mcp.json</code>，啟動指定的 MCP server 子程序，做一次 <code>initialize</code> 握手，再跑 <code>tools/list</code> 發現可用工具，最後把每個外部工具包成新的 <code>McpToolAdapter</code>。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：workspace MCP 設定</span>
+        </div>
+        <div class="window-body">
+<pre><code>{
+  "servers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "env": {}
+    }
+  }
+}</code></pre>
+        </div>
+    </div>
+
+    <p>發現到的 MCP 工具，最後會被命名成 <code>mcp__{server_name}__{tool_name}</code>。這種 namespacing 很重要，因為它避免不同 server 上同名工具直接撞名，也讓 session / replay 時能一眼看出某個工具呼叫其實來自哪個 MCP server。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：MCP 工具名稱會怎麼長</span>
+        </div>
+        <div class="window-body">
+<pre><code>server name: filesystem
+tool name: read_file
+
+=> GCD 執行時 中的工具名：
+mcp__filesystem__read_file</code></pre>
+        </div>
+    </div>
+
+    <h2>MCP 的擴充價值，在於協定，不在於命令模板</h2>
+    <p>如果說 plugins 比較像把本地命令包成工具，那 MCP 則是在說：「GCD 可以透過標準協定，向外部工具生態要能力」。這對產品邊界來說非常重要，因為它讓工具擴充不必全都塞進本地 repo，也不必全部寫成內建工具。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">M1</div>
+            <h3>工具發現是動態的</h3>
+            <p>先啟 server，再詢問它有哪些工具，而不是本機先寫死每個工具定義。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">M2</div>
+            <h3>工具 schema 來自對方</h3>
+            <p>GCD 會使用對方回傳的 <code>inputSchema</code> 生成 tool definition，而不是自己手寫。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">M3</div>
+            <h3>工具執行透過 JSON-RPC</h3>
+            <p>呼叫的不是本地命令列，而是 <code>tools/call</code> 這種協定方法。</p>
+        </article>
+    </div>
+
+    <h2>但 MCP 的 trust 與 sandbox 邊界，目前也值得保守描述</h2>
+    <p>這裡有一個很關鍵、也很容易被忽略的現況：<code>run_agent()</code> 會直接對工作區呼叫 <code>load_mcp_tools(&workspace_root)</code>，而 <code>mcp.json</code> 的讀取目前看起來不是透過 <code>TrustState</code> 決定。換句話說，MCP workspace config 和 commands / skills / workspace providers / workspace plugins 的 trust gating 含義，並不完全一致。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>工作區擴充來源</th>
+                    <th>目前是否明確受 信任檢查 影響</th>
+                    <th>說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>.gcd/commands</code></td>
+                    <td>是</td>
+                    <td>untrusted 時 catalog 會變成空的。</td>
+                </tr>
+                <tr>
+                    <td><code>.gcd/skills</code></td>
+                    <td>是</td>
+                    <td>和 commands 類似。</td>
+                </tr>
+                <tr>
+                    <td><code>.gcd/providers.conf</code></td>
+                    <td>是</td>
+                    <td>untrusted 時不讀 workspace provider config。</td>
+                </tr>
+                <tr>
+                    <td><code>.gcd/plugins</code></td>
+                    <td>是</td>
+                    <td>workspace plugins 只在 trusted workspace 載入。</td>
+                </tr>
+                <tr>
+                    <td><code>.gcd/mcp.json</code></td>
+                    <td>目前看起來未完整對齊</td>
+                    <td>；目前是由 <code>run_agent()</code> 直接讀 workspace config。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">這是文件裡一定要誠實講出的差異</div>
+        <p>如果把 MCP 直接寫成「和 commands / skills 一樣受 trust 管理」，那就會高估目前實作的一致性。比較準確的說法是：MCP 已有可用 client 與動態工具發現，但 workspace config 的 trust 含義還沒有和其他擴充來源完全對齊。</p>
+    </div>
+
+    <h2>Built-in、Plugin、MCP 三者最關鍵的差異</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>面向</th>
+                    <th>Built-in</th>
+                    <th>Plugin</th>
+                    <th>MCP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>能力來源</td>
+                    <td>GCD 原始碼內建</td>
+                    <td>本地 JSON 定義 + 本地命令</td>
+                    <td>外部 server 透過協定宣告</td>
+                </tr>
+                <tr>
+                    <td>命名規則</td>
+                    <td>固定名稱</td>
+                    <td>由 JSON 的 <code>name</code> 決定</td>
+                    <td><code>mcp__server__tool</code> namespaced</td>
+                </tr>
+                <tr>
+                    <td>Sandbox 含義</td>
+                    <td>最完整</td>
+                    <td>目前未完全對齊 built-in</td>
+                    <td>主要依 MCP server 自身與 GCD 包裝邊界</td>
+                </tr>
+                <tr>
+                    <td>Permission 含義</td>
+                    <td>明確對齊 <code>shell</code> / <code>write_file</code> / <code>apply_patch</code></td>
+                    <td>目前不會自動套進同一套高風險分類</td>
+                    <td>目前也沒有對應 built-in 的細緻分類</td>
+                </tr>
+                <tr>
+                    <td>Trust 邊界</td>
+                    <td>不涉及載入</td>
+                    <td>workspace plugins 受 trust 影響</td>
+                    <td>workspace config trust 含義尚未完全對齊</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>如果你是貢獻者，怎麼判斷該做 plugin 還是 MCP</h2>
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>如果只是本地命令封裝，先想 plugin</h3>
+                <p>像 lint、formatter、repo 專用腳本、子模組工具鏈，如果主要是包裝本地命令與 schema，plugin 常常就夠了。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>如果你要的是外部工具生態，才去想 MCP</h3>
+                <p>MCP 更適合要與外部 server 協定互通、工具集合是動態發現、且不想每個工具都手刻成本地 JSON 的情境。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>如果能力已是核心完整功能，優先考慮 built-in</h3>
+                <p>像 <code>read_file</code>、<code>apply_patch</code>、<code>shell</code> 這種會深度影響 permission、sandbox、events 的能力，長期來看還是更適合留在 built-in 層。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>實況檢查：最值得記住的四件事</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>三層工具面都能工作，但完成度不同</h3>
+            <p>Built-in 最完整；plugins 可用但安全意義尚未完全統一；MCP 已能連線與發現工具，但 client / 信任規則仍要保守看待。</p>
+        </div>
+        <div class="check-item">
+            <h3>名稱衝突目前主要靠約定，不靠強制驗證</h3>
+            <p>同名工具如果真的出現，目前偏向由註冊順序決定誰先被找到。</p>
+        </div>
+        <div class="check-item">
+            <h3>Plugin 與 MCP 不是「另一種 shell」</h3>
+            <p>Plugins 是本地命令封裝；MCP 是協定橋接；兩者都不該和 built-in shell 混成一種含義。</p>
+        </div>
+        <div class="check-item">
+            <h3>Trust、sandbox、permission 在擴充層還沒有完全同構</h3>
+            <p>這就是為什麼文件要用 <code>Implemented</code> 而不是一筆帶過「支援擴充」。</p>
+        </div>
+    </div>
+
+    <h2>把這一章濃縮成一句話</h2>
+    <div class="callout callout-info revealable">
+        <div class="callout-title">可擴充性不是功能空談，而是邊界管理</div>
+        <p>GCD 確實有 built-in、plugin、MCP 三層工具面，這很有價值；但它們不是同一種東西，也還沒有完全共享同一套 trust、sandbox、permission 含義。把這條邊界講清楚，比把「支援 MCP / plugins」寫成一行賣點更重要。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('policy')">← Hooks 和 Sub-Agent</button>
+    <button class="btn btn-primary" onclick="navigateTo('trustmap')">信任規則總表 →</button>
+</div>

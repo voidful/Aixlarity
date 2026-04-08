@@ -1,0 +1,77 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 15 章</span>
+                <h1>會話持久化</h1>
+                <p class="chapter-desc">每次互動都是歷史 — <code>session.rs</code></p>
+            </div>
+            <div class="content-body">
+                <h2>Session 資料模型</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">session/model.rs</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-rust"><span class="token keyword">pub</span> <span class="token keyword">struct</span> <span class="token class-name">SessionRecord</span> {
+    <span class="token keyword">pub</span> id: String,
+    <span class="token keyword">pub</span> workspace: PathBuf,
+    <span class="token keyword">pub</span> turns: Vec&lt;<span class="token class-name">SessionTurnRecord</span>&gt;,
+    <span class="token keyword">pub</span> metadata: SessionMetadata,
+}
+
+<span class="token keyword">pub</span> <span class="token keyword">struct</span> <span class="token class-name">SessionTurnRecord</span> {
+    <span class="token keyword">pub</span> input: String,
+    <span class="token keyword">pub</span> prompt: String,
+    <span class="token keyword">pub</span> mode: String,
+    <span class="token keyword">pub</span> execution: <span class="token class-name">SessionExecutionData</span>,
+    <span class="token keyword">pub</span> events: Vec&lt;<span class="token class-name">AgentEvent</span>&gt;,
+}
+
+<span class="token keyword">pub</span> <span class="token keyword">struct</span> <span class="token class-name">SessionExecutionData</span> {
+    <span class="token keyword">pub</span> token_usage: <span class="token class-name">TokenUsage</span>,
+    <span class="token keyword">pub</span> tool_invocations: Vec&lt;<span class="token class-name">ToolInvocation</span>&gt;,
+    <span class="token keyword">pub</span> final_response: String,
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2>儲存結構</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">磁碟結構</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-text">~/.gcd/sessions/
+├── abc123/
+│   ├── meta.json          ← 會話元資料
+│   └── turns/
+│       ├── 001.json       ← 第一輪對話
+│       ├── 002.json       ← 第二輪對話
+│       └── ...
+└── def456/
+    └── ...</code></pre>
+                    </div>
+                </div>
+
+                <h2>Fork / Resume / Replay</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-num">R</div>
+                        <h3>Resume（恢復）</h3>
+                        <p>繼續同一個 session，在現有對話歷史後追加新輪次。<code>gcd exec --resume &lt;id&gt;</code></p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-num">F</div>
+                        <h3>Fork（分支）</h3>
+                        <p>複製現有 session 到新 ID，從此獨立發展。<code>gcd exec --fork &lt;id&gt;</code></p>
+                    </div>
+                </div>
+
+                <div class="source-ref">
+                    <strong>原始碼</strong>：<code>crates/gcd-core/src/session.rs</code>、<code>crates/gcd-core/src/session/model.rs</code>、<code>crates/gcd-core/src/session/storage.rs</code>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch14')">← 14：工具系統</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch16')">16：CLI 介面 →</button>
+            </div>

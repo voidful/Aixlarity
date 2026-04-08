@@ -1,0 +1,332 @@
+<div class="chapter-header">
+    <span class="chapter-number">Tools</span>
+    <h1>工具和權限</h1>
+    <p class="chapter-desc">AI 模型不會自己讀檔案、跑指令。這一章介紹 GCD 的 8 個內建工具，以及系統怎麼控制這些工具能做什麼。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先講結論</div>
+        <p>在 AI 助手 裡，工具層不是模型的附屬配件，而是 操作真的發生的地方。GCD 用 <code>Tool</code> trait、<code>ToolContext</code>、sandbox policy、permission level 與 hooks，把「模型提出的意圖」轉成「系統允許的動作」。如果這一層不夠清楚，agent 很快就會從有用工具變成無法控制腳本。</p>
+    </div>
+
+    <h2>先把工具層想成什麼</h2>
+    <p>一個大型 prompt 即使寫得再好，也不能自己讀檔、不能真的改檔、不能跑 shell、更不會自動知道哪個路徑超出工作區。這些事情都必須套用到工具實作與 執行時 gate。換句話說，工具層其實是在回答一個很實際的問題：<strong>模型說想做什麼時，系統真的允許它做到哪裡</strong>。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">1</div>
+            <h3>工具定義能力面</h3>
+            <p>每個工具都透過 <code>name</code>、<code>description</code>、<code>parameters_schema</code> 對 provider 揭露能力與輸入形狀。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">2</div>
+            <h3>ToolContext 定義執行邊界</h3>
+            <p>工作區根目錄、sandbox、hooks、coordinator provider / key / permission 都由 context 提供。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">3</div>
+            <h3>Permission 定義人機節奏</h3>
+            <p>同一個 tool call 在 <code>suggest</code>、<code>auto-edit</code>、<code>full-auto</code> 下，允許方式會不同。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">4</div>
+            <h3>Hooks 定義外加政策</h3>
+            <p>即使工具本身允許執行，PreToolUse / PostToolUse 仍可以加上額外攔截、紀錄與整合。</p>
+        </article>
+    </div>
+
+    <h2>GCD 目前有哪些 built-in tools</h2>
+    <p><code>tools/registry.rs</code> 會先建立 built-in tools，再把 plugin tools 與 MCP tools 併進來。這表示工具目錄不是單一靜態清單，而是一個可擴充的註冊表。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>類型</th>
+                    <th>工具</th>
+                    <th>主要作用</th>
+                    <th>操作影響等級</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>讀取</td>
+                    <td><code>read_file</code>、<code>list_dir</code>、<code>search_files</code></td>
+                    <td>建立 repo 上下文，讓模型看到真實檔案與搜尋結果。</td>
+                    <td>低，但仍受工作區邊界控制。</td>
+                </tr>
+                <tr>
+                    <td>修改</td>
+                    <td><code>write_file</code>、<code>apply_patch</code></td>
+                    <td>產生或修改工作區檔案。</td>
+                    <td>高，會直接改變工作區內容。</td>
+                </tr>
+                <tr>
+                    <td>執行</td>
+                    <td><code>shell</code></td>
+                    <td>執行 shell 指令，必要時走 container sandbox。</td>
+                    <td>高，且操作影響最難預測。</td>
+                </tr>
+                <tr>
+                    <td>網路</td>
+                    <td><code>fetch_url</code></td>
+                    <td>抓取 URL 內容，作為額外上下文。</td>
+                    <td>中，會產生外部網路請求。</td>
+                </tr>
+                <tr>
+                    <td>協調</td>
+                    <td><code>spawn_agent</code></td>
+                    <td>把子任務交給 sub-agent。</td>
+                    <td>中到高，會展開另一條 代理迴圈。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>ToolContext 真正做的是邊界計算</h2>
+    <p><code>ToolContext</code> 很值得特別看，因為它不是單純把幾個變數打包，而是在工具真正執行前，提供「這次執行允許的空間」。像 <code>workspace_path()</code> 會先 canonicalize 工作區，再解析既有祖先路徑，避免路徑穿越或偷偷跳出工作區。這讓 sandbox 不只是字串標籤，而是進入具體檔案路徑判斷。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：<code>workspace_path()</code> 在保護什麼</span>
+        </div>
+        <div class="window-body">
+<pre><code>模型提出：
+write_file(path="../outside.txt", content="...")
+
+ToolContext 會做：
+1. 解析工作區根目錄的 canonical path
+2. 嘗試解析目標路徑既有祖先
+3. 檢查目標是否仍落在 workspace root 之下
+
+結果：
+如果路徑跳出工作區，工具直接失敗，不會寫出去</code></pre>
+        </div>
+    </div>
+
+    <h2>同樣是 sandbox，對不同工具的意義不一樣</h2>
+    <p>很多人會把 sandbox 想成單一保護罩，但對不同工具來說，它的落點其實不同。讀取類工具主要受工作區邊界限制；寫入類工具還會額外受 read-only 限制；shell 則在 container 模式下改走完全不同的執行路徑。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>工具</th>
+                    <th><code>off</code></th>
+                    <th><code>read-only</code></th>
+                    <th><code>workspace-write</code></th>
+                    <th><code>container</code></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>read_file</code> / <code>list_dir</code> / <code>search_files</code></td>
+                    <td>可讀取絕對路徑或相對路徑。</td>
+                    <td>限制在工作區內。</td>
+                    <td>限制在工作區內。</td>
+                    <td>限制在工作區內。</td>
+                </tr>
+                <tr>
+                    <td><code>write_file</code> / <code>apply_patch</code></td>
+                    <td>可寫絕對或相對路徑。</td>
+                    <td>直接阻擋。</td>
+                    <td>允許在工作區內修改。</td>
+                    <td>目前仍直接作用在主機工作區路徑。</td>
+                </tr>
+                <tr>
+                    <td><code>shell</code></td>
+                    <td>在主機上執行。</td>
+                    <td>直接阻擋。</td>
+                    <td>在工作區中執行。</td>
+                    <td>改走 Docker / Podman 容器。</td>
+                </tr>
+                <tr>
+                    <td><code>fetch_url</code></td>
+                    <td>可執行。</td>
+                    <td>目前程式碼未額外阻擋。</td>
+                    <td>可執行。</td>
+                    <td>目前程式碼未額外阻擋。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>這裡最值得注意的 實況檢查 有兩個。第一，<strong>container 模式目前只完整包住 <code>shell</code></strong>，其他讀寫工具還是在主機工作區上操作。第二，<strong><code>fetch_url</code> 目前沒有依 sandbox policy 額外收斂網路存取</strong>。這些都不是要否定設計，而是提醒文件必須忠實反映實作邊界。</p>
+
+    <h2>權限不是工具能不能用，而是要不要人工批准</h2>
+    <p><code>PermissionLevel</code> 和 sandbox 常被混在一起，但它們處理的問題不同。sandbox 比較像環境邊界；permission 則在回答「這次動作要不要經過人類點頭」。在 GCD 裡，<code>suggest</code>、<code>auto-edit</code>、<code>full-auto</code> 會對不同工具產生不同要求。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Permission</th>
+                    <th>代表什麼</th>
+                    <th>哪些工具通常需要確認</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>suggest</code></td>
+                    <td>偏建議模式，任何真正寫檔或執行命令都更應該問人。</td>
+                    <td><code>write_file</code>、<code>apply_patch</code>、<code>shell</code></td>
+                </tr>
+                <tr>
+                    <td><code>auto-edit</code></td>
+                    <td>允許較多自動修改，但仍把高風險工具保留給人工確認。</td>
+                    <td><code>shell</code>、<code>apply_patch</code></td>
+                </tr>
+                <tr>
+                    <td><code>full-auto</code></td>
+                    <td>在既有 sandbox 內盡量自動執行。</td>
+                    <td>原則上不需額外確認，但仍受 sandbox 與 hooks 影響。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：同一個 patch 在不同 permission 下的命運</span>
+        </div>
+        <div class="window-body">
+<pre><code>Tool call: apply_patch(path="src/app.rs", patch="...")
+
+suggest
+=> 會要求人工確認，否則不執行
+
+auto-edit
+=> 仍可能要求確認，因為 patch 屬於高影響工具
+
+full-auto
+=> 如果 sandbox 允許，runtime 可直接執行
+
+重點：
+permission 解的是「誰拍板」，
+不是「底層環境允不允許」</code></pre>
+        </div>
+    </div>
+
+    <h2>Hooks 是工具層外掛式政策，不是單純日誌</h2>
+    <p>GCD 的 hooks 系統允許在工具前後執行 shell command。<code>PreToolUse</code> 可以阻擋，<code>PostToolUse</code> 則偏向通知與整合。這個設計的好處，是團隊可以不改每個工具的實作，就插入自定政策，例如禁止某些 shell pattern、把工具結果送到外部監控、或在修改後自動跑額外檢查。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">H1</div>
+            <h3><code>exit 2</code> 代表 deny</h3>
+            <p>PreToolUse hook 如果以 exit code 2 結束，該工具呼叫會被拒絕。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">H2</div>
+            <h3>工具參數會變成環境變數</h3>
+            <p><code>GCD_TOOL_NAME</code>、<code>GCD_TOOL_ARGS</code>、<code>GCD_TOOL_RESULT</code> 讓 hook 能讀到上下文。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">H3</div>
+            <h3>Hook 有 timeout</h3>
+            <p>預設 10 秒，避免某個 hook 把整條工具鏈卡住。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">H4</div>
+            <h3>Workspace hook 目前很值得保守描述</h3>
+            <p>因為 hook 載入路徑與 trust 含義還需要更清楚文件化，這是值得持續 實況檢查 的地方。</p>
+        </article>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：一個簡單的 PreToolUse hook</span>
+        </div>
+        <div class="window-body">
+<pre><code>{
+  "pre_tool_use": [
+    {
+      "command": "echo \"$GCD_TOOL_ARGS\" | grep -q 'rm -rf' && exit 2 || exit 0",
+      "tools": ["shell"],
+      "timeout_secs": 5
+    }
+  ]
+}</code></pre>
+        </div>
+    </div>
+
+    <p>這個例子要表達的不是最佳實踐，而是 hooks 的定位：它們讓團隊可以在工具執行前後加上一層本地政策，而不必每次都回頭改 代理迴圈 核心邏輯。</p>
+
+    <h2><code>spawn_agent</code> 代表什麼完成度</h2>
+    <p><code>CoordinatorTool</code> 讓 GCD 可以把子任務交給 sub-agent。這表示 GCD 已經不只是單線工具執行器，而是開始具備協調多輪工作的能力。不過它現在也有很清楚的限制：最大深度 2、sub-agent 不串流輸出、不 auto-git，而且呼叫 <code>run_agent</code> 時沒有沿用父層 plugin tool list。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>面向</th>
+                    <th>目前行為</th>
+                    <th>判讀</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>遞迴深度</td>
+                    <td>上限 2</td>
+                    <td>避免無限展開，但也表示還不是完整多代理協調系統。</td>
+                </tr>
+                <tr>
+                    <td>繼承上下文</td>
+                    <td>沿用 workspace、sandbox、provider、permission</td>
+                    <td>這讓子代理不是完全陌生的新工作。</td>
+                </tr>
+                <tr>
+                    <td>工具集</td>
+                    <td>會得到 built-in tools 與 MCP，但不會直接收到父層 plugin tools 清單</td>
+                    <td>屬於可用但仍有限制的實作。</td>
+                </tr>
+                <tr>
+                    <td>輸出模式</td>
+                    <td>不串流、不 auto-git</td>
+                    <td>較適合 有限制的委派，不適合拿來模擬完整並行工作平台。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>實況檢查：工具層哪些地方已經很完整，哪些還不能寫滿</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>能力</th>
+                    <th>判讀</th>
+                    <th>說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>讀取 / 搜尋 / 寫入 / patch 類工具</td>
+                    <td>主要流程已完整可用，且都經過 <code>ToolContext</code> 與 sandbox 邏輯。</td>
+                </tr>
+                <tr>
+                    <td>Shell with container path</td>
+                    <td>container 模式目前只完整包住 <code>shell</code>。</td>
+                </tr>
+                <tr>
+                    <td>Hooks lifecycle</td>
+                    <td>PreToolUse / PostToolUse 都已在 工具迴圈 前後生效。</td>
+                </tr>
+                <tr>
+                    <td>Network gating for <code>fetch_url</code></td>
+                    <td>工具可用，但目前 sandbox policy 沒有對網路 access 做額外收斂含義。</td>
+                </tr>
+                <tr>
+                    <td>Coordinator / sub-agent</td>
+                    <td>已能工作，但應以 有限制的委派 心智理解，而非完整多代理平台。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('state')">← 工作記錄和記憶</button>
+    <button class="btn btn-primary" onclick="navigateTo('policy')">Hooks 和 Sub-Agent →</button>
+</div>

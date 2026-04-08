@@ -1,0 +1,287 @@
+<div class="chapter-header">
+    <span class="chapter-number">Sources</span>
+    <h1>Instructions、Commands、Skills 與 提示詞來源 Layer</h1>
+    <p class="chapter-desc">這一章專門回答一個常被忽略的問題：agent 最終拿到的 prompt，究竟是從哪些來源一層一層組起來的？</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先講結論</div>
+        <p>對 GCD 來說，prompt 不是只有「使用者輸入」而已。至少還有 repo instructions、custom commands、skills、檔案注入、待批准 shell 區塊與 工作接續。把這些來源講清楚，才能真正理解 AI 助手 為什麼不是單純的聊天模型外掛。</p>
+    </div>
+
+    <h2>為什麼這一層要單獨看</h2>
+    <p>很多文件在談 prompt 時，只會展示最後送出的文字長什麼樣子。但對工程實作來說，更重要的是「這些文字從哪裡來」。因為只要來源層不清楚，你就很難回答信任規則在哪裡、workflow 是怎麼被固定下來的、哪一層是顯式選擇、哪一層又屬於自動注入。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>來源層</th>
+                    <th>它提供什麼</th>
+                    <th>是否受 trust 影響</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Instructions</td>
+                    <td>repo 級工作規範與語氣</td>
+                    <td>是</td>
+                </tr>
+                <tr>
+                    <td>Commands</td>
+                    <td>任務模板與 workflow 腳本</td>
+                    <td>是</td>
+                </tr>
+                <tr>
+                    <td>Skills</td>
+                    <td>可選用的專題能力與長段指引</td>
+                    <td>是</td>
+                </tr>
+                <tr>
+                    <td>Attachments / File Injections</td>
+                    <td>實際檔案內容、目錄 listing、二進位參照</td>
+                    <td>受工作區解析規則影響</td>
+                </tr>
+                <tr>
+                    <td>Shell Approval Blocks</td>
+                    <td>把命令意圖轉成待批准區段</td>
+                    <td>不直接執行，進 prompt 顯示</td>
+                </tr>
+                <tr>
+                    <td>Session Continuation</td>
+                    <td>既有工作摘要</td>
+                    <td>由 session reuse mode 決定</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Instructions：repo 規範怎麼進 prompt</h2>
+    <p><code>InstructionBundle::load()</code> 目前會在可信工作區中讀取四種固定檔名：<code>AGENTS.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code>、<code>GCD.md</code>。這裡有兩個很重要的訊號。第一，instructions 是顯式檔名約定，不是任意掃描所有 Markdown。第二，它明確受 信任檢查 影響，不可信工作區會直接返回空 bundle。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：repo instructions 會如何出現在 最終提示詞</span>
+        </div>
+        <div class="window-body">
+<pre><code># Repository Instructions
+
+## AGENTS.md
+- 修改前先理解現有結構
+- 變更後要跑對應測試
+
+## GCD.md
+- 使用繁體中文撰寫文件
+- 不要把基本架構寫成完整功能</code></pre>
+        </div>
+    </div>
+
+    <p>這也是為什麼 trust 不只是 UX 標籤。只要 instructions 會進 最終提示詞，它就已經屬於 agent 行為的重要來源，不能不經檢查就相信任何工作區檔案。</p>
+
+    <h2>Commands：workflow 不是口頭習慣，而是可檔案化模板</h2>
+    <p><code>CommandCatalog::load()</code> 會讀 global commands dir 與 workspace commands dir 的 TOML 檔，並把路徑轉成 command name。像 <code>review/security.toml</code> 這類路徑會被命名成 <code>review:security</code>。這讓命令不是平面的字串清單，而是可以有層次的 workflow catalog。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>檔案位置</th>
+                    <th>最後命令名</th>
+                    <th>說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>commands/review.toml</code></td>
+                    <td><code>review</code></td>
+                    <td>最單純的單檔命令。</td>
+                </tr>
+                <tr>
+                    <td><code>commands/review/security.toml</code></td>
+                    <td><code>review:security</code></td>
+                    <td>可用目錄層次建立命令分類。</td>
+                </tr>
+                <tr>
+                    <td><code>.gcd/commands/refactor/rust.toml</code></td>
+                    <td><code>refactor:rust</code></td>
+                    <td>工作區內的專案特化命令。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：一個 custom command TOML</span>
+        </div>
+        <div class="window-body">
+<pre><code>description = "Review a Rust file with project rules"
+prompt = """
+Review the target file carefully.
+Use @{README.md} as project context.
+Task: {{args}}
+Run !{cargo test -p gcd-core}
+"""</code></pre>
+        </div>
+    </div>
+
+    <p>命令模板最有價值的地方，不只是省打字，而是把「一類任務應該怎麼展開」變成可以版本化、可以審查、可以重用的文字內容。</p>
+
+    <h2><code>{{args}}</code> 與 <code>Raw command</code> 的行為差異</h2>
+    <p><code>render_command_prompt()</code> 會先做 <code>{{args}}</code> 置換。如果模板裡沒有這個 placeholder，且使用者確實帶了參數，GCD 會把整條原始命令追加為 <code>Raw command</code>。這個細節很實用，因為它避免了「模板忘了留 args 位置，結果使用者參數悄悄消失」的問題。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：沒有 <code>{{args}}</code> 時會發生什麼</span>
+        </div>
+        <div class="window-body">
+<pre><code>模板：
+"Review the current file carefully."
+
+使用者輸入：
+/review src/app.rs
+
+最終會變成：
+Review the current file carefully.
+
+Raw command: /review src/app.rs</code></pre>
+        </div>
+    </div>
+
+    <h2>Skills：顯式載入的專題能力包</h2>
+    <p><code>SkillCatalog::load()</code> 會掃 global 與 workspace skills 目錄下的 Markdown 檔。如果檔名是 <code>SKILL.md</code>，名稱取自父目錄；否則取自檔案路徑。summary 則來自第一個非空行。這讓 skill 更像具名能力包，而不是散落 prompt 片段。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>檔案位置</th>
+                    <th>最後 skill 名稱</th>
+                    <th>summary 來源</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>skills/code-review/SKILL.md</code></td>
+                    <td><code>code-review</code></td>
+                    <td>SKILL.md 第一個非空行</td>
+                </tr>
+                <tr>
+                    <td><code>skills/rust/testing.md</code></td>
+                    <td><code>rust:testing</code></td>
+                    <td>testing.md 第一個非空行</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>GCD 目前對 skills 的取態很保守：它們是顯式選用，不是靠看不透的 判斷規則s 自動召回。這個設計選擇非常重要，因為它讓 prompt 來源可追蹤。讀者與使用者都能清楚知道：這一輪為什麼帶了這個 skill，而不是系統偷偷決定。</p>
+
+    <h2>Attachments 與 file injection：證據怎麼進 prompt</h2>
+    <p><code>expand_file_injections()</code> 會處理 <code>@{...}</code> 語法。如果指向文字檔，會把內容做成帶行號預覽；如果指向目錄，會展成 listing；如果是圖片或 PDF 這類已知二進位類型，則保留成 binary reference metadata。這一層的關鍵，不只是把檔案貼進 prompt，而是把「證據如何被壓縮與呈現」做成可控規則。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">A1</div>
+            <h3>文字檔會帶行號</h3>
+            <p>這讓後續 review 或 patch 討論能更精準對齊到檔案位置。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">A2</div>
+            <h3>有大小限制</h3>
+            <p>文字注入受 400 行與 32KB 上限控制，避免 prompt 無限制膨脹。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">A3</div>
+            <h3>目錄不是整棵樹都展開</h3>
+            <p>listing 會限制數量，且略過 <code>.git</code> 這類不適合直接放進 prompt 的內容。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">A4</div>
+            <h3>二進位附件目前是保守連接</h3>
+            <p>會形成 attachment metadata，但最終是否被各 provider 完整利用，仍要保守標成 <code>Implemented</code>。</p>
+        </article>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：檔案注入後大概會長什麼樣子</span>
+        </div>
+        <div class="window-body">
+<pre><code>原始模板：
+Use @{src/app.rs} and @{docs/architecture.md} as context.
+
+展開後：
+Use
+&lt;injected-file path="src/app.rs"&gt;
+1  fn main() {
+2      ...
+&lt;/injected-file&gt;
+
+and
+&lt;injected-file path="docs/architecture.md"&gt;
+1  # Architecture
+2  ...
+&lt;/injected-file&gt;
+as context.</code></pre>
+        </div>
+    </div>
+
+    <h2><code>!{...}</code> 不是立即執行，而是 shell approval 區塊</h2>
+    <p><code>sanitize_shell_blocks()</code> 會把一般文字段中的 <code>!{...}</code> 轉成 <code>&lt;shell-approval required="true"&gt;...&lt;/shell-approval&gt;</code>，並把命令收集到 pending list。這一層非常關鍵，因為它把「命令建議」和「命令執行」清楚切開。模板可以表達 workflow 中合理的 shell 步驟，但執行仍要交由後續 gate 決定。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：shell block 在 prompt 裡的樣子</span>
+        </div>
+        <div class="window-body">
+<pre><code>原始模板：
+Run !{cargo test -p gcd-core}
+
+進 最終提示詞 後：
+Run &lt;shell-approval required="true"&gt;cargo test -p gcd-core&lt;/shell-approval&gt;
+
+同時 pending_shell_commands 會記下：
+- cargo test -p gcd-core</code></pre>
+        </div>
+    </div>
+
+    <h2>一個容易被忽略的 實況檢查：trust 對 commands / skills 的影響比想像大</h2>
+    <p>在 GCD 目前的實作裡，<code>CommandCatalog::load()</code> 和 <code>SkillCatalog::load()</code> 一旦遇到 <code>trust.restricts_project_config()</code>，就會直接回傳空 catalog。這代表在 untrusted workspace 下，不只是 workspace-local 命令與技能受影響，整體 command / skill catalog 都會被縮減。這是一個很重要所以需要寫清楚的行為，因為它直接改變 prompt 來源層。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>情境</th>
+                    <th>會發生什麼</th>
+                    <th>對讀者的意義</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>trusted workspace</td>
+                    <td>instructions、commands、skills 都能進 提示詞來源 layer。</td>
+                    <td>agent 能表現出完整 repo workflow 與 skill 組合能力。</td>
+                </tr>
+                <tr>
+                    <td>untrusted workspace</td>
+                    <td>instructions 變空，commands / skills catalog 也會被縮減為空。</td>
+                    <td>agent 仍可工作，但會更接近通用型 coding assistant，而不是專案特化 agent。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>把這一層濃縮成一句話</h2>
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">Prompt 來源層不是單純把文字串起來，而是工作流管理</div>
+        <p>Instructions 把 repo 規範寫進 runtime，commands 把任務模板檔案化，skills 帶入可選用的專題能力，attachments 提供局部證據，shell blocks 把操作意圖延後到批准流程。把這些東西分開，你才真的看懂一個 AI 助手 為什麼比聊天模型難做得多。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('container')">← Container、Host 邊界與 Sandbox</button>
+    <button class="btn btn-primary" onclick="navigateTo('workflow')">Instructions、Commands、Skills 如何形成工作流語言 →</button>
+</div>

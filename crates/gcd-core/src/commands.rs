@@ -50,7 +50,7 @@ fn load_commands_from_dir(root: &Path, commands: &mut Vec<CustomCommand>) -> io:
             continue;
         }
 
-        let relative = file.strip_prefix(root).unwrap_or_else(|_| file.as_path());
+        let relative = file.strip_prefix(root).unwrap_or(file.as_path());
         let name = relative_path_to_command_name(relative);
         let content = fs::read_to_string(&file)?;
         let prompt = extract_toml_string(&content, "prompt").ok_or_else(|| {

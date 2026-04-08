@@ -1,0 +1,29 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 18 章</span>
+                <h1>14 步執行管線全景</h1>
+                <p class="chapter-desc">從輸入到輸出的完整旅程</p>
+            </div>
+            <div class="content-body">
+                <h2>完整管線</h2>
+                <p>當使用者執行 <code>gcd exec "重構 auth 模組"</code> 時，以下 14 個步驟依序發生：</p>
+                <div class="pipeline">
+                    <div class="pipeline-step"><div class="pipeline-num">1</div><div class="pipeline-content"><strong>CLI 解析</strong> — Clap 解析命令列參數，提取 prompt、flags、options</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">2</div><div class="pipeline-content"><strong>工作區發現</strong> — 從當前目錄向上搜尋 .git / Cargo.toml 等標記</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">3</div><div class="pipeline-content"><strong>信任評估</strong> — 檢查 trusted-folders.txt，決定信任等級</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">4</div><div class="pipeline-content"><strong>供應商解析</strong> — 按優先順序找到可用的 LLM 供應商</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">5</div><div class="pipeline-content"><strong>指令載入</strong> — 讀取 AGENTS.md / GCD.md（如果信任允許）</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">6</div><div class="pipeline-content"><strong>命令/技能載入</strong> — 掃描 .gcd/commands/ 和 .gcd/skills/</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">7</div><div class="pipeline-content"><strong>MCP 連線</strong> — 啟動 MCP 伺服器子程序，發現可用工具</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">8</div><div class="pipeline-content"><strong>提示詞組裝</strong> — 展開 @{}、解析 /command、注入指令與技能</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">9</div><div class="pipeline-content"><strong>工具註冊</strong> — 合併內建 + MCP + 插件工具為統一註冊表</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">10</div><div class="pipeline-content"><strong>Agent 迴圈</strong> — 核心 10 輪迭代（LLM ↔ Tool 來回）</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">11</div><div class="pipeline-content"><strong>Session 持久化</strong> — 將整輪對話寫入 ~/.gcd/sessions/</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">12</div><div class="pipeline-content"><strong>Memory 更新</strong> — 如果有新知識，更新 MEMORY.md</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">13</div><div class="pipeline-content"><strong>Git Commit</strong> — 如果 --git 旗標開啟，stage + commit 變更</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">14</div><div class="pipeline-content"><strong>輸出渲染</strong> — 將結果以 text / JSON / JSONL 格式輸出</div></div>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch17')">← 17：輸出</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch19')">19：設計原理 →</button>
+            </div>

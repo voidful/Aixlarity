@@ -1,0 +1,73 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 07 章</span>
+                <h1>多供應商系統</h1>
+                <p class="chapter-desc">如何將三大 LLM API 統一為一個介面 — <code>providers.rs</code></p>
+            </div>
+            <div class="content-body">
+                <h2>Provider 資料模型</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">providers/types.rs</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-rust"><span class="token keyword">pub</span> <span class="token keyword">struct</span> <span class="token class-name">ProviderProfile</span> {
+    <span class="token keyword">pub</span> id: String,              <span class="token comment">// "gemini-env"</span>
+    <span class="token keyword">pub</span> label: String,           <span class="token comment">// "Gemini (環境變數)"</span>
+    <span class="token keyword">pub</span> family: <span class="token class-name">ProviderFamily</span>,  <span class="token comment">// Gemini | OpenAi | Anthropic</span>
+    <span class="token keyword">pub</span> protocol: <span class="token class-name">ProviderProtocol</span>, <span class="token comment">// API 通訊協議</span>
+    <span class="token keyword">pub</span> model: String,           <span class="token comment">// "gemini-2.5-pro"</span>
+    <span class="token keyword">pub</span> base_url: String,        <span class="token comment">// API 端點</span>
+    <span class="token keyword">pub</span> api_key_env: String,     <span class="token comment">// 金鑰環境變數名</span>
+}
+
+<span class="token keyword">pub</span> <span class="token keyword">enum</span> <span class="token class-name">ProviderProtocol</span> {
+    GeminiStreamingRest,    <span class="token comment">// Gemini 原生 SSE</span>
+    OpenAiResponses,        <span class="token comment">// OpenAI Responses API</span>
+    AnthropicMessages,      <span class="token comment">// Anthropic Messages API</span>
+    OpenAiChat,             <span class="token comment">// 通用 OpenAI 相容</span>
+}
+
+<span class="token keyword">pub</span> <span class="token keyword">enum</span> <span class="token class-name">ProviderFamily</span> {
+    Gemini,
+    OpenAi,
+    Anthropic,
+    OpenAiCompatible,       <span class="token comment">// OpenRouter, Ollama 等</span>
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2>供應商解析流程</h2>
+                <div class="arch-flow">
+                    <div class="flow-step">CLI --provider</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">工作區 .conf</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">全域 .conf</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">GCD_PROVIDER env</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">偵測已設定的 API Key</div>
+                </div>
+
+                <h2>三大協議差異</h2>
+                <div class="comparison-table">
+                    <table>
+                        <thead><tr><th>維度</th><th>Gemini</th><th>OpenAI</th><th>Anthropic</th></tr></thead>
+                        <tbody>
+                            <tr><td>Tool Calling 格式</td><td><code>functionCall</code></td><td><code>tool_calls</code></td><td><code>tool_use</code></td></tr>
+                            <tr><td>Streaming</td><td>SSE (generateContent)</td><td>SSE (responses)</td><td>SSE (messages)</td></tr>
+                            <tr><td>System Prompt</td><td><code>systemInstruction</code></td><td><code>instructions</code></td><td><code>system</code></td></tr>
+                            <tr><td>Tool Result 格式</td><td><code>functionResponse</code></td><td><code>tool</code> role</td><td><code>tool_result</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="source-ref">
+                    <strong>原始碼</strong>：<code>crates/gcd-core/src/providers.rs</code>、<code>crates/gcd-core/src/providers/types.rs</code>、<code>crates/gcd-core/src/providers/profiles.rs</code>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch6')">← 06：沙箱</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch8')">08：設定檔格式 →</button>
+            </div>

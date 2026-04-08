@@ -2,6 +2,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum SandboxPolicy {
     Off,
     ReadOnly,
@@ -79,6 +80,10 @@ impl AppPaths {
 
     pub fn global_active_provider_path(&self) -> PathBuf {
         self.config_home.join("active-provider.txt")
+    }
+
+    pub fn plugins_dir(&self) -> PathBuf {
+        self.config_home.join("plugins")
     }
 }
 

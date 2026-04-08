@@ -1,0 +1,39 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 06 章</span>
+                <h1>沙箱策略 (Sandbox Policy)</h1>
+                <p class="chapter-desc">限制 Agent 的檔案系統與 Shell 存取範圍</p>
+            </div>
+            <div class="content-body">
+                <h2>四級沙箱模型</h2>
+                <p>靈感源自 OpenAI Codex 的三級沙箱，GCD 擴展為四級：</p>
+                <div class="comparison-table">
+                    <table>
+                        <thead><tr><th>等級</th><th>讀取</th><th>寫入</th><th>Shell</th><th>隔離</th><th>適用場景</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>off</code></td><td class="ok">任意</td><td class="ok">任意</td><td class="ok">不限</td><td class="no">無</td><td>完全信任環境</td></tr>
+                            <tr><td><code>read-only</code></td><td class="ok">工作區</td><td class="no">禁止</td><td class="warn">唯讀</td><td class="warn">弱</td><td>程式碼審查</td></tr>
+                            <tr><td><code>workspace-write</code></td><td class="ok">工作區</td><td class="ok">工作區</td><td class="warn">限工作區</td><td class="ok">中</td><td>日常開發（預設）</td></tr>
+                            <tr><td><code>container</code></td><td class="ok">掛載</td><td class="ok">掛載</td><td class="ok">容器內</td><td class="ok">強</td><td>不信任的 repo</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>沙箱如何影響工具</h2>
+                <p>每個內建工具在執行前都會檢查 <code>ToolContext</code> 中的 <code>SandboxPolicy</code>：</p>
+                <ul>
+                    <li><code>read_file</code> — 檢查路徑是否在允許的讀取範圍內</li>
+                    <li><code>write_file</code> — 檢查路徑是否在允許的寫入範圍內</li>
+                    <li><code>shell</code> — 在 container 模式下，命令在 Docker/Podman 容器內執行</li>
+                    <li><code>list_dir</code> — 受讀取範圍限制</li>
+                    <li><code>search_files</code> — 受讀取範圍限制</li>
+                </ul>
+
+                <div class="callout callout-tip">
+                    <div class="callout-title">容器沙箱</div>
+                    <p>Container 模式使用 Docker 或 Podman 將工作區掛載到容器中。Agent 的所有檔案操作和 shell 命令都在容器內執行，主機系統完全隔離。詳見第 21 章。</p>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch5')">← 05：信任模型</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch7')">07：多供應商 →</button>
+            </div>

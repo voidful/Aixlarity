@@ -1,9 +1,11 @@
 use std::env;
-use std::io::{self, BufRead, Write};
+use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process;
 
 use clap::{Parser, Subcommand};
+use colored::Colorize;
+use gcd_core::agent::PermissionLevel;
 use gcd_core::config::SandboxPolicy;
 use gcd_core::providers::ProviderScope;
 use gcd_core::trust::TrustRuleKind;
@@ -16,6 +18,10 @@ struct Cli {
     /// Return output in JSON format
     #[arg(long, global = true)]
     json: bool,
+
+    /// Return output as JSON Lines
+    #[arg(long, global = true)]
+    jsonl: bool,
 
     #[command(subcommand)]
     command: Option<Commands>,
@@ -31,7 +37,8 @@ enum Commands {
     Providers(ProviderCommands),
 
     /// Reload custom workspace commands and skills
-    Commands {
+    #[command(name = "commands")]
+    Catalog {
         #[command(subcommand)]
         cmd: CommandOps,
     },
@@ -84,6 +91,22 @@ enum Commands {
         #[arg(long)]
         no_prompt: bool,
 
+        /// Permission level: suggest, auto-edit, full-auto
+        #[arg(long, default_value = "auto-edit")]
+        permission: String,
+
+        /// Disable streaming output
+        #[arg(long)]
+        no_stream: bool,
+
+        /// Auto-commit changes to git after execution
+        #[arg(long)]
+        git: bool,
+
+        /// Enable planning mode: plan before executing
+        #[arg(long)]
+        plan: bool,
+
         /// The task instruction to execute
         #[arg(required = true)]
         task: Vec<String>,
@@ -134,6 +157,12 @@ enum SessionCommands {
     List,
     /// Details about a specific session
     Show { id: String },
+    /// Replay structured events from a session
+    Replay {
+        id: String,
+        #[arg(long)]
+        turn: Option<usize>,
+    },
     /// Fork a session into a new branch
     Fork { id: String },
 }
@@ -148,23 +177,25 @@ async fn main() -> anyhow::Result<()> {
 
     // If no subcommand, enter REPL mode
     if cli.command.is_none() {
-        return run_repl(cli.json).await;
+        return run_repl(cli.json, cli.jsonl).await;
     }
 
     let current_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let app = App::new(current_dir);
     let app_command = map_command(cli.command.unwrap());
 
-    match app.handle(app_command) {
+    match app.handle(app_command).await {
         Ok(output) => {
-            if cli.json {
+            if cli.jsonl {
+                println!("{}", output.render_jsonl());
+            } else if cli.json {
                 println!("{}", output.render_json());
             } else {
                 println!("{}", output.render());
             }
         }
         Err(error) => {
-            eprintln!("error: {}", error);
+            eprintln!("{}: {}", "error".red().bold(), error);
             process::exit(1);
         }
     }
@@ -173,38 +204,166 @@ async fn main() -> anyhow::Result<()> {
 }
 
 // ---------------------------------------------------------------------------
-// REPL — Interactive mode (no subcommand given)
+// REPL — Interactive mode with rustyline
 // ---------------------------------------------------------------------------
 
-async fn run_repl(json: bool) -> anyhow::Result<()> {
+async fn run_repl(json: bool, jsonl: bool) -> anyhow::Result<()> {
     let current_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let app = App::new(current_dir.clone());
 
     // Print welcome banner
-    println!("╔══════════════════════════════════════════╗");
-    println!("║       GemiClawDex Interactive Mode       ║");
-    println!("║   Type your task, or /help for commands  ║");
-    println!("╚══════════════════════════════════════════╝");
+    println!(
+        "{}",
+        "╔══════════════════════════════════════════════╗".cyan()
+    );
+    println!(
+        "{}",
+        "║       GemiClawDex (GCD) Interactive Mode      ║".cyan()
+    );
+    println!(
+        "{}",
+        "║    Type your task, or /help for commands       ║".cyan()
+    );
+    println!(
+        "{}",
+        "╚══════════════════════════════════════════════╝".cyan()
+    );
     println!();
 
     // Show overview on start
-    match app.handle(AppCommand::Overview) {
+    match app.handle(AppCommand::Overview).await {
         Ok(output) => println!("{}", output.render()),
-        Err(e) => eprintln!("warning: {}", e),
+        Err(e) => eprintln!("{}: {}", "warning".yellow(), e),
     }
     println!();
 
+    // Setup rustyline
+    let history_path = dirs_home().join(".gcd").join("history.txt");
+    let mut rl = match rustyline::DefaultEditor::new() {
+        Ok(editor) => editor,
+        Err(_) => {
+            eprintln!(
+                "{}: rustyline init failed, falling back to basic input",
+                "warning".yellow()
+            );
+            return run_repl_basic(json, jsonl).await;
+        }
+    };
+
+    // Load history
+    if history_path.exists() {
+        let _ = rl.load_history(&history_path);
+    }
+
+    loop {
+        let readline = rl.readline(&format!("{} ", "gcd>".green().bold()));
+
+        match readline {
+            Ok(line) => {
+                let input = line.trim();
+                if input.is_empty() {
+                    continue;
+                }
+
+                let _ = rl.add_history_entry(input);
+
+                match input {
+                    "/quit" | "/exit" | "/q" => {
+                        println!("{}", "Goodbye!".dimmed());
+                        break;
+                    }
+                    "/help" | "/h" => {
+                        print_repl_help();
+                        continue;
+                    }
+                    "/clear" => {
+                        print!("\x1B[2J\x1B[H");
+                        let _ = io::stdout().flush();
+                        continue;
+                    }
+                    "/providers" => {
+                        handle_repl_command(&app, AppCommand::ProvidersList, json, jsonl).await;
+                        continue;
+                    }
+                    "/trust" => {
+                        handle_repl_command(
+                            &app,
+                            AppCommand::TrustStatus { path: None },
+                            json,
+                            jsonl,
+                        )
+                        .await;
+                        continue;
+                    }
+                    "/sessions" => {
+                        handle_repl_command(&app, AppCommand::SessionsList, json, jsonl).await;
+                        continue;
+                    }
+                    "/overview" => {
+                        handle_repl_command(&app, AppCommand::Overview, json, jsonl).await;
+                        continue;
+                    }
+                    _ => {}
+                }
+
+                // Treat everything else as an exec task
+                let exec_options = ExecOptions {
+                    input: input.to_string(),
+                    skill: None,
+                    provider: None,
+                    sandbox: None,
+                    checkpoint: false,
+                    persist_session: true,
+                    resume_session: None,
+                    fork_session: None,
+                    print_prompt: true,
+                    permission: PermissionLevel::AutoEdit,
+                    stream: true,
+                    auto_git: false,
+                    plan_only: false,
+                };
+
+                handle_repl_command(&app, AppCommand::Exec(exec_options), json, jsonl).await;
+                println!();
+            }
+            Err(rustyline::error::ReadlineError::Interrupted) => {
+                println!("{}", "\nInterrupted. Type /quit to exit.".dimmed());
+                continue;
+            }
+            Err(rustyline::error::ReadlineError::Eof) => {
+                println!("{}", "\nGoodbye!".dimmed());
+                break;
+            }
+            Err(err) => {
+                eprintln!("{}: {:?}", "readline error".red(), err);
+                break;
+            }
+        }
+    }
+
+    // Save history
+    if let Some(parent) = history_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let _ = rl.save_history(&history_path);
+
+    Ok(())
+}
+
+/// Fallback REPL without rustyline (basic stdin)
+async fn run_repl_basic(json: bool, jsonl: bool) -> anyhow::Result<()> {
+    let current_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let app = App::new(current_dir);
+
     let stdin = io::stdin();
-    let mut reader = stdin.lock();
     let mut line = String::new();
 
     loop {
-        print!("gcd> ");
+        print!("{} ", "gcd>".green().bold());
         io::stdout().flush()?;
         line.clear();
 
-        if reader.read_line(&mut line)? == 0 {
-            // EOF
+        if io::BufRead::read_line(&mut stdin.lock(), &mut line)? == 0 {
             println!("\nGoodbye!");
             break;
         }
@@ -223,30 +382,9 @@ async fn run_repl(json: bool) -> anyhow::Result<()> {
                 print_repl_help();
                 continue;
             }
-            "/clear" => {
-                print!("\x1B[2J\x1B[H");
-                continue;
-            }
-            "/providers" => {
-                handle_repl_command(&app, AppCommand::ProvidersList, json);
-                continue;
-            }
-            "/trust" => {
-                handle_repl_command(&app, AppCommand::TrustStatus { path: None }, json);
-                continue;
-            }
-            "/sessions" => {
-                handle_repl_command(&app, AppCommand::SessionsList, json);
-                continue;
-            }
-            "/overview" => {
-                handle_repl_command(&app, AppCommand::Overview, json);
-                continue;
-            }
             _ => {}
         }
 
-        // Treat everything else as an exec task
         let exec_options = ExecOptions {
             input: input.to_string(),
             skill: None,
@@ -257,9 +395,13 @@ async fn run_repl(json: bool) -> anyhow::Result<()> {
             resume_session: None,
             fork_session: None,
             print_prompt: true,
+            permission: PermissionLevel::AutoEdit,
+            stream: true,
+            auto_git: false,
+            plan_only: false,
         };
 
-        handle_repl_command(&app, AppCommand::Exec(exec_options), json);
+        handle_repl_command(&app, AppCommand::Exec(exec_options), json, jsonl).await;
         println!();
     }
 
@@ -267,29 +409,48 @@ async fn run_repl(json: bool) -> anyhow::Result<()> {
 }
 
 fn print_repl_help() {
-    println!("Available commands:");
-    println!("  /help, /h       — Show this help");
-    println!("  /quit, /exit    — Exit the REPL");
-    println!("  /clear          — Clear the screen");
-    println!("  /overview       — Show workspace overview");
-    println!("  /providers      — List available providers");
-    println!("  /trust          — Show trust status");
-    println!("  /sessions       — List saved sessions");
+    println!("{}", "Available commands:".bold());
+    println!("  {}       — Show this help", "/help, /h".cyan());
+    println!("  {}  — Exit the REPL", "/quit, /exit".cyan());
+    println!("  {}        — Clear the screen", "/clear".cyan());
+    println!("  {}     — Show workspace overview", "/overview".cyan());
+    println!("  {}   — List available providers", "/providers".cyan());
+    println!("  {}        — Show trust status", "/trust".cyan());
+    println!("  {}     — List saved sessions", "/sessions".cyan());
     println!();
     println!("Anything else is treated as a coding task for the agent.");
+    println!();
+    println!("{}", "Exec flags (use with `gcd exec`):".bold());
+    println!(
+        "  {} — Permission: suggest | auto-edit | full-auto",
+        "--permission".cyan()
+    );
+    println!("  {}  — Disable streaming output", "--no-stream".cyan());
+    println!("  {}         — Auto-commit changes to git", "--git".cyan());
+    println!("  {}        — Enable planning mode", "--plan".cyan());
 }
 
-fn handle_repl_command(app: &App, command: AppCommand, json: bool) {
-    match app.handle(command) {
+async fn handle_repl_command(app: &App, command: AppCommand, json: bool, jsonl: bool) {
+    match app.handle(command).await {
         Ok(output) => {
-            if json {
+            if jsonl {
+                println!("{}", output.render_jsonl());
+            } else if json {
                 println!("{}", output.render_json());
             } else {
                 println!("{}", output.render());
             }
         }
-        Err(e) => eprintln!("error: {}", e),
+        Err(e) => eprintln!("{}: {}", "error".red(), e),
     }
+}
+
+/// Get home directory
+fn dirs_home() -> PathBuf {
+    env::var("HOME")
+        .or_else(|_| env::var("USERPROFILE"))
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("."))
 }
 
 // ---------------------------------------------------------------------------
@@ -306,12 +467,16 @@ fn map_command(cmd: Commands) -> AppCommand {
             ProviderCommands::Show { id } => AppCommand::ProvidersShow { id },
             ProviderCommands::Use { id, global } => AppCommand::ProvidersUse {
                 id,
-                scope: if global { ProviderScope::Global } else { ProviderScope::Workspace },
+                scope: if global {
+                    ProviderScope::Global
+                } else {
+                    ProviderScope::Workspace
+                },
             },
             ProviderCommands::Doctor { id } => AppCommand::ProvidersDoctor { id },
         },
 
-        Commands::Commands { cmd } => match cmd {
+        Commands::Catalog { cmd } => match cmd {
             CommandOps::Reload => AppCommand::CommandsReload,
         },
 
@@ -322,8 +487,12 @@ fn map_command(cmd: Commands) -> AppCommand {
                     eprintln!("Invalid trust kind. Allowed: trust, untrusted, parent.");
                     process::exit(1);
                 });
-                let p = path.unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
-                AppCommand::TrustSet { path: p, kind: rule_kind }
+                let p = path
+                    .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+                AppCommand::TrustSet {
+                    path: p,
+                    kind: rule_kind,
+                }
             }
         },
 
@@ -334,12 +503,29 @@ fn map_command(cmd: Commands) -> AppCommand {
         Commands::Sessions(sub) => match sub {
             SessionCommands::List => AppCommand::SessionsList,
             SessionCommands::Show { id } => AppCommand::SessionsShow { id },
+            SessionCommands::Replay { id, turn } => AppCommand::SessionsReplay { id, turn },
             SessionCommands::Fork { id } => AppCommand::SessionsFork { id },
         },
 
         Commands::Exec {
-            provider, sandbox, skill, checkpoint, resume, fork, no_session, no_prompt, task,
+            provider,
+            sandbox,
+            skill,
+            checkpoint,
+            resume,
+            fork,
+            no_session,
+            no_prompt,
+            permission,
+            no_stream,
+            git,
+            plan,
+            task,
         } => {
+            let permission = PermissionLevel::parse(&permission).unwrap_or_else(|| {
+                eprintln!("Invalid permission level. Allowed: suggest, auto-edit, full-auto.");
+                process::exit(1);
+            });
             AppCommand::Exec(ExecOptions {
                 input: task.join(" "),
                 skill,
@@ -350,7 +536,82 @@ fn map_command(cmd: Commands) -> AppCommand {
                 resume_session: resume,
                 fork_session: fork,
                 print_prompt: !no_prompt,
+                permission,
+                stream: !no_stream,
+                auto_git: git,
+                plan_only: plan,
             })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{map_command, Commands, SessionCommands};
+    use gcd_core::agent::PermissionLevel;
+    use gcd_core::{AppCommand, ExecOptions};
+
+    #[test]
+    fn exec_flags_are_wired_into_exec_options() {
+        let command = Commands::Exec {
+            provider: Some("gemini-official".to_string()),
+            sandbox: Some("read-only".to_string()),
+            skill: Some("code-review".to_string()),
+            checkpoint: true,
+            resume: Some("session-1".to_string()),
+            fork: None,
+            no_session: true,
+            no_prompt: true,
+            permission: "full-auto".to_string(),
+            no_stream: true,
+            git: true,
+            plan: true,
+            task: vec!["review".to_string(), "src/main.rs".to_string()],
+        };
+
+        let AppCommand::Exec(ExecOptions {
+            input,
+            skill,
+            provider,
+            checkpoint,
+            persist_session,
+            resume_session,
+            print_prompt,
+            permission,
+            stream,
+            auto_git,
+            plan_only,
+            ..
+        }) = map_command(command)
+        else {
+            panic!("expected exec command");
+        };
+
+        assert_eq!(input, "review src/main.rs");
+        assert_eq!(skill.as_deref(), Some("code-review"));
+        assert_eq!(provider.as_deref(), Some("gemini-official"));
+        assert!(checkpoint);
+        assert!(!persist_session);
+        assert_eq!(resume_session.as_deref(), Some("session-1"));
+        assert!(!print_prompt);
+        assert_eq!(permission, PermissionLevel::FullAuto);
+        assert!(!stream);
+        assert!(auto_git);
+        assert!(plan_only);
+    }
+
+    #[test]
+    fn session_replay_maps_turn_filter() {
+        let command = Commands::Sessions(SessionCommands::Replay {
+            id: "session-42".to_string(),
+            turn: Some(3),
+        });
+
+        let AppCommand::SessionsReplay { id, turn } = map_command(command) else {
+            panic!("expected session replay command");
+        };
+
+        assert_eq!(id, "session-42");
+        assert_eq!(turn, Some(3));
     }
 }

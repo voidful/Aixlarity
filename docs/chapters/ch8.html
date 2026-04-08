@@ -1,0 +1,32 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 08 章</span>
+                <h1>供應商設定檔格式</h1>
+                <p class="chapter-desc">自訂供應商的 .conf 檔結構 — <code>providers/config_loader.rs</code></p>
+            </div>
+            <div class="content-body">
+                <h2>.conf 檔案格式</h2>
+                <p>供應商設定檔使用 INI 風格的格式（以 <code>[section]</code> 分隔），每個 section 是一個供應商設定。支援兩個位置：全域 <code>~/.gcd/providers.conf</code> 和工作區 <code>.gcd/providers.conf</code>。</p>
+
+                <h2>完整欄位參考</h2>
+                <div class="comparison-table">
+                    <table>
+                        <thead><tr><th>欄位</th><th>必填</th><th>說明</th><th>範例值</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>label</code></td><td>否</td><td>顯示名稱</td><td><code>"My OpenRouter"</code></td></tr>
+                            <tr><td><code>family</code></td><td>是</td><td>供應商家族</td><td><code>gemini / openai / anthropic / openai-compatible</code></td></tr>
+                            <tr><td><code>protocol</code></td><td>是</td><td>API 協議</td><td><code>gemini-streaming / openai-responses / anthropic-messages / openai-chat</code></td></tr>
+                            <tr><td><code>model</code></td><td>是</td><td>模型名稱</td><td><code>"gemini-2.5-pro"</code></td></tr>
+                            <tr><td><code>base_url</code></td><td>是</td><td>API 端點</td><td><code>"https://api.openai.com/v1"</code></td></tr>
+                            <tr><td><code>api_key_env</code></td><td>否</td><td>金鑰環境變數</td><td><code>"OPENROUTER_API_KEY"</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="source-ref">
+                    <strong>原始碼</strong>：<code>crates/gcd-core/src/providers/config_loader.rs</code>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch7')">← 07：供應商系統</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch9')">09：指令載入器 →</button>
+            </div>

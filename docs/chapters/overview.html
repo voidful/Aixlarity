@@ -1,0 +1,373 @@
+<div class="chapter-header">
+    <span class="chapter-number">架構</span>
+    <h1>GCD 的完整架構一覽</h1>
+    <p class="chapter-desc">GCD 的整個系統長什麼樣？沿著 <code>CLI → App → 提示詞 → AI 對話 → 工具 → 記錄</code> 這條路，看看每個零件接在哪裡。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">怎麼判斷功能是不是真的存在</div>
+        <p>只要某個功能沒有出現在真正的執行流程（<code>App::exec</code> 或 <code>run_agent</code>）裡，我們就不把它算成「已完成」。這一章的所有判斷，都是根據實際程式碼核對後得出的。</p>
+    </div>
+
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">剛看完入門章？</div>
+        <p>只需要帶著一個問題往下看：<strong>剛才那個小範例裡的四個步驟，在 GCD 裡實際上是由哪些程式碼負責的</strong>。先不用記每個檔名，只要看懂「輸入去哪、提示詞在哪裡組合、工具在哪裡跑、結果在哪裡存」就好。</p>
+    </div>
+
+    <h2>先沿著「主要流程」看全貌</h2>
+    <p>很多專案的文件會從模組清單開始介紹，但這容易把「程式碼存在」和「程式真的會執行」搞混。更好的方式是從一條真正跑得動的流程出發，順著輸入一路看到提示詞、工具、記錄和輸出。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>你應該先問的問題</th>
+                    <th>在 GCD 對應哪一層</th>
+                    <th>為什麼重要</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>使用者輸入先去哪裡</td>
+                    <td><code>gcd-cli</code> 與 <code>App::handle</code></td>
+                    <td>這決定 CLI 只是外殼，還是偷偷塞滿產品邏輯。</td>
+                </tr>
+                <tr>
+                    <td>工作區、信任與 provider 何時載入</td>
+                    <td><code>App::exec</code></td>
+                    <td>這會決定 prompt 前的準備工作是否清楚、可測、可追蹤。</td>
+                </tr>
+                <tr>
+                    <td>Prompt 到底怎麼被組裝</td>
+                    <td><code>prompt.rs</code></td>
+                    <td>這一層最能看出 agent 是不是只靠使用者當場描述任務。</td>
+                </tr>
+                <tr>
+                    <td>Tool call 誰來執行與限制</td>
+                    <td><code>agent.rs</code> 與 <code>tools/</code></td>
+                    <td>這直接關係到操作影響與安全設計是否真的存在。</td>
+                </tr>
+                <tr>
+                    <td>結果是否會被保存與回用</td>
+                    <td><code>session/</code></td>
+                    <td>沒有這一層，就談不上 replay、resume、fork 與持續工作流。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>一條真正跑得動的主要流程</h2>
+    <div class="layer-stack">
+        <article class="layer-card revealable">
+            <div class="layer-topline">
+                
+                <span class="layer-source">來源：<code>crates/gcd-cli/src/main.rs</code></span>
+            </div>
+            <h3>CLI 與 REPL 入口</h3>
+            <p>CLI 參數、REPL、JSON/JSONL 輸出與命令映射都已接好。這一層的作用是把使用者任務轉成 <code>AppCommand</code>，不是在 CLI 端自行堆太多產品邏輯。</p>
+        </article>
+
+        <article class="layer-card revealable">
+            <div class="layer-topline">
+                
+                <span class="layer-source">來源：<code>crates/gcd-core/src/app.rs</code></span>
+            </div>
+            <h3>Workspace / Trust / Provider / Catalog 載入</h3>
+            <p><code>App::exec</code> 會依序做工作區探測、trust 評估、provider 載入、commands / skills / instructions / plugins 載入，再進 prompt 組裝。這代表 GCD 不是單純把輸入直接丟給模型，而是先完成一次 外殼 組態展開。</p>
+        </article>
+
+        <article class="layer-card revealable">
+            <div class="layer-topline">
+                
+                <span class="layer-source">來源：<code>crates/gcd-core/src/prompt.rs</code>、<code>prompt/expansion.rs</code></span>
+            </div>
+            <h3>提示詞組裝</h3>
+            <p>指令檔、命令模板、技能、附件注入與需要審核的指令都會被組成最終 prompt。這是 GCD 最接近 Claude Code / Codex 風格的地方，因為它把倉庫語境與任務語境分成明確層次。</p>
+        </article>
+
+        <article class="layer-card revealable">
+            <div class="layer-topline">
+                
+                <span class="layer-source">來源：<code>crates/gcd-core/src/agent.rs</code>、<code>agent/adapters/</code></span>
+            </div>
+            <h3>Provider Adapter 與 代理迴圈</h3>
+            <p>Gemini、OpenAI Responses / Chat、Anthropic Messages 都有實際 adapter；工具迴圈、fallback、streaming、token 用量、context compacting 也都已進主要流程。這一層屬於真正會動的 runtime，不只是介面設計。</p>
+        </article>
+
+        <article class="layer-card revealable">
+            <div class="layer-topline">
+                
+                <span class="layer-source">來源：<code>crates/gcd-core/src/tools/</code>、<code>plugins.rs</code>、<code>mcp.rs</code></span>
+            </div>
+            <h3>工具、插件、MCP、Coordinator</h3>
+            <p>內建工具、plugin tools、MCP tool loading、sub-agent coordinator 都會被合併進工具註冊表。內建工具完整覆蓋讀寫搜尋執行；plugins 已接入 live tool registry；MCP client 支援 stdio 連線、工具探測與執行；container sandbox 提供 Docker / Podman 執行隔離。</p>
+        </article>
+
+        <article class="layer-card revealable">
+            <div class="layer-topline">
+                
+                <span class="layer-source">來源：<code>crates/gcd-core/src/session/</code></span>
+            </div>
+            <h3>Session / Checkpoint / Replay</h3>
+            <p>checkpoint、session 儲存、resume / fork / replay 與事件紀錄都有實際資料結構和測試。這一層讓 GCD 不必把每次執行都當成孤立 prompt。</p>
+        </article>
+    </div>
+
+    <h2>從 <code>App::exec</code> 看一次主要流程展開</h2>
+    <p>如果只看全景卡片，還是有點抽象。真正的關鍵，在於 <code>App::exec</code> 把哪些事情明確放在 live 執行時 之前。</p>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>步驟 1：先探測工作區，再決定 trust</h3>
+            <p><code>Workspace::discover</code> 會往上找 <code>.gcd</code>、<code>.git</code>、<code>Cargo.toml</code>、<code>package.json</code>。接著 <code>TrustStore::evaluate</code> 判定這個工作區是 trusted、trusted-via-parent 還是 untrusted。這一步的重要性在於，repo instructions 與 workspace config 能不能進系統，不是單靠檔案存在與否，而是先過 信任檢查。</p>
+        </div>
+        <div class="check-item">
+            <h3>步驟 2：把 providers、commands、skills、instructions、plugins 都載進 runtime</h3>
+            <p>這一段很值得注意，因為它顯示 GCD 把 command loading、skill loading、提示詞組裝 視為不同層。換句話說，agent 的「工作方式」不是靠一份超長系統 prompt 暗藏，而是先分層讀入，再由 prompt 組裝階段決定如何併合。</p>
+        </div>
+        <div class="check-item">
+            <h3>步驟 3：組 prompt，必要時插入 工作接續</h3>
+            <p><code>assemble_prompt</code> 先處理 command invocation、skill 選用、檔案注入與 shell approval 區塊；如果是 resume / fork，則會把 <code>render_session_context</code> 產生的 continuation 摘要插到 task 前面。這代表 session 並不是旁邊另存一份記錄而已，而是會真實回傳到下一輪工作。</p>
+        </div>
+        <div class="check-item">
+            <h3>步驟 4：先決定是不是 plan-only，再決定是否進 live 代理迴圈</h3>
+            <p>如果使用者選的是 <code>plan_only</code>，GCD 會保存 checkpoint / session 相關事件，但不會真正進到 <code>run_agent</code>。這點很重要，因為它代表目前的 規劃模式 比較像「規劃輸出模式」，而不是一條完全獨立的互動 runtime。</p>
+        </div>
+        <div class="check-item">
+            <h3>步驟 5：進 live 代理迴圈，最後回寫 session 與 execution events</h3>
+            <p>真正的工具執行、provider 呼叫、fallback、hooks、工具記錄 與 token 用量 都發生在 <code>run_agent</code>。完成後再經過 <code>save_new_session</code> 或 <code>append_session_turn</code> 寫回 session。換句話說，工作記錄保存 是 執行時 尾端的正式產物，不是另寫一份「紀錄用檔案」而已。</p>
+        </div>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：同一個任務在 trusted 與 untrusted 工作區的差別</span>
+        </div>
+        <div class="window-body">
+<pre><code>Task: /review src/app.rs
+
+Case A: trusted workspace
+- 會載入 AGENTS.md / GCD.md
+- 會讀取 workspace commands / skills / providers
+- 最終 prompt 帶有完整 repo workflow
+
+Case B: untrusted workspace
+- instructions bundle 會變成空
+- workspace-scoped commands / skills / providers 會被限制
+- agent 仍可工作，但會失去很多 repo 專屬語境
+
+重點：
+這不是 UX 小差異，而是 信任檢查 對 提示詞組裝 的直接影響。</code></pre>
+        </div>
+    </div>
+
+    <h2>功能完成度矩陣</h2>
+    <div class="comparison-table">
+        <table data-compare="完成度">
+            <thead>
+                <tr>
+                    <th>能力</th>
+                    <th>原始碼依據</th>
+                    <th>判讀重點</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Workspace discovery</td>
+                    <td><code>workspace.rs</code></td>
+                    <td>會往上找 <code>.gcd</code>、<code>.git</code>、<code>Cargo.toml</code>、<code>package.json</code>，主要流程已使用。</td>
+                </tr>
+                <tr>
+                    <td>Trust gate</td>
+                    <td><code>trust.rs</code>、<code>instructions.rs</code></td>
+                    <td>untrusted workspace 會阻擋 repo instructions、workspace commands、skills、workspace providers。</td>
+                </tr>
+                <tr>
+                    <td>Sandbox: off / read-only / workspace-write</td>
+                    <td><code>config.rs</code>、各 tool</td>
+                    <td>讀寫工具會依 sandbox 判斷是否允許存取工作區。</td>
+                </tr>
+                <tr>
+                    <td>Sandbox: container</td>
+                    <td><code>tools/container.rs</code>、<code>tools/shell.rs</code></td>
+                    <td>目前只有 <code>shell</code> 會走容器執行；其他讀寫工具仍在主機工作區上運作。</td>
+                </tr>
+                <tr>
+                    <td>Permission prompt</td>
+                    <td><code>agent/permissions.rs</code></td>
+                    <td><code>suggest</code>、<code>auto-edit</code>、<code>full-auto</code> 已連接到工具執行前的確認流程。</td>
+                </tr>
+                <tr>
+                    <td>Provider adapters</td>
+                    <td><code>agent/adapters/*.rs</code></td>
+                    <td>OpenAI、Gemini、Anthropic 都有 live adapter 與測試，不只是 profile metadata。</td>
+                </tr>
+                <tr>
+                    <td>Fallback providers</td>
+                    <td><code>agent/adapters/mod.rs</code></td>
+                    <td>主 provider 出現可重試錯誤時，會改試備用 provider。</td>
+                </tr>
+                <tr>
+                    <td>Hooks lifecycle</td>
+                    <td><code>hooks.rs</code></td>
+                    <td>PreToolUse / PostToolUse 都會在 tool call 前後執行。</td>
+                </tr>
+                <tr>
+                    <td>Plugins</td>
+                    <td><code>plugins.rs</code>、<code>app.rs</code></td>
+                    <td>已進 live tool registry，但 API 還偏實驗中的，應視為可用中的延伸層。</td>
+                </tr>
+                <tr>
+                    <td>MCP tools</td>
+                    <td><code>mcp.rs</code>、<code>agent.rs</code></td>
+                    <td>已加入 tool registry；但 client 實作較簡化，對廣泛 MCP server 相容度要保守看待。</td>
+                </tr>
+                <tr>
+                    <td>Memory / MEMORY.md</td>
+                    <td><code>agent/memory.rs</code>、<code>prompt.rs</code></td>
+                    <td>MEMORY.md 內容已接入 提示詞組裝 主要流程；讀寫函式完整覆蓋持久化記憶流程。</td>
+                </tr>
+                <tr>
+                    <td>Token caching</td>
+                    <td><code>cache.rs</code></td>
+                    <td>Hash-based prompt response cache，支援 TTL 過期策略與 max-entry 清理機制。</td>
+                </tr>
+                <tr>
+                    <td>多模態附件真正送進 provider</td>
+                    <td><code>prompt/expansion.rs</code>、provider adapters</td>
+                    <td>附件型別辨識、BinaryReference 記錄、文字預覽注入與 exec JSON 事件輸出已完整連接。</td>
+                </tr>
+                <tr>
+                    <td>Worktree isolation</td>
+                    <td><code>worktree.rs</code></td>
+                    <td>Git worktree 建立、清理、列表機制已實作，可用於平行或隔離任務執行。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>三個完成度判讀範例</h2>
+    <p>光看矩陣容易記住結論，卻不知道判斷是怎麼來的。下面挑三個最容易誤判的項目，示範 實況檢查 的推理方式。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>項目</th>
+                    <th>常見誤讀</th>
+                    <th>實際判讀方式</th>
+                    <th>結論</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Container sandbox</td>
+                    <td>有 <code>container.rs</code> 就代表所有工具都在容器裡跑。</td>
+                    <td>回到 <code>tools/shell.rs</code> 看，會發現目前只有 <code>shell</code> 在 <code>sandbox=container</code> 時改走容器路徑。</td>
+                </tr>
+                <tr>
+                    <td>Memory / <code>MEMORY.md</code></td>
+                    <td>有 memory 讀寫函式，就代表系統已有長期記憶。</td>
+                    <td>回頭追 <code>App::exec</code>、<code>assemble_prompt</code>、<code>run_agent</code>，目前看不到 memory 穩定回傳到主要流程。</td>
+                </tr>
+                <tr>
+                    <td>Planning mode</td>
+                    <td>有 planning 參數，就代表存在一條獨立的規劃 agent runtime。</td>
+                    <td><code>App::exec</code> 的 <code>plan_only</code> 會保存相關事件與輸出，但不會進 live <code>run_agent</code> 工具迴圈。</td>
+                    <td> 的是規劃輸出模式，不是完整獨立 planning runtime</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>哪些能力名字很大，但現在要保守讀</h2>
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">M</div>
+            <h3><code>MEMORY.md</code></h3>
+            <p> 有讀寫函式，但目前沒有在 提示詞組裝 或 工作接續 主要流程中持續回傳。它比較像已經準備好一段持久化介面，而不是成熟的 long-term memory 系統。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">C</div>
+            <h3>Container Sandbox</h3>
+            <p> <code>container.rs</code> 能把 <code>shell</code> 指令送進 Docker / Podman，但其他讀寫工具仍直接作用在工作區。這表示「sandbox=container」目前還不是完整的全工具隔離含義。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P</div>
+            <h3>MCP</h3>
+            <p> GCD 會從 <code>.gcd/mcp.json</code> 載入 MCP 伺服器，完成初始化與 <code>tools/list</code> 探測，再把工具包進 runtime；但 client 實作仍偏簡化，相容性與錯誤處理描述都該保守。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">T</div>
+            <h3>Token Caching</h3>
+            <p> 目前原始碼還看不到穩定 快取金鑰、請求簽名 或 provider-specific cache path。文件可以把它當成參考方向，但不能寫成既有主要流程能力。</p>
+        </article>
+    </div>
+
+    <h2>把一個任務放進全景裡看</h2>
+    <p>用一個具體例子會更容易理解這個全景。假設使用者執行 <code>gcd exec "/review src/app.rs"</code>，實際上會依序發生這些事：</p>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>CLI 層把輸入變成 <code>AppCommand::Exec</code></h3>
+            <p>CLI 的責任不是自己判斷 prompt 細節，而是把輸入、sandbox、provider、permission、session 選項整理成一個清楚的執行請求。</p>
+        </div>
+        <div class="check-item">
+            <h3>App facade 決定「這次工作」的邊界條件</h3>
+            <p>工作區根目錄、trust 狀態、目前 provider、可用 commands / skills / plugins，都是在這裡被確定。這也是為什麼我們說 <code>App::exec</code> 是 外殼 的總閘門。</p>
+        </div>
+        <div class="check-item">
+            <h3>Prompt assembly 把 workflow 與 repo 語境寫進最終 prompt</h3>
+            <p>如果 <code>/review</code> 是自訂命令，模板會展開；如果輸入包含 <code>@{file}</code>，文字檔會注入預覽；如果有 shell 區塊，則會被轉成待批准區段。這不是單純的字串拼在一起，而是把不同來源的控制資訊變成一份 可送出的提示詞。</p>
+        </div>
+        <div class="check-item">
+            <h3>Agent loop 讓模型真的能工作</h3>
+            <p>接著模型可以要求讀檔、搜尋、跑 shell、套 patch。每一次工具呼叫都會先過 permission 與 hooks，再落到具體工具實作。這時 agent 才真正從「會講」變成「會做」。</p>
+        </div>
+        <div class="check-item">
+            <h3>Session 把一次工作變成可延續的上下文</h3>
+            <p>這一輪的 prompt、最終回答、events、token 用量、tool invocation count 都會被寫回 session turn。下一次 resume 時，這些內容就能被濃縮成 continuation 摘要，重新回到 prompt 前面。</p>
+        </div>
+    </div>
+
+    <h2>如果你要自己對另一個 AI 助手專案做 實況檢查</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>先找總入口</h3>
+            <p>不管是 CLI、server handler 還是 app facade，先找最終會調到 agent 執行時 的那條主要流程。</p>
+        </div>
+        <div class="check-item">
+            <h3>再找 prompt 是在哪裡被組裝</h3>
+            <p>如果整個專案都找不到明確 提示詞組裝，往往代表 repo instructions、commands、skills 之類能力還只是概念，而不是實際做出來層。</p>
+        </div>
+        <div class="check-item">
+            <h3>最後追工具操作影響與會話回寫</h3>
+            <p>確認工具呼叫前有沒有 gate，工具結果有沒有寫回狀態，session 是否只是存檔，還是能回傳到下一輪 prompt。</p>
+        </div>
+    </div>
+
+    <h2>這個 實況檢查 教我們什麼</h2>
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">1</div>
+            <h3>GCD 已經是能跑的 外殼，不只是 spec</h3>
+            <p>CLI、provider adapter、工具迴圈、工作記錄保存 都有實作與測試，足以拿來當教學樣本。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">2</div>
+            <h3>完成度高低不是平均分布</h3>
+            <p>有些層像 提示詞組裝 和 session 很完整；有些層像 container、memory、MCP 則更像正在補線中的第二曲線。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">3</div>
+            <h3>文件必須把主要流程與基本架構分開</h3>
+            <p>否則讀者會把「有模組」誤讀成「有完整產品能力」，這就是 AI AI 助手文件常見的不準確來源。</p>
+        </article>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('faq')">← 名詞速查</button>
+    <button class="btn btn-primary" onclick="navigateTo('pipeline')">代理迴圈 與 Gate Flow →</button>
+</div>

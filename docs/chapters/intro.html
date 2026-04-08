@@ -1,0 +1,209 @@
+<div class="chapter-header">
+    <span class="chapter-number">前言</span>
+    <h1>AI 助手的「外殼」是什麼？</h1>
+    <p class="chapter-desc">AI 模型本身只會聊天。要讓它變成能讀檔案、跑測試、修改程式碼的助手，需要在外面包一層軟體系統。這一層就叫做 Harness。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">一句話解釋</div>
+        <p><strong>Harness</strong>（外殼）就是包在 AI 模型外面的那層軟體。它負責：組合提示詞、管理工具（讀檔、跑指令）、控制安全權限、記錄工作過程、以及對接不同的 AI 模型。AI 模型像引擎，Harness 則是方向盤、煞車和儀表板。</p>
+    </div>
+
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">第一次看？先別急</div>
+        <p>不用一次把所有名詞都背下來。建議看完這一章後，先看下一章的<strong>入門範例</strong>，用一個小任務把 prompt（提示詞）、tool（工具）、session（工作記錄）這幾個基本詞搞懂就好。剩下的名詞，後面讀到時自然就會理解。</p>
+    </div>
+
+    <h2>為什麼要先講這個？</h2>
+    <p>市面上介紹 AI 助手時，通常會強調「模型多強」、「支援多少工具」、「哪家 API」。但這只回答了「引擎有多強」，沒有回答<strong>「引擎是怎麼被操控的」</strong>。</p>
+
+    <p>舉個例子：AI 模型很會寫程式，但它自己<strong>不會</strong>以下這些事——</p>
+    <ul>
+        <li>不會自己去讀你的專案檔案（需要 <code>read_file</code> 工具）</li>
+        <li>不會知道你的團隊有哪些規範（需要 <code>AGENTS.md</code> 設定檔）</li>
+        <li>不會知道哪些操作需要先問你（需要權限控制）</li>
+        <li>不會記住上次做了什麼（需要工作記錄系統）</li>
+    </ul>
+    <p>這些事情全部都是 Harness 在做的。所以，<strong>一個 AI 助手好不好用，很大程度取決於它的 Harness 做了多少事</strong>。</p>
+
+    <h2>一個簡單的對比</h2>
+    <p>同樣都是「幫我 review 這個檔案」，有沒有 Harness，結果完全不同：</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>情境</th>
+                    <th>只有 AI 模型（像 ChatGPT 網頁版）</th>
+                    <th>有 Harness 的 AI 助手</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>你說：「幫我看 <code>src/app.rs</code>」</td>
+                    <td>模型只能根據你貼的片段猜，給你一般性的建議。</td>
+                    <td>助手會<strong>自己去讀</strong>那個檔案，甚至搜尋相關檔案，再給出具體建議。</td>
+                </tr>
+                <tr>
+                    <td>專案有規定要先跑測試</td>
+                    <td>除非你每次都提醒，否則模型不知道。</td>
+                    <td>這個規定寫在 <code>AGENTS.md</code> 裡，會自動加入提示詞。</td>
+                </tr>
+                <tr>
+                    <td>模型想跑 <code>cargo test</code></td>
+                    <td>純聊天模型沒辦法真的執行指令，只能口頭建議你。</td>
+                    <td>Harness 會把它變成工具呼叫，經過安全檢查後真的執行。</td>
+                </tr>
+                <tr>
+                    <td>你想接著昨天的工作繼續</td>
+                    <td>對話一斷，前面做過什麼就忘了。</td>
+                    <td>工作記錄會保存完整上下文，讓你可以接續、回放、甚至分叉。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>AI 模型和 Harness 各負責什麼？</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>這件事</th>
+                    <th>誰負責？</th>
+                    <th>為什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>看不完整的資訊也能提出解法</td>
+                    <td>AI 模型</td>
+                    <td>這是AI 模型最擅長的能力。</td>
+                </tr>
+                <tr>
+                    <td>決定哪些專案設定可以載入</td>
+                    <td>Harness</td>
+                    <td>這涉及安全信任，不能讓 AI 自己決定。</td>
+                </tr>
+                <tr>
+                    <td>控制哪些檔案可以改、哪些指令可以跑</td>
+                    <td>Harness</td>
+                    <td>這是安全管理，必須由系統限制。</td>
+                </tr>
+                <tr>
+                    <td>切換不同 AI 模型（GPT、Gemini、Claude）</td>
+                    <td>Harness</td>
+                    <td>不同模型的 API 格式不同，需要轉換。</td>
+                </tr>
+                <tr>
+                    <td>把工具執行結果餵回 AI 做下一步決策</td>
+                    <td>兩者合作</td>
+                    <td>AI 負責思考要做什麼；Harness 負責真的去做、然後把結果送回來。</td>
+                </tr>
+                <tr>
+                    <td>記錄和回放工作過程</td>
+                    <td>Harness</td>
+                    <td>這是除錯和學習的基礎。沒有記錄就沒辦法追查問題。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>從最簡單到最完整：AI 助手的五個層次</h2>
+    <p>一個 AI 助手不是一步到位的，而是一層一層往上加的：</p>
+    <div class="ladder">
+        <article class="ladder-step revealable">
+            <span class="ladder-index">第 1 層</span>
+            <h3>單純問答</h3>
+            <p>你問一個問題，AI 回答。就像用 ChatGPT 聊天。這還不算 Agent。</p>
+        </article>
+        <article class="ladder-step revealable">
+            <span class="ladder-index">第 2 層</span>
+            <h3>加上工具</h3>
+            <p>AI 開始能「做事」了——讀檔案、跑指令、修改程式碼。系統會把工具的執行結果再餵回 AI，讓它決定下一步。這就是所謂的 <strong>代理迴圈</strong>（代理迴圈）。</p>
+        </article>
+        <article class="ladder-step revealable">
+            <span class="ladder-index">第 3 層</span>
+            <h3>加上安全控制</h3>
+            <p>AI 能「做事」之後，就需要限制它「能做哪些事」。比如：讀檔可以自動做、但刪檔要先問你、跑測試可以但不能裝軟體。這一層包含 Trust（信任）、Sandbox（沙盒）、Permission（權限）。</p>
+        </article>
+        <article class="ladder-step revealable">
+            <span class="ladder-index">第 4 層</span>
+            <h3>加上專案知識</h3>
+            <p>把你的專案規範（AGENTS.md）、任務模板（commands）、方法論（skills）、附件、歷史記錄，全部組合成一份完整的提示詞送給 AI。這就是 <strong>提示詞組裝</strong>（提示詞組裝）。</p>
+        </article>
+        <article class="ladder-step revealable">
+            <span class="ladder-index">第 5 層</span>
+            <h3>可長期使用</h3>
+            <p>工作記錄可以回放和續接、可以切換不同 AI 模型、可以追蹤費用、可以檢查每次工具呼叫的結果。到了這一層，AI 助手才真正能融入日常開發流程。</p>
+        </article>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">簡單範例：同一個任務在不同層次的差異</span>
+        </div>
+        <div class="window-body">
+<pre><code>【第 1 層】單純問答
+你：幫我 review src/app.rs
+AI：一般來說 review 要注意錯誤處理、命名規範⋯⋯（一般性的建議）
+
+【第 2 層】有工具
+你：幫我 review src/app.rs
+AI → 呼叫 read_file("src/app.rs")
+工具 → 回傳檔案內容
+AI：第 42 行有個錯誤處理漏洞，建議改成⋯⋯（具體建議）
+
+【第 3 層以上】有安全控制 + 專案知識
+你：幫我 review src/app.rs
+系統：讀取 AGENTS.md（專案規範）
+系統：設定 sandbox=只能改工作區, permission=需確認
+AI → 呼叫 shell("cargo test")
+系統：這個操作需要你確認，允許嗎？
+AI：根據測試結果和程式碼內容，有兩個具體風險⋯⋯</code></pre>
+        </div>
+    </div>
+
+    <h2>沒有 Harness 會怎樣？</h2>
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">A</div>
+            <h3>AI 看不到你的專案規範</h3>
+            <p>沒有提示詞組裝，AI 不知道你的團隊怎麼工作、coding style 是什麼、哪些測試要先跑。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">B</div>
+            <h3>惡意專案可能注入指令</h3>
+            <p>沒有信任機制，不明來源的專案可能在設定檔裡偷塞指令，被 AI 當成高優先規則執行。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">C</div>
+            <h3>換模型就要重寫一堆程式</h3>
+            <p>沒有 Provider 轉接層，從 GPT 換成 Gemini 就要改一堆 API 呼叫格式、串流處理、錯誤處理。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">D</div>
+            <h3>出問題找不到原因</h3>
+            <p>沒有工作記錄，每次失敗都無法回放。你不知道問題出在提示詞、工具、模型，還是權限設定。</p>
+        </article>
+    </div>
+
+    <h2>GCD 為什麼適合用來學這些？</h2>
+    <p>GemiClawDex 不是世界上最完美的 AI 助手，但它有一條<strong>非常清楚的 Rust 程式碼路徑</strong>：從 CLI 入口 → 工作區偵測 → 信任檢查 → 提示詞組裝 → AI 對話迴圈 → 工作記錄保存，每一步都看得到程式碼。</p>
+
+    <p>更重要的是，它同時展示了兩種學習價值：</p>
+    <ul>
+        <li><strong>已完成的功能</strong>：CLI、提示詞組裝、工具系統、工作記錄、Provider 轉接⋯ 每個都有完整的程式碼和自動化測試。</li>
+        <li><strong>還在發展的功能</strong>：Container 沙盒、MCP 外部工具、Token 快取⋯ 可以讓你練習分辨「已完成的功能」和「規劃中的方向」。</li>
+    </ul>
+
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">建議的閱讀順序</div>
+        <p>如果你第一次看，接下來最順的順序是：<strong>入門範例 → 名詞速查 → 架構全貌</strong>。先用一個小任務理解 AI 助手的基本運作，搞懂幾個常見名詞，再回來看完整的系統架構。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('home')">← 首頁</button>
+    <button class="btn btn-primary" onclick="navigateTo('starter')">入門範例 →</button>
+</div>

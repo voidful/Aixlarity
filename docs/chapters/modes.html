@@ -1,0 +1,427 @@
+<div class="chapter-header">
+    <span class="chapter-number">Modes</span>
+    <h1>Plan、Live、REPL、JSON 與 JSONL：的不同使用方式</h1>
+    <p class="chapter-desc">GCD 有好幾種使用方式：Plan 模式、Live 模式、REPL、JSON 輸出等。每種方式看到的東西不一樣，適合不同的使用情境。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先講最重要的結論</div>
+        <p>GCD 不是為每一種使用方式各寫一套系統，而是盡量讓同一份 <code>AppOutput</code>、同一條 <code>App::exec</code> 主要流程，對應到文字、JSON、JSONL、REPL、plan、live 這幾種讀法。因此，很多看似「只是介面」的選項，其實都在表達你要從 外殼 看見什麼。</p>
+    </div>
+
+    <h2>為什麼模式層值得單獨成章</h2>
+    <p>如果你把 AI 助手 只當成「打一段任務，等模型回來」的工具，那 CLI 旗標、REPL、JSONL 輸出看起來像附加功能；但如果你把它當成可教、可以觀察、可自動化的 外殼，這些就會變成核心設計。因為工程團隊通常同時需要四種視角：</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">M1</div>
+            <h3>人類閱讀</h3>
+            <p>看 prompt preview、assistant response、runtime summary，快速掌握一輪執行大意。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">M2</div>
+            <h3>腳本整合</h3>
+            <p>讓 CI、外部工具、其他腳本能讀出結構化資料，而不是只能 parse 純文字。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">M3</div>
+            <h3>事件追蹤</h3>
+            <p>把一次執行分成事件序列，讓 replay、除錯與教學可以對齊到同一套 執行時 語言。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">M4</div>
+            <h3>互動工作流</h3>
+            <p>REPL、plan mode、resume / fork 讓 agent 不再只是一次性請求，而是持續工作系統。</p>
+        </article>
+    </div>
+
+    <h2>先把模式分成四條軸看</h2>
+    <p>GCD 的「模式」不是只有 plan 與 live。比較精準的看法，是把它分成四條互相交錯的軸：</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>軸</th>
+                    <th>選項</th>
+                    <th>它在回答什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>互動介面</td>
+                    <td>CLI 子命令 / REPL</td>
+                    <td>你是一次執行，還是要在終端裡持續工作？</td>
+                </tr>
+                <tr>
+                    <td>執行模式</td>
+                    <td>plan / live / replay</td>
+                    <td>你要看規劃快照、真的跑 agent，還是回頭讀既有事實？</td>
+                </tr>
+                <tr>
+                    <td>輸出序列化</td>
+                    <td>text / JSON / JSONL</td>
+                    <td>你是要給人看、給機器吃，還是要看事件流？</td>
+                </tr>
+                <tr>
+                    <td>回應呈現</td>
+                    <td>stream / no-stream</td>
+                    <td>模型回覆要不要在終端逐步吐出，還是等整段完成再顯示？</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>把這四條軸分開之後，你會比較容易理解：<code>--plan</code>、<code>--jsonl</code>、<code>--no-stream</code> 並不是在切換三個互斥產品，而是在改變同一條 外殼 的觀察方式。</p>
+
+    <h2>沒有 subcommand 時，CLI 其實會直加入 REPL</h2>
+    <p><code>gcd</code> 如果沒有帶任何 subcommand，不是報錯，而是直加入互動模式。這個細節很重要，因為它說明 GCD 的預設基本概念更接近「終端裡的工作環境」，而不只是一次性命令。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：REPL 會怎麼啟動</span>
+        </div>
+        <div class="window-body">
+<pre><code>$ gcd
+
+╔══════════════════════════════════════════════╗
+║       GemiClawDex (GCD) Interactive Mode      ║
+║    Type your task, or /help for commands       ║
+╚══════════════════════════════════════════════╝
+
+[先顯示 workspace overview]
+gcd></code></pre>
+        </div>
+    </div>
+
+    <p>REPL 內建幾個 slash command，像 <code>/overview</code>、<code>/providers</code>、<code>/trust</code>、<code>/sessions</code>；其他任何輸入都會被直接當成一個 exec task。這種設計很 terminal-first，也和 Gemini CLI / Codex 類型產品的互動節奏比較接近。</p>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">對腳本作者的一個提醒</div>
+        <p><code>--json</code> 或 <code>--jsonl</code> 並不會改變「沒有 subcommand 就進 REPL」這件事。換句話說，如果你要做真正穩定的 headless / machine-readable 呼叫，最好明確使用 <code>gcd overview</code>、<code>gcd exec</code>、<code>gcd sessions replay</code> 這類 subcommand，而不是單獨執行 <code>gcd --json</code>。</p>
+    </div>
+
+    <h2>REPL 不是完整 CLI 的另一個外皮，而是帶預設值的互動工作流</h2>
+    <p>如果你往下看 <code>run_repl()</code>，會發現 REPL 對一般任務輸入其實套了很明確的預設：<code>persist_session = true</code>、<code>print_prompt = true</code>、<code>permission = auto-edit</code>、<code>stream = true</code>、<code>plan_only = false</code>。這代表 REPL 比較像「為互動工作優化過的一組執行選項」。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>在 REPL 直接輸入任務時</th>
+                    <th>預設值</th>
+                    <th>對使用體驗的意思</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>工作記錄保存</td>
+                    <td>開啟</td>
+                    <td>互動工作預設可延續、可 replay。</td>
+                </tr>
+                <tr>
+                    <td>prompt preview</td>
+                    <td>開啟</td>
+                    <td>每輪都偏向可教、可檢查。</td>
+                </tr>
+                <tr>
+                    <td>permission</td>
+                    <td><code>auto-edit</code></td>
+                    <td>互動使用偏向務實，不是最保守也不是全自動。</td>
+                </tr>
+                <tr>
+                    <td>streaming</td>
+                    <td>開啟</td>
+                    <td>回答會逐步出現在終端，比較像對話。</td>
+                </tr>
+                <tr>
+                    <td>checkpoint / plan</td>
+                    <td>關閉</td>
+                    <td>REPL 預設偏向直接工作，而不是先做規劃快照。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">這代表什麼</div>
+        <p>如果你需要更精細地控制 <code>--plan</code>、<code>--checkpoint</code>、<code>--permission</code>、<code>--no-stream</code>、<code>--no-session</code>，最清楚的方式仍然是使用 <code>gcd exec</code>。REPL 比較像一條意見明確、方便持續工作的預設路徑。</p>
+    </div>
+
+    <h2><code>--plan</code> 不是另一個 agent，而是同一條 <code>App::exec</code> 的分支</h2>
+    <p>這是整章最值得講清楚的 實況檢查 之一。很多文件一看到 規劃模式，就會直覺把它寫成「另一套推理 agent」；但 GCD 目前的 <code>plan_only</code> 不是這樣。它會走同樣的 workspace / trust / provider / catalog / prompt 組裝前半段，只是在真正建立 <code>AgentRunOptions</code> 前就分支返回，不會進 <code>run_agent()</code>。</p>
+
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>plan 與 live 共享前半段</h3>
+                <p>兩者都會先做 workspace discovery、trust evaluation、provider / commands / skills / instructions / plugins 載入，然後組出同一份 <code>PromptAssembly</code>。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>plan 可以一樣保存 checkpoint 與 session</h3>
+                <p>如果有開 <code>--checkpoint</code> 或 工作記錄保存，plan mode 也會把資料寫下來，只是 turn 的 mode 會標成 <code>plan</code>。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>plan 不會呼叫 provider，也不會跑 工具迴圈</h3>
+                <p>因為根本沒有進 <code>run_agent()</code>，所以沒有 provider call、沒有 assistant response、沒有 tool invocation，也沒有 live token 用量。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>因此它更像規劃輸出模式，而不是獨立 runtime</h3>
+                <p>這個判讀很重要，因為它會直接影響你怎麼寫文件、怎麼設計教學、怎麼預期 plan mode 的事件含義。</p>
+            </div>
+        </article>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：同一個任務在 plan 與 live 下會差多少</span>
+        </div>
+        <div class="window-body">
+<pre><code># Plan
+gcd exec --plan --checkpoint "review src/app.rs 並列出修補方向"
+
+你會得到：
+- Execution plan
+- Prompt preview
+- Checkpoint saved
+- 可能的 plan session turn
+- events 只到 ExecutionPrepared / CheckpointSaved / SessionPersisted
+
+# Live
+gcd exec "review src/app.rs 並列出修補方向"
+
+你會得到：
+- Execution result
+- Provider called
+- AssistantMessage
+- ToolCallRequested / Completed
+- RunCompleted
+- Runtime summary</code></pre>
+        </div>
+    </div>
+
+    <h2>文字、JSON、JSONL 不是同一份東西換格式而已</h2>
+    <p>GCD 的輸出層雖然都包在同一個 <code>AppOutput</code> 裡，但三種 render 其實在回答不同問題。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>輸出型態</th>
+                    <th>你會拿到什麼</th>
+                    <th>最適合的用途</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>text</td>
+                    <td>給人類閱讀的摘要、prompt preview、assistant response、runtime summary。</td>
+                    <td>終端互動、教學、快速檢查。</td>
+                </tr>
+                <tr>
+                    <td>JSON</td>
+                    <td>完整的結構化物件，例如 exec 模式下的 <code>ExecJson</code>。</td>
+                    <td>腳本整合、一次拿完整摘要。</td>
+                </tr>
+                <tr>
+                    <td>JSONL</td>
+                    <td>逐行事件或紀錄，用來做 event stream 與後處理。</td>
+                    <td>批次處理、事件管線、後續 observability。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>其中最容易被誤會的是 <code>JSONL</code>。在 exec 路徑下，<code>render_exec_output()</code> 目前輸出的 JSONL 其實是 <strong>execution events 的逐行序列</strong>，不是完整的 exec summary 被分成多行。這代表如果你要拿到完整 <code>prompt</code>、<code>attachments</code>、<code>result.final_response</code> 等完整摘要，<code>--json</code> 反而更直接。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>情境</th>
+                    <th>比較適合</th>
+                    <th>原因</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>我想一次拿到完整 exec 摘要</td>
+                    <td><code>--json</code></td>
+                    <td>會直接得到完整 <code>ExecJson</code> 結構。</td>
+                </tr>
+                <tr>
+                    <td>我想追事件流，或把事件逐行送去別的系統</td>
+                    <td><code>--jsonl</code></td>
+                    <td>每行就是一個 event payload。</td>
+                </tr>
+                <tr>
+                    <td>我想手動看 prompt 與回答</td>
+                    <td>預設 text</td>
+                    <td>人類閱讀成本最低。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>一個很值得文件化的細節：<code>--no-prompt</code> 只影響文字輸出</h2>
+    <p>在 exec 路徑裡，<code>print_prompt</code> 只控制人類可讀的 text render 是否顯示 <code>Prompt preview</code>；但在 JSON 結構裡，<code>prompt</code> 欄位仍會被放進 <code>ExecJson</code>。這對 automation 很有價值，也正是文件需要特別點出來的地方。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：<code>--no-prompt</code> 的真正影響範圍</span>
+        </div>
+        <div class="window-body">
+<pre><code>gcd exec --no-prompt --json "review src/app.rs"
+
+文字輸出：
+- 不顯示 Prompt preview
+
+JSON 輸出：
+{
+  "mode": "live",
+  "prompt": "...完整 最終提示詞 仍在這裡...",
+  ...
+}</code></pre>
+        </div>
+    </div>
+
+    <p>所以如果你的需求是「終端畫面不要太長，但機器還是要拿到完整 prompt」，GCD 目前其實已經可以做到。</p>
+
+    <h2><code>--jsonl</code> 在 exec 與 replay 下的含義也不完全相同</h2>
+    <p>這是另一個很適合教學的細節。exec 的 JSONL 比較像單輪執行事件流；<code>sessions replay --jsonl</code> 則會把每個 event 包成帶有 <code>session_id</code>、<code>turn_index</code>、<code>turn_mode</code>、<code>input</code> 的 wrapper 物件。換句話說，兩者都叫 JSONL，但服務的分析任務不同。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>命令</th>
+                    <th>JSONL 每行大致長什麼樣子</th>
+                    <th>適合做什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>gcd exec --jsonl ...</code></td>
+                    <td>單個 <code>AgentEvent</code></td>
+                    <td>即時或近即時地消費執行事件。</td>
+                </tr>
+                <tr>
+                    <td><code>gcd sessions replay --jsonl ...</code></td>
+                    <td>帶 <code>session_id</code> / <code>turn_index</code> / <code>payload</code> 的事件包裝</td>
+                    <td>離線分析既有 session、做 replay pipeline。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Streaming 是呈現策略，不是結果格式</h2>
+    <p><code>--no-stream</code> 也很容易被誤解成「不要用 SSE」或「不要有 events」。更精準的說法是：它主要改變 provider adapter 與終端的回應呈現方式。streaming 關閉後，OpenAI / Gemini / Anthropic adapter 會走非 streaming 路徑，但整體 <code>ExecJson</code>、session turn、runtime summary 的含義並沒有變成另一套格式。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>選項</th>
+                    <th>主要改變什麼</th>
+                    <th>不會改變什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>streaming = true</td>
+                    <td>回答在終端逐步吐出，adapter 走 SSE 或對應 streaming 協定。</td>
+                    <td>提示詞組裝、permission、工作記錄保存 的主要流程不變。</td>
+                </tr>
+                <tr>
+                    <td>streaming = false</td>
+                    <td>等整個 response 完成後再輸出。</td>
+                    <td>最終 <code>result</code> 的結構、events 類型與 session mode 不因此變成另一種產品。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>如果同時開 <code>--json</code> 和 <code>--jsonl</code>，哪個會贏</h2>
+    <p>在目前 CLI 實作裡，輸出順序是先檢查 <code>jsonl</code>，再檢查 <code>json</code>。換句話說，如果兩者同時為真，實際上會輸出 JSONL。這不是最核心的功能，但對腳本穩定性來說，是值得文件化的小細節。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：輸出選項的優先順序</span>
+        </div>
+        <div class="window-body">
+<pre><code>if cli.jsonl {
+    println!("{}", output.render_jsonl());
+} else if cli.json {
+    println!("{}", output.render_json());
+} else {
+    println!("{}", output.render());
+}</code></pre>
+        </div>
+    </div>
+
+    <h2>用三個實務情境理解這一章</h2>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">S1</div>
+            <h3>我要先做教學式規劃，再人工確認</h3>
+            <p>用 <code>gcd exec --plan --checkpoint --json</code>。這樣可以同時保存 prompt、checkpoint 與完整結構化規劃輸出。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">S2</div>
+            <h3>我要把事件送去別的分析系統</h3>
+            <p>用 <code>gcd exec --jsonl</code> 或 <code>gcd sessions replay --jsonl</code>。前者看 live event，後者看既有 session 事件。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">S3</div>
+            <h3>我要在終端裡持續工作，不想每次都重打一堆旗標</h3>
+            <p>直加入 REPL，接受它偏向互動工作的預設值；如果要更精準控制，再切回完整 CLI。</p>
+        </article>
+    </div>
+
+    <h2>實況檢查：最值得記住的五件事</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3><code>--plan</code> 不是另一個 agent runtime</h3>
+            <p>它是 <code>App::exec</code> 的前半段分支，會組 prompt、可存 session / checkpoint，但不進 <code>run_agent()</code>。</p>
+        </div>
+        <div class="check-item">
+            <h3>REPL 是有意見的預設工作流</h3>
+            <p>它預設會保存 session、顯示 prompt、使用 <code>auto-edit</code>、開啟 streaming。</p>
+        </div>
+        <div class="check-item">
+            <h3><code>--json</code> 比 <code>--jsonl</code> 更適合拿完整摘要</h3>
+            <p>exec 的 JSONL 目前主要是事件流，不是完整 result object 的逐行拆分。</p>
+        </div>
+        <div class="check-item">
+            <h3><code>--no-prompt</code> 只隱藏文字版 prompt</h3>
+            <p>JSON 結構裡的 <code>prompt</code> 欄位仍然存在。</p>
+        </div>
+        <div class="check-item">
+            <h3>Streaming 改的是呈現節奏，不是 外殼 結構</h3>
+            <p>關閉 streaming 後，主要流程仍是同一份 prompt、同一套 events、同一份 session 模型。</p>
+        </div>
+    </div>
+
+    <h2>把這一章濃縮成一句話</h2>
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">模式層的價值，在於讓同一條 外殼 同時服務人與機器</div>
+        <p>Plan / live 決定你是在看規劃還是在看執行，REPL / CLI 決定你是持續工作還是一次觸發，text / JSON / JSONL 決定你是給人看還是給系統吃，stream / no-stream 則決定終端裡的節奏。把這些層講清楚，你就會知道 GCD 不只是「能跑的 agent」，而是一個開始具備操作面設計的 外殼。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('evidence')">← 執行記錄和回放</button>
+    <button class="btn btn-primary" onclick="navigateTo('comp')">Claude Code / Gemini CLI / Codex 對照 →</button>
+</div>

@@ -1,0 +1,47 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 09 章</span>
+                <h1>指令載入器</h1>
+                <p class="chapter-desc">AGENTS.md 如何變成 System Prompt — <code>instructions.rs</code></p>
+            </div>
+            <div class="content-body">
+                <h2>指令檔案搜尋順序</h2>
+                <p>GCD 在工作區根目錄搜尋以下指令檔，全部載入後合併：</p>
+                <ol>
+                    <li><code>AGENTS.md</code> — 主指令檔（所有供應商共用）</li>
+                    <li><code>GCD.md</code> — GCD 專屬指令</li>
+                    <li><code>GEMINI.md</code> — 僅在使用 Gemini 供應商時載入</li>
+                    <li><code>CLAUDE.md</code> — 僅在使用 Anthropic 供應商時載入</li>
+                </ol>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">信任閘門</div>
+                    <p>指令載入受 Trust System 控制。如果當前工作區被標記為 <code>untrusted</code>，<strong>所有專案指令檔都不會被載入</strong>。這是防禦 Prompt Injection 的核心機制。</p>
+                </div>
+
+                <h2>注入到 System Prompt 的位置</h2>
+                <p>載入的指令會被包裝成特定格式，插入到最終提示詞的 system message 中：</p>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">最終 System Prompt 結構</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-text">[內建 Agent 角色描述]
+[工具能力說明]
+---
+[AGENTS.md 內容]
+[GCD.md 內容]
+[供應商特定指令]
+---
+[注入的技能內容]</code></pre>
+                    </div>
+                </div>
+
+                <div class="source-ref">
+                    <strong>原始碼</strong>：<code>crates/gcd-core/src/instructions.rs</code>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch8')">← 08：設定檔</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch10')">10：命令系統 →</button>
+            </div>

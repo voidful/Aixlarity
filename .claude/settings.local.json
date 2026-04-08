@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:yage.ai)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:anneheartrecord.github.io)",
+      "WebFetch(domain:ccunpacked.dev)"
+    ]
+  }
+}

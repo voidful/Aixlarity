@@ -1,0 +1,107 @@
+<div class="chapter-header">
+                <span class="chapter-number">使用者指南 · 第 4 章</span>
+                <h1>客製化：指令、命令與技能</h1>
+                <p class="chapter-desc">打造專屬你的 AI 編碼工作流</p>
+            </div>
+            <div class="content-body">
+                <h2>專案指令 (AGENTS.md)</h2>
+                <p>在專案根目錄放置 <code>AGENTS.md</code>，GCD 會自動注入到 System Prompt：</p>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">AGENTS.md</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-markdown"># 專案規範
+
+## 程式碼風格
+- 使用 4 空格縮排
+- 函數名稱採用 snake_case
+- 所有公開 API 都要有文件註解
+
+## 測試要求
+- 每個新功能都要有對應的單元測試
+- 使用 `cargo test` 驗證
+
+## 架構決策
+- 避免使用 unwrap()，改用 ? 運算子
+- 錯誤類型使用 thiserror 定義</code></pre>
+                    </div>
+                </div>
+
+                <div class="callout callout-info">
+                    <div class="callout-title">多指令檔案</div>
+                    <p>GCD 同時支援 <code>GCD.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code> 等供應商特定指令檔。當使用特定供應商時，會額外載入對應的指令。</p>
+                </div>
+
+                <h2>自訂命令</h2>
+                <p>在 <code>.gcd/commands/</code> 目錄放置 TOML 檔案，定義可複用的命令：</p>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">.gcd/commands/review.toml</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-toml">description = "程式碼審查"
+prompt = """
+請對以下程式碼進行詳細審查，重點關注：
+1. 安全性漏洞
+2. 效能瓶頸
+3. 錯誤處理完整性
+4. 程式碼可讀性
+5. 是否符合 AGENTS.md 中的規範
+
+請用表格呈現發現的問題及建議修復方案。
+"""</code></pre>
+                    </div>
+                </div>
+                <p>使用方式：<code>gcd exec "/review src/auth.rs"</code></p>
+
+                <h2>技能系統 (Skills)</h2>
+                <p>在 <code>.gcd/skills/</code> 目錄放置 Markdown 檔案，作為可選注入的專業知識：</p>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">.gcd/skills/rust-optimization/SKILL.md</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-markdown">Rust 效能最佳化專家
+
+# 最佳化策略
+1. 避免不必要的 clone()，改用借用
+2. 使用 Cow&lt;str&gt; 延遲分配
+3. 優先使用 iterator 而非 collect()
+4. 考慮使用 SmallVec 減少堆分配
+5. Profile 後再最佳化，避免過早最佳化</code></pre>
+                    </div>
+                </div>
+
+                <h2>MCP 伺服器</h2>
+                <p>在 <code>.gcd/mcp.json</code> 中配置 MCP 伺服器，擴充 Agent 工具能力：</p>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">.gcd/mcp.json</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-json">{
+  "servers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "env": {}
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" }
+    }
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('u3')">← U3：供應商配置</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch1')">第二部分：基礎架構 →</button>
+            </div>

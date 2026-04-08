@@ -1,0 +1,379 @@
+<div class="chapter-header">
+    <span class="chapter-number">案例導讀</span>
+    <h1>三個任務，如何一路走過完整流程</h1>
+    <p class="chapter-desc">前面幾章把層次分開講，這一章則把它們重新接回一條真實任務路徑。你可以把這裡當成「把系統圖變成執行感」的案例章。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先說清楚這一章的口徑</div>
+        <p>下面三個案例都以 GCD 目前原始碼為基礎，但其中的 prompt 片段、工具呼叫順序與模型回覆內容屬於教學性示意，不是官方逐字輸出。這一章的價值在於幫你建立判斷方法，而不是假裝列出一份唯一正確的 transcript。</p>
+    </div>
+
+    <h2>為什麼一定要看案例</h2>
+    <p>很多人第一次接觸 AI 助手 文件時，會把每個模組都看懂，卻還是不知道它們在執行時怎麼互相影響。原因很簡單：<strong>外殼的難點不是名詞，而是順序</strong>。工作區先不先被信任，會改變 instructions 能不能載入；sandbox 與 permission 的組合，會改變同一個 tool call 是否可執行；session 有沒有延續，又會改變 最終提示詞 裡是不是多一大段上下文。</p>
+
+    <p>所以這一章刻意不再抽象地說「有 trust、有 tools、有 session」，而是選三個工程上最常見的任務，沿著 <code>gcd exec</code> 的主要流程，把每一層實際在做的事走一次。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>案例</th>
+                    <th>你會看到什麼</th>
+                    <th>這個案例最想教你的事</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>案例一：安全 review</td>
+                    <td>read-only + suggest 下，agent 如何被限制成觀察者。</td>
+                    <td>沒有這些 gate，模型很容易從「分析」滑向「動手改」。</td>
+                </tr>
+                <tr>
+                    <td>案例二：有限度修補</td>
+                    <td>workspace-write + auto-edit 下，寫檔可以自動，但 shell 仍可能被擋。</td>
+                    <td>permission 與 sandbox 是兩條不同軸，不該混成一個開關。</td>
+                </tr>
+                <tr>
+                    <td>案例三：不受信任的第三方 repo</td>
+                    <td>trust 限制生效後，instructions / commands / skills 如何一起消失。</td>
+                    <td>trust 不只是安全設計，也是 提示詞來源 設計的一部分。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>案例一：在 trusted repo 裡做安全 review</h2>
+    <p>先看最常見、也最能說明 外殼 價值的情境：你想讓 agent 幫你 review 一段 Rust 程式，但你此刻不希望它寫檔、跑 shell、或自作主張改任何東西。這類任務看似簡單，實際上很能驗證系統是否把「分析」和「執行」分開。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">教學性命令示意</span>
+        </div>
+        <div class="window-body">
+<pre><code>gcd exec \
+  --sandbox read-only \
+  --permission suggest \
+  "review crates/gcd-core/src/app.rs 的 exec 主流程，指出風險與完成度誤判"</code></pre>
+        </div>
+    </div>
+
+    <p>這個設定表面上只是「保守一點」，但它其實明確改變了 agent 的身份。模型在這裡不再是可執行修補者，而更像受限的分析助手。它可以讀檔、列目錄、搜尋字串，也可以提出「建議你跑某個 shell 命令」，但寫檔、patch 與 shell 執行都不該直接越過 gate。</p>
+
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>進入模型之前，先決定工作區與 trust</h3>
+                <p><code>Workspace::discover()</code> 會先決定根目錄，接著 trust state 會影響 instructions、commands、skills 能不能載入。如果這個 repo 已被信任，<code>AGENTS.md</code>、<code>GCD.md</code> 之類檔案就可能進入 提示詞來源 layer。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>Prompt assembly 把「review 任務」翻成 可送出的提示詞</h3>
+                <p>這時候 user input 不再只是單一句子。它會和 repo instructions、選中的 skill、sandbox 標籤、provider profile 等資訊一起被組裝，最後才形成送給模型的 prompt。這也是為什麼看起來一樣是「請 review」，不同 外殼 產生的行為會差很多。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>Tool loop 中，模型被鼓勵讀取證據，而不是直接動手</h3>
+                <p>在 read-only sandbox 下，<code>read_file</code>、<code>search_files</code>、<code>list_dir</code> 仍可工作；但 <code>write_file</code>、<code>apply_patch</code>、<code>shell</code> 會被 sandbox 或 permission 層攔下。這讓 review 更像蒐證與分析，而不是半自動改碼。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>任務結束後，session 仍會留下可 replay 的痕跡</h3>
+                <p>即使沒有修改檔案，GCD 仍會把 prompt 準備、工具呼叫、provider fallback 與最終回覆等資訊寫進 session turn。這一點很重要，因為 外殼 的價值之一就是讓你事後能重建發生過什麼。</p>
+            </div>
+        </article>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：模型在這個案例裡可能想做的事</span>
+        </div>
+        <div class="window-body">
+<pre><code>1. read_file("crates/gcd-core/src/app.rs")
+2. search_files("plan_only", "crates/gcd-core/src")
+3. read_file("crates/gcd-core/src/prompt.rs")
+4. 建議：!{cargo test -p gcd-core}
+5. 整理風險、完成度與可能的誤判
+
+真正會發生的 gate：
+- read_file / search_files：可執行
+- shell：read-only sandbox 下不可直接執行
+- write_file / apply_patch：不可執行</code></pre>
+        </div>
+    </div>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>如果沒有哪一層</th>
+                    <th>可能出現什麼問題</th>
+                    <th>GCD 這個案例靠哪一層補上</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>沒有 sandbox</td>
+                    <td>模型可能從 review 直接滑向 patch 或 shell。</td>
+                    <td><code>read-only</code> sandbox 把操作影響先收斂掉。</td>
+                </tr>
+                <tr>
+                    <td>沒有 permission</td>
+                    <td>即使有 shell 建議，也很可能在錯誤時機被執行。</td>
+                    <td><code>suggest</code> 讓危險工具必須再經過批准。</td>
+                </tr>
+                <tr>
+                    <td>沒有 session 持久化</td>
+                    <td>你很難事後判讀模型到底看過什麼證據。</td>
+                    <td>session turn 與 events 提供 replay 基礎。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">這個案例最值得記住的一句話</div>
+        <p>一個好的 review 外殼，不是讓模型更勇猛，而是讓模型在不該動手時能被穩定地限制成觀察者。</p>
+    </div>
+
+    <h2>案例二：在 trusted repo 裡做有限度修補</h2>
+    <p>第二個案例換一個更接近日常開發的情境：你願意讓 agent 幫你改檔，但還不想放它直接跑 shell。這正好可以用來說明很多人常混在一起的兩件事：<strong>sandbox 決定「能碰哪裡」；permission 決定「要不要再問一次」</strong>。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">教學性命令示意</span>
+        </div>
+        <div class="window-body">
+<pre><code>gcd exec \
+  --sandbox workspace-write \
+  --permission auto-edit \
+  "修補 providers doctor 的錯誤訊息，並補一個最小測試"</code></pre>
+        </div>
+    </div>
+
+    <p>這裡的心理預期，通常是「改檔可以自動，但測試執行前最好問我一下」。如果你的 外殼 只有單一的「安全 / 不安全」開關，這種需求就很難表達；但 GCD 把 sandbox 和 permission 分開，所以這個協作節奏能被寫成明確 policy。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>面向</th>
+                    <th>這個案例的設定</th>
+                    <th>對實際行為的影響</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>工作區信任</td>
+                    <td>trusted</td>
+                    <td>repo instructions、commands、skills 都有機會進 prompt。</td>
+                </tr>
+                <tr>
+                    <td>sandbox</td>
+                    <td><code>workspace-write</code></td>
+                    <td>代理可在工作區內寫檔或套 patch，但不應越界寫到 repo 外。</td>
+                </tr>
+                <tr>
+                    <td>permission</td>
+                    <td><code>auto-edit</code></td>
+                    <td>寫檔可自動，shell 仍要批准。</td>
+                </tr>
+                <tr>
+                    <td>session</td>
+                    <td>預設持久化</td>
+                    <td>你可以事後 replay 這次修改到底怎麼完成。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：同一個修補任務的典型路徑</span>
+        </div>
+        <div class="window-body">
+<pre><code>1. read_file("crates/gcd-core/src/app.rs")
+2. search_files("providers_doctor", "crates/gcd-core/src")
+3. read_file("crates/gcd-core/src/providers.rs")
+4. apply_patch(...)
+5. 建議：!{cargo test -p gcd-core providers::tests}
+6. 等待 shell 批准
+7. 根據測試結果再決定是否補第二次 patch</code></pre>
+        </div>
+    </div>
+
+    <p>這個案例最有學習價值的地方，在於它看起來像一個單一任務，實際上卻跨了三種不同性質的操作：讀證據、改工作區、驗證結果。GCD 現在能把前兩者加入主要流程，也能把第三者做成 approval step，這代表它已經不是單純的 patch bot，而是具備基本人機協作節奏的 coding 外殼。</p>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">常見誤判</div>
+        <p>很多文件會把「可寫檔」直接寫成「可全自動修復」。這是不精確的。以這個案例來說，寫檔能力屬於 <code>Implemented</code>，但整個「修改後自動驗證、根據結果再迭代」的體驗，仍然受到 shell approval、container path 與 hooks 設定影響。把這種差異講清楚，比把功能表列滿更重要。</p>
+    </div>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>如果模型下一步想做的是</th>
+                    <th>這個案例會怎麼處理</th>
+                    <th>原因</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>直接 <code>apply_patch</code></td>
+                    <td>可執行</td>
+                    <td><code>workspace-write</code> 允許工作區修改，<code>auto-edit</code> 也不要求再確認。</td>
+                </tr>
+                <tr>
+                    <td>直接 <code>write_file</code></td>
+                    <td>可執行</td>
+                    <td>和 patch 一樣，屬於可自動放行的寫入行為。</td>
+                </tr>
+                <tr>
+                    <td>直接跑 <code>cargo test</code></td>
+                    <td>需要批准</td>
+                    <td>permission 層把 shell 視為不同風險類型，不因可寫檔而自動放行。</td>
+                </tr>
+                <tr>
+                    <td>改到工作區外的路徑</td>
+                    <td>應被阻擋</td>
+                    <td>工具路徑會經過 workspace canonicalization。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>案例三：在 untrusted 第三方 repo 裡做初步盤點</h2>
+    <p>第三個案例故意不讓 agent 太舒服。想像你剛把一個外部專案 clone 下來，還不確定裡面的 instructions、commands、skills 該不該信任，但你又想先請 agent 幫你看 build 流程與模組分布。這種時候，真正有價值的不是模型多聰明，而是 外殼 能不能在不信任的前提下仍提供有用、但比較保守的協助。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">教學性命令示意</span>
+        </div>
+        <div class="window-body">
+<pre><code>gcd exec \
+  --sandbox read-only \
+  --permission suggest \
+  "先說明這個 repo 的 build 流程、主要模組與可疑腳本，不要執行任何命令"</code></pre>
+        </div>
+    </div>
+
+    <p>如果工作區目前是不受信任狀態，GCD 的行為不是「完全不能用」，而是 <strong>提示詞來源 layer 會整體被限縮</strong>。Instructions 不載入，commands catalog 變空，skills catalog 也變空。代理仍能讀檔、列目錄、搜尋，但它會更像一般性的 terminal coding assistant，而不是一個懂這個 repo 私有 workflow 的專案 agent。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>同樣一句任務</th>
+                    <th>trusted repo</th>
+                    <th>untrusted repo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>「說明 build 流程」</td>
+                    <td>可能會結合 <code>AGENTS.md</code>、自訂 commands、skills 與 repo 約定來回答。</td>
+                    <td>主要靠檔案蒐證與通用推理，不會把工作區設定直接吞進 prompt。</td>
+                </tr>
+                <tr>
+                    <td>「跑測試看看」</td>
+                    <td>如果設定允許，可能在 approval 後真的執行。</td>
+                    <td>在這個案例設定下，仍只會以建議形式出現，且 instructions 不會幫它強化 repo 特定流程。</td>
+                </tr>
+                <tr>
+                    <td>「用 /review 模板」</td>
+                    <td>如果 command catalog 有對應模板，可進 提示詞來源 layer。</td>
+                    <td>catalog 為空，代理不會拿到這層 repo-specific workflow。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：為什麼 trust 改的是 prompt，不只是安全感</span>
+        </div>
+        <div class="window-body">
+<pre><code>trusted 時，組裝結果可能像：
+- repo instructions
+- command template
+- selected skill summary
+- user task
+
+untrusted 時，組裝結果更接近：
+- sandbox / provider / session metadata
+- user task
+- 必要的 file injections
+
+差別不是模型智商，而是上下文管理。</code></pre>
+        </div>
+    </div>
+
+    <div class="callout callout-info revealable">
+        <div class="callout-title">這個案例最值得帶走的觀念</div>
+        <p>trust 的作用不是讓系統看起來「比較安全」而已。它會直接決定哪些專案內建知識可以被視為 提示詞來源，因此也會改變 agent 的專案感與執行風格。</p>
+    </div>
+
+    <h2>把三個案例放在一起看，你會得到什麼判讀框架</h2>
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">1</div>
+            <h3>先問「這次要不要讓它動手」</h3>
+            <p>如果答案是否定的，先把任務壓到 read-only + suggest，讓模型先成為觀察者，再決定是否升級權限。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">2</div>
+            <h3>再問「要讓它碰到哪個邊界」</h3>
+            <p>寫檔、patch、shell、network、sub-agent 都不是同一種風險。把它們分開，你才真的在做 外殼 設計，而不是做一個總開關。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">3</div>
+            <h3>最後問「哪些專案知識應該進 prompt」</h3>
+            <p>repo instructions、commands、skills 與 session context 都屬於 提示詞來源 layer。這一層如果沒有管理，agent 很容易不是太盲，就是太相信工作區。</p>
+        </article>
+    </div>
+
+    <h2>如果你想自己重跑這三個案例</h2>
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>先用 <code>--plan</code> 看組裝，不急著打 API</h3>
+                <p>GCD 的 規劃模式 會在真正 live execution 前，把 prompt、checkpoint 與預定事件先整理出來。這很適合拿來做離線教學或文件驗證。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>再用 live mode 看工具與批准節奏</h3>
+                <p>尤其是案例二，最值得觀察的是「為什麼可寫檔，但 shell 還在等批准」。這能快速幫團隊釐清 permission 設計是否足夠清楚。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>最後回頭 replay session</h3>
+                <p>透過 <code>gcd sessions list</code> 與 <code>gcd sessions replay &lt;id&gt;</code>，你可以把「我以為 agent 會這樣做」和「它真的這樣做了嗎」放在一起比對。這一步很適合做 外殼 實況檢查。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>這一章濃縮成一句話</h2>
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">案例把抽象層次變成工程判斷</div>
+        <p>當你能拿同一個任務，分別放進不同 trust、sandbox、permission 與 提示詞來源 設定裡看差異，你就不再只是記住幾個 agent 名詞，而是真的開始具備 外殼 工程 的判讀能力。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('attachments')">← Binary Attachment、Multimodal 與 Provider 實際做出來斷點</button>
+    <button class="btn btn-primary" onclick="navigateTo('evidence')">執行記錄和回放 →</button>
+</div>

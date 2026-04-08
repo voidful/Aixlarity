@@ -1,0 +1,86 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 14 章</span>
+                <h1>工具系統 (Tool System)</h1>
+                <p class="chapter-desc">Agent 與現實世界互動的橋梁 — <code>tools.rs</code></p>
+            </div>
+            <div class="content-body">
+                <h2>Tool Trait</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">tools.rs — Tool trait 定義</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-rust">#[async_trait]
+<span class="token keyword">pub</span> <span class="token keyword">trait</span> <span class="token class-name">Tool</span>: Send + Sync {
+    <span class="token keyword">fn</span> <span class="token function">name</span>(&amp;<span class="token keyword">self</span>) -&gt; &amp;<span class="token keyword">str</span>;
+    <span class="token keyword">fn</span> <span class="token function">description</span>(&amp;<span class="token keyword">self</span>) -&gt; &amp;<span class="token keyword">str</span>;
+    <span class="token keyword">fn</span> <span class="token function">parameters_schema</span>(&amp;<span class="token keyword">self</span>) -&gt; serde_json::Value;
+    <span class="token keyword">async</span> <span class="token keyword">fn</span> <span class="token function">execute</span>(
+        &amp;<span class="token keyword">self</span>,
+        params: serde_json::Value,
+        ctx: &amp;<span class="token class-name">ToolContext</span>,
+    ) -&gt; Result&lt;String&gt;;
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2>8 個 built-in tools</h2>
+                <div class="tool-cards">
+                    <div class="tool-card">
+                        <div class="tool-name">read_file</div>
+                        <div class="tool-desc">讀取指定檔案的內容。支援相對路徑（基於工作區根）和絕對路徑。</div>
+                        <div class="tool-sandbox">沙箱：受讀取範圍限制</div>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-name">write_file</div>
+                        <div class="tool-desc">建立或覆寫檔案。自動生成 unified diff 預覽，供使用者審核。</div>
+                        <div class="tool-sandbox">沙箱：受寫入範圍限制 | 權限：suggest 模式需確認</div>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-name">list_dir</div>
+                        <div class="tool-desc">列出目錄內容，截斷至 200 筆以避免過大輸出。</div>
+                        <div class="tool-sandbox">沙箱：受讀取範圍限制</div>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-name">shell</div>
+                        <div class="tool-desc">執行 shell 命令。輸出截斷至 10KB。在 container 模式下命令在 Docker 容器內執行。</div>
+                        <div class="tool-sandbox">沙箱：受隔離策略限制 | 權限：suggest/auto-edit 需確認</div>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-name">search_files</div>
+                        <div class="tool-desc">使用 ripgrep (rg) 搜尋檔案內容。支援正則表達式和檔案類型過濾。</div>
+                        <div class="tool-sandbox">沙箱：受讀取範圍限制</div>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-name">fetch_url</div>
+                        <div class="tool-desc">HTTP GET 抓取網頁內容。內建簡易 HTML → Markdown 轉換。</div>
+                        <div class="tool-sandbox">沙箱：不受檔案系統限制</div>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-name">apply_patch</div>
+                        <div class="tool-desc">套用 unified diff 格式的修補。比 write_file 更精準，適合小範圍修改。</div>
+                        <div class="tool-sandbox">沙箱：受寫入範圍限制 | 權限：suggest/auto-edit 需確認</div>
+                    </div>
+                </div>
+
+                <h2>工具註冊表</h2>
+                <p><code>tools/registry.rs</code> 負責合併三種來源的工具：</p>
+                <div class="arch-flow">
+                    <div class="flow-step">8 個 built-in tools</div>
+                    <div class="flow-arrow">+</div>
+                    <div class="flow-step">MCP 伺服器工具</div>
+                    <div class="flow-arrow">+</div>
+                    <div class="flow-step">JSON 插件工具</div>
+                    <div class="flow-arrow">=</div>
+                    <div class="flow-step">統一工具註冊表</div>
+                </div>
+
+                <div class="source-ref">
+                    <strong>原始碼</strong>：<code>crates/gcd-core/src/tools.rs</code>、<code>crates/gcd-core/src/tools/</code> 目錄下所有檔案
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch13')">← 13：Agent 迴圈</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch15')">15：會話持久化 →</button>
+            </div>

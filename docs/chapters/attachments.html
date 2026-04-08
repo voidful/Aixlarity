@@ -1,0 +1,477 @@
+<div class="chapter-header">
+    <span class="chapter-number">Attachments</span>
+    <h1>Binary Attachment、Multimodal 與 Provider 實際做出來斷點</h1>
+    <p class="chapter-desc">這一章專門拆解圖片、PDF 這類二進位附件在 GCD 裡的真實路徑。重點不是「有沒有 multimodal 這個詞」，而是附件到底走到哪一層、在哪裡停下來。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先講結論</div>
+        <p>GCD 目前已經能把圖片與 PDF 這類附件辨識成 <code>PromptAttachment::BinaryReference</code>，也會把它們放進 <code>PromptAssembly.attachments</code>、exec JSON 輸出與事件計數裡；但進到 provider adapter 時，主要流程仍是把整份 prompt 當成文字 message 送出。因此這條能力最如實的標記是：。</p>
+    </div>
+
+    <h2>為什麼附件要單獨成章</h2>
+    <p>在 AI 助手 文件裡，最容易被講成空談的能力之一，就是所謂的「多模態支援」。很多專案只要 provider profile 上有個 <code>supports_multimodal = true</code>，就很容易讓讀者誤以為圖片、PDF、截圖已經能像文字一樣完整流進模型。但真實工程並不是這樣。你至少還要回答六個問題：</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">M1</div>
+            <h3>附件怎麼被辨識</h3>
+            <p>是靠副檔名、MIME sniffing，還是檔頭判斷？支援哪些格式？</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">M2</div>
+            <h3>附件怎麼進 prompt</h3>
+            <p>是直接展開內容、只留 placeholder，還是變成獨立 metadata？</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">M3</div>
+            <h3>附件怎麼進 provider request</h3>
+            <p>不同協定要的是 base64、URL、document block，還是檔案 upload token？</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">M4</div>
+            <h3>大小與成本怎麼管</h3>
+            <p>圖片 / PDF 通常比文字更容易推高 request 體積與成本，不能只靠 prompt 字數估算。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">M5</div>
+            <h3>Replay 能不能重建</h3>
+            <p>如果 session 只留下 prompt 字串，你是否還能還原當時真正送出的附件 payload？</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">M6</div>
+            <h3>安全範圍在哪裡</h3>
+            <p>附件通常來自工作區檔案系統，這會直接碰到 trust、路徑限制與未來的容器含義。</p>
+        </article>
+    </div>
+
+    <p>也正因為這些問題不能被一句「我們支援 multimodal」帶過，所以附件值得獨立成章。這一章的用途，是把 capability metadata、prompt metadata、runtime payload 三層分開。</p>
+
+    <h2>先把現況切成五層看</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>層次</th>
+                    <th>GCD 目前怎麼做</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>工作區內的附件路徑解析</td>
+                    <td><code>@{...}</code> 會先經過工作區限制與路徑解析，不能隨意跳出 workspace。</td>
+                </tr>
+                <tr>
+                    <td>已知圖片 / PDF 的辨識</td>
+                    <td>目前靠副檔名辨識 <code>png / jpg / jpeg / gif / webp / pdf</code>。</td>
+                </tr>
+                <tr>
+                    <td>prompt 與輸出層的附件 metadata</td>
+                    <td>會產生 <code>&lt;attached-file&gt;</code> placeholder、<code>PromptAttachment::BinaryReference</code> 與 exec JSON 中的 <code>attachments</code>。</td>
+                </tr>
+                <tr>
+                    <td>provider request 真的帶出圖片 / PDF payload</td>
+                    <td>目前 adapter 主要流程仍只把 message.content 當文字送出。</td>
+                </tr>
+                <tr>
+                    <td>provider-specific upload / replay reconstruction</td>
+                    <td>尚未形成完整主要流程。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>文字注入和二進位附件，不能當同一件事看</h2>
+    <p>在 <code>expand_file_injections()</code> 這層，GCD 其實已經把兩條路徑分開了。文字檔會被讀成帶行號 preview，直接展開為 <code>&lt;injected-file&gt;</code>；二進位附件則不會直接把內容塞進 prompt，而是只留下 placeholder 與 metadata。這個差別非常重要，因為它代表系統已經知道「附件不是普通文字」。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>注入類型</th>
+                    <th>prompt 內長什麼樣子</th>
+                    <th>metadata 會記什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>文字檔</td>
+                    <td><code>&lt;injected-file path="..."&gt;...帶行號內容...&lt;/injected-file&gt;</code></td>
+                    <td><code>FileText { path, preview }</code></td>
+                </tr>
+                <tr>
+                    <td>目錄</td>
+                    <td><code>&lt;injected-directory path="..."&gt;...listing...&lt;/injected-directory&gt;</code></td>
+                    <td><code>DirectoryListing { path, entries }</code></td>
+                </tr>
+                <tr>
+                    <td>圖片 / PDF</td>
+                    <td><code>&lt;attached-file path="..." media_type="..."&gt;binary reference reserved for provider adapter&lt;/attached-file&gt;</code></td>
+                    <td><code>BinaryReference { path, media_type }</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：三種注入會被怎麼分開</span>
+        </div>
+        <div class="window-body">
+<pre><code>使用者輸入：
+/review @{src/app.rs} @{docs/architecture.md} @{assets/flow.png} @{specs/agent.pdf}
+
+展開後：
+- src/app.rs      -> injected-file（帶行號 preview）
+- docs/architecture.md -> injected-file（帶行號 preview）
+- assets/flow.png -> attached-file（image/png binary reference）
+- specs/agent.pdf -> attached-file（application/pdf binary reference）</code></pre>
+        </div>
+    </div>
+
+    <p>這裡值得注意的是：<strong>GCD 並不是完全沒有附件含義</strong>。它已經把二進位檔從文字注入路徑分流了，只是目前還沒一路分流到 provider-native request payload。</p>
+
+    <h2>副檔名辨識是 Implemented，但仍是保守做法</h2>
+    <p>目前附件辨識主要靠 <code>detect_binary_media_type()</code>，已知支援的類型是 <code>png</code>、<code>jpg / jpeg</code>、<code>gif</code>、<code>webp</code>、<code>pdf</code>。這種做法的優點是簡單、可測、離線友善；缺點則是它依賴副檔名，不是完整的 MIME 或檔頭辨識。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>情境</th>
+                    <th>目前會怎麼被判斷</th>
+                    <th>你應該怎麼描述</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>diagram.png</code></td>
+                    <td>會被當成 <code>image/png</code> 的 binary reference。</td>
+                </tr>
+                <tr>
+                    <td><code>spec.pdf</code></td>
+                    <td>會被當成 <code>application/pdf</code> 的 binary reference。</td>
+                </tr>
+                <tr>
+                    <td><code>screenshot.PNG</code></td>
+                    <td>副檔名會轉小寫，仍可辨識。</td>
+                </tr>
+                <tr>
+                    <td><code>trace.bin</code></td>
+                    <td>如果內容像二進位但副檔名不在白名單，會走文字讀取路徑並報 binary-not-supported 錯。</td>
+                    <td> 的體驗邊角</td>
+                </tr>
+                <tr>
+                    <td><code>diagram.svg</code></td>
+                    <td>不在 binary 白名單，通常會被當文字檔 preview。</td>
+                    <td>這不是壞事，但要知道它目前不是獨立圖像 payload。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>這也提醒我們一件事：附件能力不只是 provider 問題，前面還有一層「你要怎麼判斷這個檔案值不值得當附件」。GCD 目前的答案是保守而可測，但還沒有走到完整型別系統。</p>
+
+    <h2>一條完整路徑：從 <code>@{flow.png}</code> 到 exec JSON</h2>
+    <p>如果你想真正看懂附件線，最好的方法是把一個具體例子沿著主要流程走一次。假設使用者輸入：</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">教學性輸入例子</span>
+        </div>
+        <div class="window-body">
+<pre><code>/review @{assets/flow.png} 並說明這張流程圖和 提示詞組裝 的關聯</code></pre>
+        </div>
+    </div>
+
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>先解析工作區內路徑</h3>
+                <p><code>resolve_injected_path()</code> 只允許絕對路徑位於 workspace root 或 current dir 之下；相對路徑則先試 current dir，再試 workspace root。這表示附件仍受工作區邊界保護。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>辨識成 binary reference</h3>
+                <p>副檔名命中 <code>png</code> 後，不會去讀圖片內容本身，而是直接產生 <code>&lt;attached-file ...&gt;</code> placeholder 與 <code>BinaryReference</code> metadata。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>進入 <code>PromptAssembly.attachments</code></h3>
+                <p><code>assemble_prompt()</code> 會把這個 metadata 收進 <code>attachments</code>，並把 placeholder 留在 <code>final_prompt</code> 內，表示 prompt 文字與附件索引同時存在。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>輸出層可以看見附件</h3>
+                <p><code>render_exec_output()</code> 會在文字輸出中顯示 <code>Attachments: 1</code>，JSON 則會帶出結構化的 <code>attachments</code> 陣列。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">05</div>
+            <div class="roadmap-content">
+                <h3>事件與 session 只保留部分證據</h3>
+                <p><code>ExecutionPrepared</code> 事件目前只記 <code>attachment_count</code>；session turn 會保存 prompt 字串與事件，但不會額外保存完整結構化附件 payload。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">06</div>
+            <div class="roadmap-content">
+                <h3>進到 adapter 時仍回到文字主要流程</h3>
+                <p><code>AgentRunOptions</code> 目前不攜帶獨立附件欄位；adapter 只看 <code>messages</code> 裡的文字內容，因此圖片最終仍像一段帶標記的文字 prompt，而不是 provider-native image/document block。</p>
+            </div>
+        </article>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：prompt 與 JSON 層會看見的附件</span>
+        </div>
+        <div class="window-body">
+<pre><code>Prompt preview 片段：
+&lt;attached-file path="assets/flow.png" media_type="image/png"&gt;
+binary reference reserved for provider adapter
+&lt;/attached-file&gt;
+
+Exec JSON 片段：
+{
+  "attachments": [
+    {
+      "kind": "binary_reference",
+      "path": "assets/flow.png",
+      "media_type": "image/png"
+    }
+  ]
+}</code></pre>
+        </div>
+    </div>
+
+    <h2>最關鍵的 實況檢查：adapter 目前仍是文字 payload</h2>
+    <p>真正讓這條能力停在 <code>Implemented</code> 的地方，不在 prompt expansion，而在 adapter。現在四條 provider 路徑雖然協定不同，但都還是把 message 內容當成文字主體來送。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Provider 路徑</th>
+                    <th>目前的 message payload 形狀</th>
+                    <th>附件目前怎麼表現</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>OpenAI Responses</td>
+                    <td><code>content: [{ type: "input_text", text: message.content }]</code></td>
+                    <td>附件 placeholder 只是文字的一部分。</td>
+                </tr>
+                <tr>
+                    <td>OpenAI Chat Completions</td>
+                    <td>chat <code>messages</code> 的 <code>content</code> 目前走文字主要流程。</td>
+                    <td>沒有另外分成 image input item。</td>
+                </tr>
+                <tr>
+                    <td>Gemini GenerateContent</td>
+                    <td><code>parts: [{ "text": message.content }]</code></td>
+                    <td>沒有轉成 <code>inlineData</code> 或 file part。</td>
+                </tr>
+                <tr>
+                    <td>Anthropic Messages</td>
+                    <td>user / assistant content 目前主要是字串或 <code>type: text</code> block。</td>
+                    <td>沒有轉成 image / document block。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>換句話說，<strong>GCD 目前已經知道「有附件這回事」，但還沒有把它翻成各家 provider 真正吃得懂的多模態 request</strong>。這是很典型的 外殼 半連接狀態：上游已有含義，下游尚未完全消化。</p>
+
+    <h2>為什麼 <code>supports_multimodal</code> 不等於「真的已可用」</h2>
+    <p>GCD 的 provider profile 確實有 <code>supports_multimodal</code> 這個欄位，而且 Gemini、Anthropic 的 built-in / env profiles 預設會是 <code>true</code>。但這個欄位目前比較像 capability metadata，用來描述 provider 家族的理論能力與使用建議；它本身不會自動幫你把附件轉成正確 payload。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>層次</th>
+                    <th>目前扮演的角色</th>
+                    <th>不能替代什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>supports_multimodal</code></td>
+                    <td>provider profile metadata，方便 UI、文件與選型提示。</td>
+                    <td>不能替代真正的 請求格式調整。</td>
+                </tr>
+                <tr>
+                    <td><code>BinaryReference</code></td>
+                    <td>prompt / output 層的附件索引。</td>
+                    <td>不能替代 provider-specific image / document part。</td>
+                </tr>
+                <tr>
+                    <td><code>&lt;attached-file&gt;</code> placeholder</td>
+                    <td>讓 prompt 仍可讀、可追蹤。</td>
+                    <td>不能替代真實檔案 bytes 或 upload token。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>這就是 教學範例 很值得強調的一課：<strong>能力宣告、prompt metadata、runtime payload 是三件不同的事</strong>。如果把它們混為一談，文件就會比實作更樂觀。</p>
+
+    <h2>Replay 與 checkpoint 能看到多少附件證據</h2>
+    <p>這條線還有另一個容易被忽略的點：就算你現在不急著把圖片真的送進模型，至少也要知道事後能追到多少證據。GCD 在這裡已經有一些不錯的基礎，但還沒到完整鑑識等級。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>證據載體</th>
+                    <th>目前能看到什麼</th>
+                    <th>還缺什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Prompt preview</td>
+                    <td>看得到 <code>&lt;attached-file ...&gt;</code> placeholder。</td>
+                    <td>看不到 可送出的 payload。</td>
+                </tr>
+                <tr>
+                    <td>Exec JSON</td>
+                    <td>看得到結構化 <code>attachments</code> 陣列與 media type。</td>
+                    <td>看不到實際 upload / conversion 結果。</td>
+                </tr>
+                <tr>
+                    <td><code>ExecutionPrepared</code> 事件</td>
+                    <td>看得到 <code>attachment_count</code>。</td>
+                    <td>看不到每個附件的明細。</td>
+                </tr>
+                <tr>
+                    <td>Checkpoint 檔</td>
+                    <td>會保存帶 placeholder 的 prompt。</td>
+                    <td>不會另外保存附件 metadata。</td>
+                </tr>
+                <tr>
+                    <td>Session turn / replay</td>
+                    <td>保留 prompt 字串與事件序列。</td>
+                    <td>目前仍不足以完整重建 provider-native attachment payload。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>因此，如果你問「今天 GCD 能不能讓我事後知道某輪用了幾個附件？」答案是可以。如果你問「能不能百分之百重建當時實際送到 provider 的圖片 / PDF payload？」那答案還不能講成已完整支援。</p>
+
+    <h2>一個更貼近工程現場的例子</h2>
+    <p>想像你要做一個 bug report review，任務裡同時附上 terminal 截圖與 PDF 規格。這是一個很合理的 AI 助手 任務，也是多模態最容易被拿來當賣點的場景。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性任務例子</span>
+        </div>
+        <div class="window-body">
+<pre><code>gcd exec --print-prompt \
+  "請比較 @{artifacts/error-screen.png} 和 @{docs/runtime-spec.pdf}，
+   說明為什麼目前的 fallback 行為和規格不一致"</code></pre>
+        </div>
+    </div>
+
+    <p>今天這條線在 GCD 裡大概會發生的事，是：</p>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>你可以在 prompt preview 裡看到兩個 <code>&lt;attached-file&gt;</code></h3>
+            <p>這代表 prompt 組裝層知道有兩個附件，且知道它們的 path 與 media type。</p>
+        </div>
+        <div class="check-item">
+            <h3>你可以在 JSON 輸出裡看到兩筆 <code>binary_reference</code></h3>
+            <p>這代表 observability 層也能看見附件，不只是人眼看到的 prompt 樣子。</p>
+        </div>
+        <div class="check-item">
+            <h3>但 provider 很可能仍只收到一段描述附件存在的文字</h3>
+            <p>如果 adapter 沒有把這兩個附件翻成 provider-specific image / document blocks，模型實際讀到的就不會是圖片內容本身。</p>
+        </div>
+    </div>
+
+    <p>這種落差需要寫進文件，因為它正好示範了 外殼 工程最常見的誤解：<strong>UI 與 prompt 層看起來像支援，不等於 執行時 已經真的支援</strong>。</p>
+
+    <h2>如果要把這條線補齊，工程上至少要新增哪些層</h2>
+    <p>這裡我不把它寫成「GCD 已打算這樣做」的承諾，而是用比較保守的技術判斷整理成  /  方向。因為原始碼目前還沒有完整實作這些步驟。</p>
+
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">A</div>
+            <div class="roadmap-content">
+                <h3>先把附件從純文字 message 分流出來</h3>
+                <p>如果要真的實際做出來，多半需要在 <code>AgentRunOptions</code> 或 adapter helper 層攜帶獨立附件集合，而不是只靠 <code>initial_prompt: String</code>。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">B</div>
+            <div class="roadmap-content">
+                <h3>定義 provider-specific 請求格式調整</h3>
+                <p> OpenAI Responses、Gemini、Anthropic 對圖像 / 文件的 請求格式不同，不能共用同一個 generic serializer。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">C</div>
+            <div class="roadmap-content">
+                <h3>補上大小、格式與成本管理</h3>
+                <p> 真正送圖片或 PDF 時，通常還要有大小限制、頁數策略、轉碼與快取政策，否則成本和穩定度都難以控制。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">D</div>
+            <div class="roadmap-content">
+                <h3>讓 replay 與證據鏈同步升級</h3>
+                <p> 一旦 執行時 開始真的送出附件 payload，session / replay 也要決定至少保存哪種等級的 metadata，否則事後很難 debug。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>對貢獻者最實用的建議：先從單一 provider 做到底</h2>
+    <p>如果你未來真的要補這條能力，最不建議的做法，就是一開始就同時把 OpenAI、Gemini、Anthropic 三家都做滿。比較務實的順序，通常會是先挑一個協定，把「檔案辨識 -> payload 轉換 -> replay 證據 -> 錯誤處理」整條走到底，再把抽象層抽出來。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>做法</th>
+                    <th>優點</th>
+                    <th>風險</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>三家一起補</td>
+                    <td>看起來 coverage 很高。</td>
+                    <td>容易把 請求格式調整、錯誤處理與 replay 一起搞成半成品。</td>
+                </tr>
+                <tr>
+                    <td>先補單一 provider</td>
+                    <td>比較容易把整條能力做成真的可教、可測、可 debug。</td>
+                    <td>短期內文件要更誠實標示「其餘 provider 尚未接齊」。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>把這一章濃縮成一句話</h2>
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">GCD 已經有附件含義，但還沒有完整的多模態 runtime</div>
+        <p>現在的 GCD 已經會辨識圖片與 PDF、會在 prompt 與輸出裡保留附件索引，也會把附件數量記進事件；但 adapter 仍以文字 message 為主。這不是失敗，而是一個很值得被清楚寫清楚的開發中的狀態。看懂這個中間態，本身就是 外殼工程 的核心訓練。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('promptlab')">← Prompt 解剖室：最終 Prompt 如何長出來</button>
+    <button class="btn btn-primary" onclick="navigateTo('cases')">案例導讀：三個任務的完整流程 →</button>
+</div>

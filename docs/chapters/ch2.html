@@ -1,0 +1,112 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 02 章</span>
+                <h1>技術棧與專案結構</h1>
+                <p class="chapter-desc">原始碼組織、依賴選擇與 Crate 職責劃分</p>
+            </div>
+            <div class="content-body">
+                <h2>Workspace 結構</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">專案目錄樹</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-text">GemiClawDex/
+├── Cargo.toml              ← Workspace 宣告
+├── Cargo.lock
+├── README.md
+├── AGENTS.md               ← 專案指令
+├── .gcd/                   ← 工作區配置
+│   ├── commands/           ← 自訂命令 (.toml)
+│   ├── skills/             ← 技能 (SKILL.md)
+│   └── mcp.json            ← MCP 伺服器配置
+├── crates/
+│   ├── gcd-core/           ← 核心庫 (library crate)
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs          ← 公開 API 入口
+│   │       ├── app.rs          ← 命令路由 Facade
+│   │       ├── agent.rs        ← Agent 迴圈主體
+│   │       ├── agent/          ← Agent 子模組
+│   │       │   ├── types.rs        ← 型別定義
+│   │       │   ├── adapters.rs     ← Provider 適配器
+│   │       │   ├── permissions.rs  ← 權限提示
+│   │       │   ├── runtime_support.rs ← 壓縮/估算
+│   │       │   └── memory.rs       ← MEMORY.md
+│   │       ├── tools.rs        ← Tool trait 定義
+│   │       ├── tools/          ← 8 個 built-in tools
+│   │       │   ├── context.rs      ← ToolContext
+│   │       │   ├── registry.rs     ← 工具註冊表
+│   │       │   ├── read_file.rs
+│   │       │   ├── write_file.rs
+│   │       │   ├── list_dir.rs
+│   │       │   ├── shell.rs
+│   │       │   ├── search_files.rs
+│   │       │   ├── fetch_url.rs
+│   │       │   ├── apply_patch.rs
+│   │       │   ├── coordinator.rs
+│   │       │   ├── container.rs
+│   │       │   └── common.rs
+│   │       ├── providers.rs    ← 供應商管理
+│   │       ├── providers/      ← 供應商子模組
+│   │       ├── prompt.rs       ← 提示詞組裝
+│   │       ├── prompt/         ← 組裝子模組
+│   │       ├── session.rs      ← 會話管理
+│   │       ├── session/        ← 會話子模組
+│   │       ├── config.rs       ← 組態
+│   │       ├── workspace.rs    ← 工作區偵測
+│   │       ├── trust.rs        ← 信任系統
+│   │       ├── instructions.rs ← 指令載入
+│   │       ├── commands.rs     ← 命令載入
+│   │       ├── skills.rs       ← 技能載入
+│   │       ├── plugins.rs      ← 插件載入
+│   │       ├── mcp.rs          ← MCP 客戶端
+│   │       └── output.rs       ← 輸出渲染
+│   └── gcd-cli/            ← CLI 二進位 (binary crate)
+│       ├── Cargo.toml
+│       └── src/
+│           └── main.rs         ← Clap + Rustyline
+└── docs/                   ← 本文件</code></pre>
+                    </div>
+                </div>
+
+                <h2>核心依賴</h2>
+                <div class="comparison-table">
+                    <table>
+                        <thead>
+                            <tr><th>依賴</th><th>版本</th><th>用途</th><th>選擇理由</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>tokio</code></td><td>1.x</td><td>非同步 Runtime</td><td>Rust 生態事實標準，full features</td></tr>
+                            <tr><td><code>reqwest</code></td><td>0.11</td><td>HTTP 客戶端</td><td>支援 streaming、TLS、連接池</td></tr>
+                            <tr><td><code>serde</code></td><td>1.0</td><td>序列化框架</td><td>Rust 生態標準，derive 巨集</td></tr>
+                            <tr><td><code>serde_json</code></td><td>1.0</td><td>JSON 處理</td><td>搭配 serde 使用</td></tr>
+                            <tr><td><code>clap</code></td><td>4.x</td><td>CLI 解析</td><td>Derive 巨集、自動生成 help</td></tr>
+                            <tr><td><code>rustyline</code></td><td>latest</td><td>REPL 行編輯</td><td>歷史、補全、Ctrl+R</td></tr>
+                            <tr><td><code>colored</code></td><td>2.x</td><td>終端色彩</td><td>輕量、API 簡潔</td></tr>
+                            <tr><td><code>thiserror</code></td><td>1.0</td><td>錯誤定義</td><td>derive Error trait</td></tr>
+                            <tr><td><code>anyhow</code></td><td>1.0</td><td>錯誤傳播</td><td>快速原型、context 鏈</td></tr>
+                            <tr><td><code>async-trait</code></td><td>0.1</td><td>非同步 Trait</td><td>Tool trait 的非同步支援</td></tr>
+                            <tr><td><code>futures-util</code></td><td>0.3</td><td>Stream 組合子</td><td>SSE 串流處理</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>兩個 Crate 的職責</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-num">L</div>
+                        <h3>gcd-core (Library)</h3>
+                        <p>所有業務邏輯。可被其他 Rust 程式作為函式庫引用。零 CLI 依賴、零 UI 邏輯。純粹的 Agent 引擎。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-num">B</div>
+                        <h3>gcd-cli (Binary)</h3>
+                        <p>薄殼 CLI。只負責解析命令列參數、啟動 REPL、呼叫 gcd-core。約 500 行。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch1')">← 01：設計哲學</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch3')">03：工作區發現 →</button>
+            </div>

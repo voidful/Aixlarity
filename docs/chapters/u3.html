@@ -1,0 +1,85 @@
+<div class="chapter-header">
+                <span class="chapter-number">使用者指南 · 第 3 章</span>
+                <h1>配置 LLM 供應商</h1>
+                <p class="chapter-desc">三大 AI 供應商的設定與切換指南</p>
+            </div>
+            <div class="content-body">
+                <h2>供應商優先順序</h2>
+                <p>GCD 按以下順序解析使用哪個 LLM 供應商：</p>
+                <div class="arch-flow">
+                    <div class="flow-step">--provider 參數</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">.gcd/providers.conf</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">~/.gcd/providers.conf</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">GCD_PROVIDER 環境變數</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">自動偵測 API Key</div>
+                </div>
+
+                <h2>內建供應商</h2>
+                <div class="comparison-table">
+                    <table>
+                        <thead>
+                            <tr><th>供應商 ID</th><th>家族</th><th>協議</th><th>模型</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>gemini-official</code></td><td>Gemini</td><td>GeminiStreamingRest</td><td>gemini-2.5-pro</td></tr>
+                            <tr><td><code>openai-official</code></td><td>OpenAI</td><td>OpenAiResponses</td><td>o4-mini</td></tr>
+                            <tr><td><code>claude-official</code></td><td>Anthropic</td><td>AnthropicMessages</td><td>claude-sonnet-4-20250514</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>自訂供應商</h2>
+                <p>在 <code>~/.gcd/providers.conf</code> 或專案的 <code>.gcd/providers.conf</code> 中定義自訂供應商：</p>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">~/.gcd/providers.conf</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-toml"><span class="token comment"># 使用 OpenRouter 等相容 API</span>
+[my-openrouter]
+label = "OpenRouter Claude"
+family = "openai-compatible"
+protocol = "openai-chat"
+model = "anthropic/claude-sonnet-4-20250514"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+
+<span class="token comment"># 本機部署的模型</span>
+[local-ollama]
+label = "Local Ollama"
+family = "openai-compatible"
+protocol = "openai-chat"
+model = "codellama:34b"
+base_url = "http://localhost:11434/v1"</code></pre>
+                    </div>
+                </div>
+
+                <h2>供應商診斷</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">terminal</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-bash"><span class="token comment"># 檢查所有供應商狀態</span>
+gcd providers doctor
+
+<span class="token comment"># 輸出範例：</span>
+<span class="token comment"># ✅ gemini-env: API key found (GEMINI_API_KEY)</span>
+<span class="token comment"># ✅ openai-env: API key found (OPENAI_API_KEY)</span>
+<span class="token comment"># ❌ claude-env: Missing ANTHROPIC_API_KEY</span>
+
+<span class="token comment"># 切換當前使用的供應商</span>
+gcd providers use gemini-env</code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('u2')">← U2：互動模式</button>
+                <button class="btn btn-primary" onclick="navigateTo('u4')">U4：客製化 →</button>
+            </div>

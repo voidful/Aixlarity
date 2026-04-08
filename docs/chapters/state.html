@@ -1,0 +1,267 @@
+<div class="chapter-header">
+    <span class="chapter-number">State</span>
+    <h1>工作記錄和記憶</h1>
+    <p class="chapter-desc">這三個詞在 AI 助手文件裡最容易被混成一團。這一章專門講清楚：什麼是執行紀錄、什麼是下一輪上下文、什麼又只是尚未完全連接的記憶介面。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先講結論</div>
+        <p>在 GCD 裡，<strong>session</strong> 是正式的執行記錄與延續基礎；<strong>continuation</strong> 是從既有 session 中抽出的摘要，重新插回下一輪 prompt；<strong>memory</strong> 則是獨立的 <code>MEMORY.md</code> 介面，已接入 提示詞組裝 主要流程。這三者不能互相替代，也不應該用同一種口氣描述。</p>
+    </div>
+
+    <h2>為什麼這一層值得單獨分開講</h2>
+    <p>很多文件會把「記憶」「會話」「上下文延續」通通包在同一段描述裡，結果讀者只知道系統似乎有在保存東西，卻不知道保存的是什麼、下一輪到底會不會用到、以及哪些只是未來規劃。對 GCD 來說，這一點特別重要，因為它直接決定系統是不是只會做一次性 prompt，還是能支援 resume、fork、replay 與可回放教學。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>概念</th>
+                    <th>它回答的問題</th>
+                    <th>在 GCD 的現況</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Session</td>
+                    <td>這次執行發生了什麼？之後可不可以再看、再接、再分叉？</td>
+                </tr>
+                <tr>
+                    <td>Continuation</td>
+                    <td>既有 session 的哪些內容要回到下一輪 prompt？</td>
+                </tr>
+                <tr>
+                    <td>Memory</td>
+                    <td>跨 session 的持久知識要怎麼獨立保存與回用？</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Session 在 GCD 裡不是「聊天記錄」，而是執行紀錄</h2>
+    <p>GCD 的 session 並不只存使用者輸入與最終回答。每一個 turn 都會保存 provider、sandbox、trust、active command、active skill、完整 prompt、final response、tool 次數、token 用量、API calls 與 events。這個資料量，讓 session 更接近執行紀錄而不是對話紀錄。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">S1</div>
+            <h3>保存 prompt 本體</h3>
+            <p>這代表你之後可以回頭看「當時到底送了什麼 prompt」，而不是只剩模糊印象。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">S2</div>
+            <h3>保存事件流</h3>
+            <p><code>ExecutionPrepared</code>、<code>ToolCallRequested</code>、<code>ProviderFallback</code> 等事件都能被 replay。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">S3</div>
+            <h3>保存執行條件</h3>
+            <p>provider、sandbox、trust、permission 模式的差異都會直接改變結果，因此必須跟著 turn 一起保存。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">S4</div>
+            <h3>支援 resume / fork / replay</h3>
+            <p>這使 session 不只是存檔，而是後續 workflow 的基礎設施。</p>
+        </article>
+    </div>
+
+    <h2>GCD 的 session 檔案實際上保存了什麼</h2>
+    <p><code>session/storage.rs</code> 會把 session metadata 寫進 <code>session.txt</code>，再把每個 turn 寫成獨立檔案。turn 檔內含 header 與 payload，header 記錄位元組長度，payload 再依序拼在一起 input、prompt、response 與 events JSON。這個設計很樸素，但也很誠實：它明確表示 session 的核心材料是什麼。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：一個 session turn 檔案大概會長什麼樣子</span>
+        </div>
+        <div class="window-body">
+<pre><code>index=1
+timestamp_secs=1712345678
+mode=live
+provider_id=openai-codex
+provider_label=OpenAI Codex
+sandbox=workspace-write
+trust_label=trusted
+active_command=review
+input_bytes=26
+prompt_bytes=1420
+response_bytes=320
+events_json_bytes=980
+turns_used=2
+tool_invocation_count=3
+prompt_tokens=1200
+completion_tokens=220
+total_tokens=1420
+api_calls=2
+
+[input][prompt][final_response][events_json]</code></pre>
+        </div>
+    </div>
+
+    <p>這裡很值得注意的一點是：<strong>完整 prompt 也被保存了</strong>。這讓 session 成為一個很強的學習資源，因為你不只知道 agent 做了什麼，還知道它是在什麼上下文下做出這些決策。</p>
+
+    <h2><code>resume</code>、<code>fork</code>、<code>replay</code> 三者有什麼差別</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>模式</th>
+                    <th>它要解的問題</th>
+                    <th>在 GCD 裡的行為</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>resume</code></td>
+                    <td>我想沿著同一條工作繼續做下去。</td>
+                    <td>沿用原 session id，並在下一個 turn 追加新紀錄。</td>
+                </tr>
+                <tr>
+                    <td><code>fork</code></td>
+                    <td>我想從既有工作分叉出另一條嘗試。</td>
+                    <td>複製既有 turns，建立新 session id，並記錄 parent session。</td>
+                </tr>
+                <tr>
+                    <td><code>replay</code></td>
+                    <td>我想回頭看某次執行到底發生什麼。</td>
+                    <td>把保存的 events 重新列出，讓除錯與教學都可追蹤。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：同一段工作在 resume 與 fork 下的差異</span>
+        </div>
+        <div class="window-body">
+<pre><code>你完成了一輪 /review src/app.rs
+
+resume
+=> 同一個 session 繼續新增 turn 2
+=> 適合「延續剛才那件事」
+
+fork
+=> 複製原 session，建立新 session id
+=> 適合「保留原路線，再試另一種修法」
+
+重點：
+兩者都建立在 session 存得夠完整，
+否則分叉與延續都只會變成薄薄的聊天歷史。</code></pre>
+        </div>
+    </div>
+
+    <h2>Continuation 不是全部重灌歷史，而是濃縮回傳</h2>
+    <p>當使用者選擇 resume 或 fork 時，GCD 不會把全部過去訊息生硬地重新塞進 prompt，而是透過 <code>render_session_context()</code> 產生一段 <code># Session Continuation</code> 區塊，摘要 session id、工作區、parent session 與最近三個 turn 的概況。這種設計很務實，因為它在保留脈絡與控制 提示詞變太大之間做了折衷。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：continuation 區塊的形狀</span>
+        </div>
+        <div class="window-body">
+<pre><code># Session Continuation
+Mode: resume
+Session ID: 1712345678-review-src-app-rs
+Workspace: /workspace/project
+Existing turns: 3
+Parent session: 1712341000-review-src-app-rs
+Recent turn summaries
+- [1] /review src/app.rs | mode=live | provider=openai-codex | sandbox=workspace-write | tools=2
+- [2] fix error handling in src/app.rs | mode=live | provider=openai-codex | sandbox=workspace-write | tools=3
+- [3] re-run tests and summarize remaining risks | mode=live | provider=gemini-official | sandbox=workspace-write | tools=1</code></pre>
+        </div>
+    </div>
+
+    <p>這裡也能看出一個很重要的區分：continuation 是從 session 中抽出來的可用摘要，不是另一套獨立資料系統。如果 session 本身存得不完整，continuation 也不可能憑空變得有用。</p>
+
+    <h2>那 memory 呢？為什麼它不能跟 session 混成同一件事</h2>
+    <p><code>agent/memory.rs</code> 提供 <code>update_memory()</code> 與 <code>read_memory()</code> 針對 <code>.gcd/MEMORY.md</code> 的讀寫介面，且 <code>read_memory</code> 已接入 <code>App::exec</code> 與 <code>assemble_prompt</code> 主要流程，在每次執行時會自動將 MEMORY.md 內容注入 prompt 的 <code># Persistent Memory</code> 區塊。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>如果你想保存的是</th>
+                    <th>比較適合放在哪裡</th>
+                    <th>原因</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>某次執行的完整 prompt、tool calls、tokens、events</td>
+                    <td>Session</td>
+                    <td>這是執行紀錄，未來要 replay / resume / fork 都會用到。</td>
+                </tr>
+                <tr>
+                    <td>跨多次執行都值得保留的專案知識</td>
+                    <td>Memory</td>
+                    <td>理想上它應該是較穩定、較長壽的專案記憶，而不是單輪事件流水帳。</td>
+                </tr>
+                <tr>
+                    <td>為了下一輪工作只需要一小段歷史摘要</td>
+                    <td>Continuation</td>
+                    <td>它的目標是控制 prompt 尺寸，同時保留足夠上下文。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>實況檢查：memory 的實作現況</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>有獨立讀寫介面</h3>
+            <p>這代表它不是純概念，已經有實際檔案格式與更新方式。</p>
+        </div>
+        <div class="check-item">
+            <h3>已接入 提示詞組裝 主要流程</h3>
+            <p><code>App::exec</code> 會呼叫 <code>read_memory</code>，並透過 <code>PromptRequest::memory_content</code> 將內容注入 <code>assemble_prompt</code>。</p>
+        </div>
+        <div class="check-item">
+            <h3>持久化記憶儲存</h3>
+            <p>MEMORY.md 作為工作區級別的持久知識容器，跨 session 保留。</p>
+        </div>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">Memory 已接入主要流程，但仍有潛在改進空間</div>
+        <p>MEMORY.md 的內容現在會自動注入每次執行的 prompt。但真正完整的 long-term memory 還可以回答更多問題：何時自動寫入、何時清理、怎樣過濾相關性。這些都是未來可以持續優化的方向。</p>
+    </div>
+
+    <h2>如果你是貢獻者，該怎麼分辨新資料該進 session 還是 memory</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>判斷問題</th>
+                    <th>如果答案偏向是</th>
+                    <th>比較適合去哪裡</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>這是某一輪執行的事後證據嗎？</td>
+                    <td>是</td>
+                    <td>Session</td>
+                </tr>
+                <tr>
+                    <td>它應該跨多輪、甚至跨多次 session 持續存在嗎？</td>
+                    <td>是</td>
+                    <td>Memory</td>
+                </tr>
+                <tr>
+                    <td>它只是要讓下一輪快速理解目前做到哪裡嗎？</td>
+                    <td>是</td>
+                    <td>Continuation</td>
+                </tr>
+                <tr>
+                    <td>它需要支援 replay / fork / audit 嗎？</td>
+                    <td>是</td>
+                    <td>Session</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('runtime')">← 備援和保護機制</button>
+    <button class="btn btn-primary" onclick="navigateTo('tools')">工具和權限 →</button>
+</div>

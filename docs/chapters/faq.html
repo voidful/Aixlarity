@@ -1,0 +1,290 @@
+<div class="chapter-header">
+    <span class="chapter-number">名詞速查</span>
+    <h1>8 個最容易搞混的概念</h1>
+    <p class="chapter-desc">第一次接觸 AI 助手時，不需要一次把所有名詞都背下來。這裡幫你把最常搞混的幾組概念分清楚。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">讀完這章大概需要 3 分鐘</div>
+        <p>目標很簡單：把最常混在一起的詞分開。知道每個詞管哪一段就好，不用記得很精確。後面讀到具體章節時，自然會越來越熟。</p>
+    </div>
+
+    <h2>問題 1：模型、Provider、Protocol 差在哪？</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>名詞</th>
+                    <th>白話解釋</th>
+                    <th>舉例</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>模型（Model）</td>
+                    <td>真正負責思考和生成文字的 AI 引擎</td>
+                    <td>GPT-4o、Gemini 2.5 Pro、Claude 4 Sonnet</td>
+                </tr>
+                <tr>
+                    <td>Provider</td>
+                    <td>把模型提供給你使用的「服務設定」</td>
+                    <td>同一個 GPT 模型，可以用不同的 API key、不同的伺服器網址</td>
+                </tr>
+                <tr>
+                    <td>Protocol（協定）</td>
+                    <td>你和 Provider 溝通時用的「API 格式」</td>
+                    <td>OpenAI Chat 格式、Gemini 格式、Anthropic 格式（各家格式不同！）</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p>簡單記法：<strong>模型是引擎、Provider 是加油站的設定、Protocol 是加油孔的規格</strong>。</p>
+
+    <h2>問題 2：Prompt、Command、Skill 差在哪？</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>名詞</th>
+                    <th>白話解釋</th>
+                    <th>它負責什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Prompt（提示詞）</td>
+                    <td>最後真正送給 AI 看的那份完整文字</td>
+                    <td>把你的輸入、專案規則、上下文組合成一份任務說明</td>
+                </tr>
+                <tr>
+                    <td>Command（命令）</td>
+                    <td>某類任務的模板</td>
+                    <td>像 <code>/review</code>、<code>/refactor</code> 這種預設的任務格式</td>
+                </tr>
+                <tr>
+                    <td>Skill（技能）</td>
+                    <td>一套方法論的知識包</td>
+                    <td>例如「code review 要檢查哪些面向」「Rust 測試要注意什麼」</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">簡單記法</span>
+        </div>
+        <div class="window-body">
+<pre><code>Prompt = 最後送進 AI 的那份完整文字
+Command = 某類任務要怎麼展開（模板）
+Skill = 用哪一套方法去做（知識包）</code></pre>
+        </div>
+    </div>
+
+    <h2>問題 3：Tool、Shell、Patch 差在哪？</h2>
+    <p>這三個很容易搞混，但其實它們不在同一個層次：</p>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>名詞</th>
+                    <th>白話解釋</th>
+                    <th>舉例</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Tool（工具）</td>
+                    <td>AI 能呼叫的任何一種能力</td>
+                    <td><code>read_file</code>、<code>search_files</code>、<code>shell</code>、<code>apply_patch</code> 都算工具</td>
+                </tr>
+                <tr>
+                    <td>Shell</td>
+                    <td>工具的<strong>其中一種</strong>——執行終端機指令</td>
+                    <td>跑 <code>cargo test</code>、<code>git status</code>、<code>npm lint</code></td>
+                </tr>
+                <tr>
+                    <td>Patch</td>
+                    <td>工具的<strong>另一種</strong>——用結構化方式修改檔案</td>
+                    <td>不是跑指令，而是直接套用一段程式碼變更</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p>所以當文件說「AI 會用工具」，不一定代表它在跑 shell。讀檔、搜尋、寫檔、套 patch 都算工具，但它們的風險等級不同。</p>
+
+    <h2>問題 4：Trust、Permission、Sandbox 差在哪？</h2>
+    <p>這三個都和安全有關，但管的是三個不同的問題：</p>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>名詞</th>
+                    <th>它在問什麼</th>
+                    <th>白話解釋</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Trust（信任）</td>
+                    <td>這個專案的設定檔可以信嗎？</td>
+                    <td>決定專案自帶的 AGENTS.md、commands、skills 要不要載入</td>
+                </tr>
+                <tr>
+                    <td>Permission（權限）</td>
+                    <td>這個操作要不要先問人？</td>
+                    <td>像 <code>suggest</code>（只建議）、<code>auto-edit</code>（自動改）、<code>full-auto</code>（全自動）</td>
+                </tr>
+                <tr>
+                    <td>Sandbox（沙盒）</td>
+                    <td>就算允許做，實際能做到什麼程度？</td>
+                    <td>像 <code>read-only</code>（唯讀）、<code>workspace-write</code>（只能改工作區）、<code>container</code>（在容器裡跑）</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">舉例：AI 想跑 cargo test，三層各管什麼</span>
+        </div>
+        <div class="window-body">
+<pre><code>AI 想跑：cargo test
+
+Trust（信任）：
+  這個專案的設定檔可以信嗎？設定裡的規則要不要載入？
+
+Permission（權限）：
+  這次跑 shell 要不要先問你？
+
+Sandbox（沙盒）：
+  就算允許跑，是在你的電腦上直接跑、還是進 Docker 容器裡跑？</code></pre>
+        </div>
+    </div>
+
+    <h2>問題 5：Session、Checkpoint、Memory 差在哪？</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>名詞</th>
+                    <th>白話解釋</th>
+                    <th>用途</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Session（工作記錄）</td>
+                    <td>一次工作過程的完整記錄</td>
+                    <td>讓你可以回放、續接、分叉</td>
+                </tr>
+                <tr>
+                    <td>Checkpoint（快照）</td>
+                    <td>某一刻的提示詞和執行狀態快照</td>
+                    <td>方便回頭看「送進 AI 之前長什麼樣」</td>
+                </tr>
+                <tr>
+                    <td>Memory（記憶）</td>
+                    <td>跨多次工作都保留的長期筆記</td>
+                    <td>記住專案的重要資訊，下次工作時自動帶入</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p>最簡單的理解：<strong>Session 像這次工作的資料夾、Checkpoint 像其中某一刻的截圖、Memory 像一本長期筆記</strong>。</p>
+
+    <h2>問題 6：Plan 模式和 Live 模式差在哪？</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>模式</th>
+                    <th>白話解釋</th>
+                    <th>什麼時候用</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Plan（規劃模式）</td>
+                    <td>AI 只會產生計畫書，不會真的動手</td>
+                    <td>想先看看 AI 打算怎麼做，再決定要不要讓它做</td>
+                </tr>
+                <tr>
+                    <td>Live（執行模式）</td>
+                    <td>AI 會真的呼叫工具、修改檔案</td>
+                    <td>確認方向沒問題後，讓 AI 實際動手</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>問題 7：Plugin、MCP、內建工具差在哪？</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>類型</th>
+                    <th>白話解釋</th>
+                    <th>為什麼要知道</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>內建工具（Built-in）</td>
+                    <td>系統自帶的、最穩定的工具</td>
+                    <td>大部分安全規則都是以這些工具為準來設計的</td>
+                </tr>
+                <tr>
+                    <td>Plugin（插件）</td>
+                    <td>你自己加的本地擴充工具</td>
+                    <td>可以用，但不一定完全享有內建工具的安全保護</td>
+                </tr>
+                <tr>
+                    <td>MCP（外部工具協定）</td>
+                    <td>透過標準協定連接外部工具伺服器</td>
+                    <td>不只是多一個指令，而是多了一層網路連線和協定</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>問題 8：為什麼文件裡都標 Implemented？</h2>
+    <p>因為每個功能都有實際的程式碼支撐和自動化測試。這個標記的意思是：這不是只寫在規劃書上的功能，而是你可以在原始碼裡追查到的實作。</p>
+
+    <h2>一張總整理圖</h2>
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">AI 助手的基本組成</span>
+        </div>
+        <div class="window-body">
+<pre><code>模型：
+  負責思考和生成文字
+
+提示詞（Prompt）：
+  負責把任務說清楚
+
+工具（Tools）：
+  負責跟真實世界互動（讀檔、跑指令、搜尋⋯）
+
+Trust / Permission / Sandbox：
+  負責安全控制
+
+Session（工作記錄）：
+  負責記住這次做了什麼
+
+Provider：
+  負責把不同的 AI 模型接進系統</code></pre>
+        </div>
+    </div>
+
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">接下來看什麼最順</div>
+        <p>如果讀完還是覺得有點抽象，下一步去看<strong>架構全貌</strong>。那一章會把這些名詞放回真正的執行流程裡，讓你看到它們不只是名詞，而是程式碼裡一步步執行的不同階段。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('starter')">← 入門範例</button>
+    <button class="btn btn-primary" onclick="navigateTo('overview')">架構全貌 →</button>
+</div>

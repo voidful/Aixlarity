@@ -1,0 +1,16 @@
+<div class="chapter-header"><span class="chapter-number">第 22 章</span><h1>多代理協調器</h1><p class="chapter-desc">Agent 生成子 Agent — <code>tools/coordinator.rs</code></p></div>
+            <div class="content-body">
+                <h2>Coordinator 機制</h2>
+                <p>靈感來自 Claude Code 的 Agent tool 與 Claurst 的 Coordinator。GCD 的協調器允許主 Agent 生成子 Agent 來處理獨立子任務：</p>
+                <ul>
+                    <li>主 Agent 識別可並行處理的子任務</li>
+                    <li>每個子 Agent 擁有獨立的 context window</li>
+                    <li>子 Agent 繼承主 Agent 的 Sandbox 和 Permission 設定</li>
+                    <li>結果匯總回主 Agent 繼續處理</li>
+                </ul>
+                <div class="source-ref"><strong>原始碼</strong>：<code>crates/gcd-core/src/tools/coordinator.rs</code></div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch21')">← 21：容器</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch23')">23：插件系統 →</button>
+            </div>

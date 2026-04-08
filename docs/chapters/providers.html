@@ -1,0 +1,278 @@
+<div class="chapter-header">
+    <span class="chapter-number">Provider</span>
+    <h1>切換 AI 模型</h1>
+    <p class="chapter-desc">切換 AI 模型不是換個 API key 就好。這一章講 GCD 怎麼管理不同模型供應商、怎麼自動切換備用模型。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先講結論</div>
+        <p>如果你把 provider layer 想成「換個 base URL 再帶 API key」的薄薄一層，你很快就會在第二家模型加入來時碰壁。GCD 把 provider 清單、profile 載入、protocol 分派、streaming parsing、fallback 與 usage 計算放進同一條主要流程，正是在承認這層本來就是 外殼 的一部分。</p>
+    </div>
+
+    <h2>為什麼 provider 層值得單獨成章</h2>
+    <p>對很多使用者來說，provider 只是選單裡的一個下拉欄位。但對工程實作來說，這一層同時在處理至少五件事：用哪個協定發送請求、如何解析 tool call、如何處理 streaming、主 provider 失敗時是否能 fallback、以及不同來源的 provider profile 要怎麼被安全地併入 runtime。只要其中一件沒處理好，agent 就很難從 demo 走向可維護系統。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">1</div>
+            <h3>載入來源不只一種</h3>
+            <p>內建 profile、環境變數、全域設定、工作區設定都可能提供 provider 資訊，而且信任規則會影響工作區設定是否可用。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">2</div>
+            <h3>家族與協定是兩層概念</h3>
+            <p><code>family</code> 表示大致生態，<code>protocol</code> 則決定具體請求形狀。這讓 GCD 能區分「看起來像哪家」與「實際怎麼發送」。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">3</div>
+            <h3>Runtime 不能只知道主 provider</h3>
+            <p>當主 provider 發生 429、500 或 timeout 類錯誤時，fallback 列表決定這輪工作能不能繼續。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">4</div>
+            <h3>解析層差異非常真實</h3>
+            <p>Gemini、OpenAI Responses、OpenAI Chat、Anthropic 的 tool call 與 SSE 事件都不一樣，不能靠一份通用 parser 混過去。</p>
+        </article>
+    </div>
+
+    <h2>GCD 的 provider 清單 是怎麼長出來的</h2>
+    <p>在 <code>ProviderRegistry::load</code> 裡，GCD 會依序把四種來源併進同一份 registry：built-in、environment、global config、workspace config。這個順序本身就有產品意義，因為它讓專案可以同時支援預設 profile、環境驅動部署，以及工作區自訂 provider。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>來源</th>
+                    <th>在 GCD 的位置</th>
+                    <th>適合解的問題</th>
+                    <th>注意事項</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Built-in</td>
+                    <td><code>providers/profiles.rs</code></td>
+                    <td>提供開箱即用的預設 profile，讓教學與初次體驗有穩定起點。</td>
+                    <td>不代表所有使用者都會一直用內建 profile。</td>
+                </tr>
+                <tr>
+                    <td>Environment</td>
+                    <td><code>env_profiles()</code></td>
+                    <td>支援 headless 腳本、CI 與相容端點切換。</td>
+                    <td>環境變數本身也會決定選用哪個 API key env。</td>
+                </tr>
+                <tr>
+                    <td>Global Config</td>
+                    <td>使用者 config home 下的 <code>providers.conf</code></td>
+                    <td>讓同一台機器上的多專案共用自訂 provider 配置。</td>
+                    <td>適合長期個人偏好，不適合倉庫內專案特化。</td>
+                </tr>
+                <tr>
+                    <td>Workspace Config</td>
+                    <td>工作區內 <code>.gcd/providers.conf</code></td>
+                    <td>讓專案自帶 provider 建議與本地路由設定。</td>
+                    <td>在 untrusted workspace 下會被 信任檢查 阻擋。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：一份 workspace provider config 可能長什麼樣子</span>
+        </div>
+        <div class="window-body">
+<pre><code>[provider "openrouter-codex"]
+label = "OpenRouter Codex"
+family = "openai-compatible"
+protocol = "openai-responses"
+api_base = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "openai/codex-mini-latest"
+strengths = "relay routing | one key for multiple vendors"</code></pre>
+        </div>
+    </div>
+
+    <p>這個例子真正想說明的，不是 config 語法本身，而是 GCD 把 provider 看成明確的 domain object，而不是零散散落在 CLI 參數與環境變數裡的設定碎片。</p>
+
+    <h2><code>family</code>、<code>protocol</code>、<code>profile</code> 三者差在哪裡</h2>
+    <p>這三個詞很容易混在一起，但在 GCD 裡是不同層的概念。理解這個分工，才能看懂為什麼 provider layer 不只是 API wrapper。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>名詞</th>
+                    <th>它回答的問題</th>
+                    <th>在 GCD 裡的例子</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>ProviderFamily</code></td>
+                    <td>大致屬於哪個生態與能力族群？</td>
+                    <td><code>Gemini</code>、<code>OpenAiCompatible</code>、<code>Anthropic</code></td>
+                </tr>
+                <tr>
+                    <td><code>ProviderProtocol</code></td>
+                    <td>請求與回應要用哪一種具體協定？</td>
+                    <td><code>gemini-generate-content</code>、<code>openai-responses</code>、<code>anthropic-messages</code></td>
+                </tr>
+                <tr>
+                    <td><code>ProviderProfile</code></td>
+                    <td>這次 執行時 真正要用哪個模型、base URL、key env、能力宣告？</td>
+                    <td><code>openai-codex</code>、<code>gemini-env</code>、<code>openrouter-codex</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>把 family 和 protocol 分開，有兩個好處。第一，某些 profile 可以共享同一家族含義，但使用不同 protocol。第二，文件和 UI 可以說「這個 provider 屬於 openai-compatible 家族」，runtime 則更精準地知道「這次應該走 responses API 還是 chat completions」。</p>
+
+    <h2>一輪 live execution 是怎麼選 provider 的</h2>
+    <p>在 <code>App::exec</code> 裡，provider 選擇並不是單一來源決定的。GCD 會綜合 explicit provider、預設偏好、workspace active、global active 與 built-in default 來決定這次主 provider，然後再根據可用 API key 組出 fallback providers。</p>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>先 resolve 主 provider</h3>
+            <p><code>resolve_profile()</code> 會依序考慮顯式指定、偏好值、workspace active、global active 與 default provider。這讓 CLI 與設定檔的優先順序清楚可預測。</p>
+        </div>
+        <div class="check-item">
+            <h3>再檢查主 provider 的 API key</h3>
+            <p><code>read_provider_api_key()</code> 不是從固定 env 名稱讀值，而是依 profile 的 <code>api_key_env</code> 決定。這能支援官方端點與相容端點共存。</p>
+        </div>
+        <div class="check-item">
+            <h3>最後建立 fallback providers</h3>
+            <p>GCD 會遍歷 registry 裡其他 profiles，凡是能成功讀到 key 的，就加入 fallback list。當主 provider 在可重試錯誤上失敗時，這份列表就能接手。</p>
+        </div>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">這裡有一個值得保守描述的 實況檢查</div>
+        <p><code>app.rs</code> 裡的註解寫的是「same-family providers」，但目前實作並沒有真的再過濾 family；它是把所有不是主 provider、且能成功讀到 key 的 profiles 都放進候選清單。換句話說，fallback 現在比較接近「只要可用就先接手」，而不是嚴格的同家族退路。</p>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：provider 選擇與 fallback 的基本概念</span>
+        </div>
+        <div class="window-body">
+<pre><code>使用者顯式指定：--provider openai-codex
+workspace active provider：gemini-official
+global active provider：claude-official
+
+=> 主 provider 會先選 openai-codex
+
+如果 openai-codex 發生 429 / 500 / timeout
+=> 執行時 可能依可用 key 依序嘗試 gemini-official、claude-official
+
+重點：
+fallback 不是「隨便換一個模型」，
+而是建立在 registry、可用 key、retryable error 判定之上的受控退路。</code></pre>
+        </div>
+    </div>
+
+    <h2>整合成本真正高的地方，不在選 profile，而在協定差異</h2>
+    <p>真正麻煩的不是把 provider 顯示成下拉選單，而是不同協定會把同一輪 代理迴圈 切成完全不同的 request / response 形狀。GCD 在 <code>agent/adapters/</code> 下把 Gemini、OpenAI Responses、OpenAI Chat、Anthropic 分開，就是因為這些差異無法被「一層統一 SDK」簡單抹平。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>協定差異</th>
+                    <th>在 GCD 看到的具體處理</th>
+                    <th>如果偷懶會出現什麼問題</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>OpenAI Responses 支援 <code>previous_response_id</code></td>
+                    <td>follow-up turn 只送 tool outputs，而不是整段歷史訊息重灌一次。</td>
+                    <td>如果忽略這點，跨 turn 行為與 token 成本都會偏離協定原意。</td>
+                </tr>
+                <tr>
+                    <td>OpenAI Chat 與 Anthropic / Gemini 的 streaming event 不同</td>
+                    <td>各自有 parser，並透過 SSE 處理工具 delta 與 usage 事件。</td>
+                    <td>tool call 會被拼不完整，或 usage / completion text 解析錯亂。</td>
+                </tr>
+                <tr>
+                    <td>Tool call payload 形狀不同</td>
+                    <td>adapter 會統整成 GCD 內部的 <code>ToolCall</code> 形狀。</td>
+                    <td>runtime 需要為每家 provider 重寫工具執行邏輯。</td>
+                </tr>
+                <tr>
+                    <td>錯誤含義不同</td>
+                    <td>fallback 只在 429、500、503、timeout 等可重試錯誤時才觸發。</td>
+                    <td>一旦把所有錯誤都當可重試，容易遮蔽真正設定錯誤或權限錯誤。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>一個很值得注意的細節：GCD 把 provider 事件寫回 session</h2>
+    <p>在 代理迴圈 裡，provider 呼叫不是看不透的。GCD 會把 <code>RunStarted</code>、<code>ProviderCalled</code>、<code>ProviderFallback</code>、<code>RunCompleted</code> 這些事件寫回 session。這代表 provider layer 不只是執行細節，也是一條可回放、可除錯、可教學的事件線。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">E1</div>
+            <h3><code>ExecutionPrepared</code></h3>
+            <p>在真正呼叫 provider 前，就先保存 provider、protocol、sandbox、trust、prompt 與附件數等資訊。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">E2</div>
+            <h3><code>ProviderFallback</code></h3>
+            <p>如果 fallback 發生，事件會明確記下 from / to provider 與原因，讓這個切換可被追蹤。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">E3</div>
+            <h3><code>RunCompleted</code></h3>
+            <p>最後會記下 turns、tool invocations、token 使用量與最終回答，形成可 replay 的執行摘要。</p>
+        </article>
+    </div>
+
+    <h2>實況檢查：這一層哪些是已實際做出來，哪些還不能講滿</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>能力</th>
+                    <th>判讀</th>
+                    <th>說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Built-in / env / config provider 清單</td>
+                    <td>已在 <code>ProviderRegistry::load</code> 形成清楚主要流程。</td>
+                </tr>
+                <tr>
+                    <td>OpenAI Responses / Chat、Gemini、Anthropic adapters</td>
+                    <td>不只 profile 存在，測試也覆蓋了協定呼叫與 回覆解析。</td>
+                </tr>
+                <tr>
+                    <td>Fallback on retryable errors</td>
+                    <td>429 / 500 / 503 / timeout 類錯誤可觸發受控 fallback。</td>
+                </tr>
+                <tr>
+                    <td>Token caching / 請求簽名 穩定策略</td>
+                    <td>目前還看不到 快取金鑰、cache invalidation 與 provider-specific cache path 主要流程。</td>
+                </tr>
+                <tr>
+                    <td>多模態附件完整落到所有 adapters</td>
+                    <td>profile 有 multimodal metadata，但附件從 prompt 到各 adapter 的實際做出來程度不一致。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">不要把多 provider 想成「多選一 UI」</div>
+        <p>對教學用的範例系統 來說，多 provider 的真正價值不是選單比較豐富，而是迫使我們把 請求格式調整、parsing、fallback、usage、安全範圍都做成清楚的工程層。這也是為什麼 provider 章值得存在，而不是被藏進設定附錄。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('pipeline')">← Pipeline</button>
+    <button class="btn btn-primary" onclick="navigateTo('providerlab')">同一個任務，四種 Provider 協定如何變形 →</button>
+</div>

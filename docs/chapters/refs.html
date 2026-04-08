@@ -1,0 +1,312 @@
+<div class="chapter-header">
+    <span class="chapter-number">附錄</span>
+    <h1>參考來源</h1>
+    <p class="chapter-desc">這裡不是單純堆連結，而是把每個來源對本站說明與 GCD 判斷的影響範圍寫清楚。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">可追蹤原則</div>
+        <p>如果某個判斷直接來自 GCD 原始碼，就標示原始碼依據。如果來自外部資料，就標明來源與用途。如果是基於社群分析或文件總結，會特別標示，避免讓讀者誤以為是專案官方聲明。</p>
+    </div>
+
+
+
+    <h2>原始碼錨點：寫文件時最常對照的檔案</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th style="min-width:200px">原始碼檔案</th>
+                    <th>這個檔案告訴我們什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>app.rs</code></td>
+                    <td>整個系統的入口。工作區偵測、信任載入、provider 設定都在這裡，可以判斷哪些功能真的在執行流程裡。</td>
+                </tr>
+                <tr>
+                    <td><code>prompt.rs</code></td>
+                    <td>提示詞組裝的核心。看 commands、skills、附件、待審核指令怎麼被合併成最終提示詞。</td>
+                </tr>
+                <tr>
+                    <td><code>agent.rs</code></td>
+                    <td>AI 對話迴圈的核心。包含 provider 呼叫、工具迴圈、權限檢查、hooks、備援切換。</td>
+                </tr>
+                <tr>
+                    <td><code>hooks.rs</code></td>
+                    <td>PreToolUse / PostToolUse 的實作。看 hook 怎麼攔截工具呼叫，退出碼各代表什麼。</td>
+                </tr>
+                <tr>
+                    <td><code>tools/coordinator.rs</code></td>
+                    <td>Sub-agent（<code>spawn_agent</code>）的實作。包含回合上限、深度上限、繼承條件。</td>
+                </tr>
+                <tr>
+                    <td><code>trust.rs</code></td>
+                    <td>信任判斷規則。決定工作區是 trusted / parent-trusted / untrusted，直接影響哪些設定會被載入。</td>
+                </tr>
+                <tr>
+                    <td><code>instructions.rs</code></td>
+                    <td>專案規範載入。只有可信工作區才會讀 <code>AGENTS.md</code>、<code>GEMINI.md</code> 等設定檔。</td>
+                </tr>
+                <tr>
+                    <td><code>commands.rs</code></td>
+                    <td>自訂命令的載入與 <code>{{args}}</code> 置換。任務模板怎麼變成提示詞的一部分。</td>
+                </tr>
+                <tr>
+                    <td><code>skills.rs</code></td>
+                    <td>技能包的 Markdown 載入、名稱推導、顯式選用。技能是方法論知識包，不是命令模板。</td>
+                </tr>
+                <tr>
+                    <td><code>tools/shell.rs</code><br><code>tools/container.rs</code></td>
+                    <td>Container 沙盒怎麼對 shell 工具提供 Docker 隔離執行。</td>
+                </tr>
+                <tr>
+                    <td><code>session/storage.rs</code><br><code>session/render.rs</code></td>
+                    <td>工作記錄的保存與回放。checkpoint、resume、fork、replay 的實作都在這裡。</td>
+                </tr>
+                <tr>
+                    <td><code>mcp.rs</code></td>
+                    <td>MCP 伺服器初始化、工具發現與 JSON-RPC 封裝。外部工具擴充就靠這個。</td>
+                </tr>
+                <tr>
+                    <td><code>agent/runtime_support.rs</code></td>
+                    <td>上下文預算管理、訊息壓縮、自動 git commit 與 commit 訊息清理。</td>
+                </tr>
+                <tr>
+                    <td><code>output.rs</code></td>
+                    <td>輸出格式控制。<code>--json</code> 和 <code>--jsonl</code> 不只是換格式——它們輸出的資料結構不同。</td>
+                </tr>
+                <tr>
+                    <td><code>gcd-cli/main.rs</code></td>
+                    <td>CLI 入口。子命令對應、REPL 模式、<code>--plan</code> / <code>--json</code> 等參數的實作。</td>
+                </tr>
+                <tr>
+                    <td><code>agent/memory.rs</code></td>
+                    <td><code>MEMORY.md</code> 的讀寫。已連接到提示詞組裝流程，可以跨工作記錄記住事情。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>三個參考型判斷範例</h2>
+    <p>如果你想知道這個附錄到底怎麼被使用，下面三個樣本就是最實際的答案。它們示範了本站如何從檔案與程式路徑，一步步推到判斷。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>判讀題目</th>
+                    <th>我們先看哪裡</th>
+                    <th>最後如何落結論</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>為什麼 <code>MEMORY.md</code> 不是完整記憶系統</td>
+                    <td><code>agent/memory.rs</code> 是否被 <code>app.rs</code>、<code>prompt.rs</code>、<code>agent.rs</code> 主要流程持續使用。</td>
+                    <td>因為目前只看到讀寫介面，沒有穩定回傳到 prompt 或 工作接續，所以標 。</td>
+                </tr>
+                <tr>
+                    <td>為什麼 規劃模式 不能被寫成獨立 agent runtime</td>
+                    <td><code>App::exec</code> 中 <code>plan_only</code> 分支是否真正進 <code>run_agent</code>。</td>
+                    <td>它目前更接近規劃輸出模式與 session / checkpoint 記錄，而非獨立的 live planning 工具迴圈。</td>
+                </tr>
+                <tr>
+                    <td>為什麼 container sandbox 不是完整隔離含義</td>
+                    <td><code>tools/shell.rs</code> 與其他工具是否都改走 <code>container.rs</code>。</td>
+                    <td>只有 <code>shell</code> 真正切到容器執行，所以文件必須保守標示，不可誤寫成全工具隔離。</td>
+                </tr>
+                <tr>
+                    <td>為什麼 instructions、commands、skills 不該互相亂塞</td>
+                    <td><code>instructions.rs</code> 的固定檔名載入、<code>commands.rs</code> 的 slash invocation、<code>skills.rs</code> 的顯式選用，是否真的代表不同觸發含義。</td>
+                    <td>因為這三層處理的是不同粒度的工作知識，文件必須把它們寫成工作流語言，而不是同義 prompt 片段。</td>
+                </tr>
+                <tr>
+                    <td>為什麼 <code>spawn_agent</code> 不能直接被寫成完整多代理平台</td>
+                    <td><code>tools/coordinator.rs</code> 是否有限深度 / 回合、是否經過 <code>App::exec</code>、是否保留 plugin / session / fallback 全貌。</td>
+                    <td>因為它目前更接近 有限制的委派 tool，所以標  的工作代理執行面，而不是完整協調層。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="comparison-table">
+        <table data-compare="references">
+            <thead>
+                <tr>
+                    <th>來源</th>
+                    <th>類型</th>
+                    <th>本站採用的訊號</th>
+                    <th>GCD 轉化方式</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><a href="https://yage.ai/share/claude-code-engineering-cost-20260331.html" target="_blank">AI 工程的真實代價</a></td>
+                    <td>文章</td>
+                    <td>模型整合成本在 cache、headers、normalization、串流解析。</td>
+                    <td>把 provider adapter 與整合成本寫進 外殼 說明。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/ZhangHanDong/harness-engineering-from-cc-to-ai-coding" target="_blank">Harness Engineering from CC to AI Coding</a></td>
+                    <td>理論 / 教學</td>
+                    <td>以 外殼 作為總綱，而不是功能表。</td>
+                    <td>首頁、前言、全景章都沿用這個總綱。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/huifer/claude-code-book" target="_blank">Claude Code Book</a></td>
+                    <td>專書式文件</td>
+                    <td>章節拆解與讀者路徑設計。</td>
+                    <td>保留 教學導覽風格，但加入 完成度 與來源追溯。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/sanbuphy/learn-coding-agent" target="_blank">Learn AI 助手</a></td>
+                    <td>教學專案</td>
+                    <td>從最小 loop 到 production 外殼 的學習曲線。</td>
+                    <td>網站新增 5 / 15 / 30 分鐘閱讀路徑。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://ccunpacked.dev" target="_blank">Claude Code Unpacked</a></td>
+                    <td>互動式解說站</td>
+                    <td>scrollytelling、step-by-step loop 解說、可探索 catalog。</td>
+                    <td>重做 pipeline 視覺、rail 與互動比較表。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://anneheartrecord.github.io/claude-code-docs/#/" target="_blank">Claude Code 繁中解說站</a></td>
+                    <td>繁中本地化</td>
+                    <td>概念重編排與降低理解門檻。</td>
+                    <td>全站改用台灣工程語境重寫，不沿用簡體與直譯腔。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/google-gemini/gemini-cli" target="_blank">Gemini CLI</a></td>
+                    <td>產品 / 原始碼</td>
+                    <td>terminal-first、MCP、trusted folders、token caching、context file。</td>
+                    <td>MCP awareness 與 workspace config 已採用；token caching 已實作。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/openai/codex" target="_blank">OpenAI Codex</a></td>
+                    <td>產品 / 原始碼</td>
+                    <td>approval / sandbox、本地 agent UX、instructions workflow。</td>
+                    <td>permission 與 sandbox 語言已採用，但保留多 provider 方向。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/codeany-ai/open-agent-sdk-typescript" target="_blank">Open Agent SDK TypeScript</a></td>
+                    <td>SDK / 架構</td>
+                    <td>in-process loop、hooks、skills、subagents、可嵌入 abstraction。</td>
+                    <td>目前只拿來當未來 SDK 邊界的參照，不宣稱 GCD 已 SDK 化。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/Kuberwastaken/claurst" target="_blank">Claurst</a></td>
+                    <td>Rust 替代實作</td>
+                    <td>從頭重建 方法、Dream memory、multi-agent 觀察。</td>
+                    <td>GCD 借方法論，不直接宣稱已有 Dream consolidation。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/roger2ai/Claude-Code-Compiled" target="_blank">Claude-Code-Compiled</a></td>
+                    <td>社群逆向</td>
+                    <td>社群想看真實結構與 prompt 工程。</td>
+                    <td>本站加重 實況檢查 與原始碼導讀。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/oboard/claude-code-rev" target="_blank">claude-code-rev</a></td>
+                    <td>社群 還原原始碼</td>
+                    <td>可執行 restored source tree 的價值在於把看不透的變成可修補工作區。</td>
+                    <td>文件中刻意區分 production path 與 scaffold path。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/instructkr/claw-code" target="_blank">claw-code</a></td>
+                    <td>社群本地化</td>
+                    <td>地方化知識重編排本身就是採用策略。</td>
+                    <td>強化繁中說明與閱讀路徑。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/claude-code-best/claude-code" target="_blank">claude-code-best/claude-code</a></td>
+                    <td>社群 workflow</td>
+                    <td>最佳實踐與工作流收斂。</td>
+                    <td>新增 workflow 與學習路徑章節。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/paoloanzn/free-code" target="_blank">free-code</a></td>
+                    <td>社群衍生版</td>
+                    <td>隱私、telemetry、移除安全機制 的社群關切。</td>
+                    <td>首頁直接把 trust / sandbox / permission 拉到第一層。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/NanmiCoder/claude-code-haha" target="_blank">claude-code-haha</a></td>
+                    <td>社群衍生版</td>
+                    <td>成本與端點相容性是使用門檻。</td>
+                    <td>強調 provider 清單 與 fallback 的產品價值。</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/jay6697117/claude-copy-code" target="_blank">claude-copy-code</a></td>
+                    <td>社群再分發</td>
+                    <td>中文社群對資訊翻譯與分享有強需求。</td>
+                    <td>把語言、命名與案例視為產品介面的一部分。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>如何把附錄當成研究註腳，而不是無用連結清單</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>當你在主文看到一個判斷時</h3>
+            <p>先回來附錄找對應的原始碼錨點，確認它是被哪一條主要流程支持，而不是只因為存在某個模組名稱。</p>
+        </div>
+        <div class="check-item">
+            <h3>當你在主文看到一個參考說法時</h3>
+            <p>回來附錄找它是來自產品、理論、從頭重建 還是社群反饋。這會幫你判斷那句話的可信度與用途。</p>
+        </div>
+        <div class="check-item">
+            <h3>當你想自己做新判讀時</h3>
+            <p>先找原始碼錨點，再找對應的外部座標，最後才下判斷。這也是本站整體分析框架的基本動作。</p>
+        </div>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">附錄使用範例：從一句主文判斷回到證據</span>
+        </div>
+        <div class="window-body">
+<pre><code>主文句子：
+"MCP 已加入工具註冊表，但 client 實作較簡化，應保守看待。"
+
+我回附錄會看：
+1. mcp.rs 是否真的有 initialize / tools/list / tools/call
+2. agent.rs 是否真的把 MCP tools merge 進 all_tools
+3. 是否看到更完整 capability negotiation / robust error handling
+
+因此得到：
+- 主要流程確實能載入 MCP tools
+- client 具備 initialize / tools/list / tools/call 完整流程
+- 標成 Implemented</code></pre>
+        </div>
+    </div>
+
+    <h2>使用外部來源時，本站刻意遵守的誠實界線</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>原始碼可以證明的，就不借外部話術來包裝</h3>
+            <p>例如 GCD 的 信任檢查、提示詞組裝、工作記錄保存，都優先回到本專案原始碼確認，而不是用外部產品官網的語言來描述。</p>
+        </div>
+        <div class="check-item">
+            <h3>外部產品提供的是參考方向，不是 GCD 現況</h3>
+            <p>Gemini CLI 的 token caching、Codex 的本地 agent UX、Claude Code 的工作流拆解，都可以成為比照座標，但不會被直接寫成 GCD 已完成。</p>
+        </div>
+        <div class="check-item">
+            <h3>社群分析只會標成 <code>Implemented</code></h3>
+            <p>社群還原樹、繁中解說、從頭重建都很有價值，但本站不會把它們包裝成原版官方聲明。</p>
+        </div>
+        <div class="check-item">
+            <h3>來源越接近 實際使用情況，越值得放進比較章</h3>
+            <p>成本、相容性、本地化、安全透明度這些訊號，雖然未必華麗，卻最能說明為什麼某些設計值得被借進 GCD。</p>
+        </div>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('strategy')">← 參考矩陣</button>
+    <button class="btn btn-primary" onclick="navigateTo('learn')">新手閱讀路徑 →</button>
+</div>

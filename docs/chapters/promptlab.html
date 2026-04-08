@@ -1,0 +1,431 @@
+<div class="chapter-header">
+    <span class="chapter-number">Prompt Lab</span>
+    <h1>Prompt 解剖室：最終 Prompt 如何一層一層長出來</h1>
+    <p class="chapter-desc">這一章不只講 prompt 來源，還要把真正的組裝順序、插入時機、限制條件與常見誤判分開來看。讀完後，你應該能自己重建 GCD 的 最終提示詞 形狀。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">這一章在補什麼</div>
+        <p>前面的 Pipeline 與 提示詞來源 章，已經把來源和概念講清楚了；但如果你真的要回到原始碼，還是會卡在更具體的問題上，例如：commands 是先展開還是先注入檔案？<code>!{...}</code> 在哪一步被改寫？<code>Session Continuation</code> 是不是由 <code>assemble_prompt()</code> 直接產生？這一章的目的，就是把這些實作細節拼成一張完整地圖。</p>
+    </div>
+
+    <h2>先講最重要的現況判讀</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>層次</th>
+                    <th>目前在哪裡完成</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>commands / skills / instructions / file injection / shell block 組裝</td>
+                    <td><code>prompt.rs</code> 與 <code>prompt/</code> 子模組</td>
+                </tr>
+                <tr>
+                    <td>工作接續 回插到 最終提示詞</td>
+                    <td><code>app.rs</code> 透過 <code>inject_section_before_task()</code></td>
+                </tr>
+                <tr>
+                    <td>binary attachment 真正落入各 provider request</td>
+                    <td>attachments metadata 已存在，但 adapter 實際做出來程度不一致</td>
+                </tr>
+                <tr>
+                    <td>自動 skill 選擇 / 自動 prompt routing</td>
+                    <td>目前沒有主要流程</td>
+                    <td> / 未實作</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>真正的組裝流程，其實分成兩段</h2>
+    <p>很多文件會把 提示詞組裝 寫成一個單一步驟，但在 GCD 裡，這條線其實分成兩段。第一段是 <code>assemble_prompt()</code> 把 repo instructions、command、skill、attachments、shell approval 與 執行時 metadata 組成一份「基礎 最終提示詞」。第二段則是在 <code>App::exec</code> 裡，如果有 <code>resume</code> 或 <code>fork</code>，再把 <code># Session Continuation</code> 插進 <code># Task</code> 之前。</p>
+
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>先解析使用者輸入是不是 custom command</h3>
+                <p><code>parse_command_invocation()</code> 只要看到輸入以 <code>/</code> 開頭，就會先把它當成 command invocation，拆出名稱、args 與完整原始命令。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>把 command 模板先渲染成文字</h3>
+                <p>如果符合 command，<code>render_command_prompt()</code> 會先加上 <code># Custom Command</code> header，再做 <code>{{args}}</code> 置換或補上 <code>Raw command</code>。到這一步為止，還沒有做檔案注入與 shell block 改寫。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>再展開 <code>@{...}</code> 附件注入</h3>
+                <p><code>expand_file_injections()</code> 會把文字檔、目錄、二進位附件轉成 prompt segment 與 attachment metadata。這一步之後，prompt 內部才真的出現 <code>&lt;injected-file&gt;</code> 或 <code>&lt;attached-file&gt;</code>。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>再把 <code>!{...}</code> 改成 shell approval block</h3>
+                <p><code>sanitize_shell_blocks()</code> 只會作用在非 injected segment，避免把注入檔案裡原本存在的字串誤當成命令模板。這一步也會產生 <code>pending_shell_commands</code>。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">05</div>
+            <div class="roadmap-content">
+                <h3>最後才把各段 section 串成基礎 最終提示詞</h3>
+                <p>順序固定為 <code># Runtime</code>、<code># Repository Instructions</code>、<code># Loaded Skill</code>、<code># Task</code>、<code># 待審核指令</code>。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">06</div>
+            <div class="roadmap-content">
+                <h3>如果有 session reuse，再由 <code>app.rs</code> 插入 continuation</h3>
+                <p><code>inject_section_before_task()</code> 會把 <code># Session Continuation</code> 插到 <code># Task</code> 前面。這表示 session 不是在 prompt 子模組內生成，而是 app orchestration 最後補上的 執行時的上下文。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>一個完整例子：從使用者輸入到 最終提示詞</h2>
+    <p>假設使用者輸入的是下面這行，而且工作區已 trusted、選了 <code>code-review</code> skill、同時從舊 session resume：</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">教學性輸入例子</span>
+        </div>
+        <div class="window-body">
+<pre><code>/review src/app.rs</code></pre>
+        </div>
+    </div>
+
+    <p>而對應 command 模板長這樣：</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性 command 模板</span>
+        </div>
+        <div class="window-body">
+<pre><code>description = "Review a file with repo rules"
+prompt = """
+Use @{README.md} as project context.
+Review target: {{args}}
+If needed, run !{cargo test -p gcd-core}
+"""</code></pre>
+        </div>
+    </div>
+
+    <p>那麼這條線大致會經過下面幾個中間狀態：</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>步驟</th>
+                    <th>中間結果長什麼樣子</th>
+                    <th>這一步在解什麼問題</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>command render 後</td>
+                    <td>會先出現 <code># Custom Command</code> header 與 <code>Review target: src/app.rs</code></td>
+                    <td>把 workflow 模板檔案化，而不是直接把 user input 塞進 prompt。</td>
+                </tr>
+                <tr>
+                    <td>file injection 後</td>
+                    <td><code>@{README.md}</code> 變成帶行號的 <code>&lt;injected-file&gt;</code></td>
+                    <td>把 repo 證據變成可控 preview，而不是任意全文貼上。</td>
+                </tr>
+                <tr>
+                    <td>shell sanitize 後</td>
+                    <td><code>!{cargo test -p gcd-core}</code> 變成 <code>&lt;shell-approval&gt;</code></td>
+                    <td>把命令意圖和命令執行分開。</td>
+                </tr>
+                <tr>
+                    <td>section 組裝後</td>
+                    <td>會有 <code># Runtime</code>、<code># Repository Instructions</code>、<code># Loaded Skill</code>、<code># Task</code></td>
+                    <td>把來源分層，而不是做成一大塊無法追蹤的文字。</td>
+                </tr>
+                <tr>
+                    <td>app 插 continuation 後</td>
+                    <td><code># Session Continuation</code> 被放進 <code># Task</code> 前面</td>
+                    <td>在不重灌整段舊歷史的前提下，補回最近工作摘要。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：最後可能長出的 prompt 基本架構</span>
+        </div>
+        <div class="window-body">
+<pre><code># Runtime
+Provider: OpenAI Codex (gpt-5.1)
+Provider ID: openai-codex
+Protocol: openai-responses
+API Base: https://api.openai.com/v1
+Sandbox: workspace-write
+Trust: trusted
+Workspace: /workspace/project
+
+# Repository Instructions
+## AGENTS.md
+...
+
+# Loaded Skill
+Name: code-review
+Summary: Review code with architectural and regression focus
+
+...
+
+# Session Continuation
+Mode: resume
+Session ID: 1712440000-review-app-rs
+Existing turns: 3
+Recent turn summaries
+- [1] ...
+- [2] ...
+- [3] ...
+
+# Task
+# Custom Command
+Name: review
+Description: Review a file with repo rules
+Source: /workspace/project/.gcd/commands/review.toml
+Workspace: /workspace/project
+
+Use <injected-file path="README.md">...</injected-file> as project context.
+Review target: src/app.rs
+If needed, run <shell-approval required="true">cargo test -p gcd-core</shell-approval>
+
+# 待審核指令
+- cargo test -p gcd-core</code></pre>
+        </div>
+    </div>
+
+    <h2>Commands 不是直接塞模板，而是先加一層可追蹤 header</h2>
+    <p>這個細節很值得拆出來講，因為許多 agent 只會把 command 模板靜默展開，事後很難知道 prompt 中哪些文字其實是某個命令模板帶進來的。GCD 則會明確插入 <code># Custom Command</code>、名稱、描述、來源路徑與工作區。這讓 prompt 事後可追蹤，也讓 session replay 更容易看懂。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">P1</div>
+            <h3>命令名可追蹤</h3>
+            <p>你能知道這輪到底是 <code>/review</code> 還是 <code>/review:security</code> 在主導任務。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P2</div>
+            <h3>來源路徑可追蹤</h3>
+            <p>當模板行為怪異時，你可以直接回頭看那個 TOML 檔，不必猜是哪段 prompt 生出來的。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P3</div>
+            <h3><code>{{args}}</code> 與 <code>Raw command</code> 保住參數資訊</h3>
+            <p>即使模板沒留 placeholder，使用者參數也不會無聲消失。</p>
+        </article>
+    </div>
+
+    <h2><code>@{...}</code> 先展開、<code>!{...}</code> 後改寫，順序不能搞反</h2>
+    <p>GCD 先做 file injection，再做 shell block sanitize。這個順序不是偶然，而是為了避免把注入檔案裡原本存在的 <code>!{...}</code> 內容誤當成 command template 的待執行 shell。換句話說，只有原始 prompt 文字本身的 shell block 會被改寫，注入檔案內容則被當成證據保留。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>情境</th>
+                    <th>如果順序做錯會怎麼樣</th>
+                    <th>GCD 目前怎麼避免</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>README 裡剛好寫了 <code>!{rm -rf ...}</code> 當示例</td>
+                    <td>如果 sanitize 太早或太廣，可能把注入檔案內容也誤判成待批准命令。</td>
+                    <td>只對非 injected segment 做 shell block 改寫。</td>
+                </tr>
+                <tr>
+                    <td>prompt 模板本身寫了 <code>!{cargo test}</code></td>
+                    <td>如果不 sanitize，就會把命令意圖直接當普通文字，失去批准節奏。</td>
+                    <td>轉成 <code>&lt;shell-approval&gt;</code> 並記入 pending list。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：注入檔案中的 <code>!{...}</code> 不會被當成待批准命令</span>
+        </div>
+        <div class="window-body">
+<pre><code>guide.txt 內容：
+請不要真的執行 !{cargo clean}
+
+prompt 模板：
+Use @{guide.txt}
+Then run !{cargo test -p gcd-core}
+
+結果：
+- guide.txt 中的字樣保留為注入證據
+- 只有模板裡的 cargo test 變成 shell-approval block</code></pre>
+        </div>
+    </div>
+
+    <h2>File injection 的路徑解析其實也有規則</h2>
+    <p><code>resolve_injected_path()</code> 不是把任何路徑都照單全收。相對路徑會先嘗試從 <code>workspace.current_dir</code> 找，再退到 <code>workspace.root</code>；絕對路徑則必須落在工作區根或目前目錄底下，否則會被拒絕。這表示 injection 不只是便利語法，也是工作區邊界的一部分。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>輸入</th>
+                    <th>目前解析策略</th>
+                    <th>對文件讀者的意義</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>@{src/app.rs}</code></td>
+                    <td>先找 current_dir，再找 workspace root</td>
+                    <td>相對路徑可以跟著你當前工作位置解析。</td>
+                </tr>
+                <tr>
+                    <td><code>@{/absolute/path/in/workspace}</code></td>
+                    <td>如果位於 workspace 內，可接受</td>
+                    <td>允許顯式絕對路徑，但仍受工作區限制。</td>
+                </tr>
+                <tr>
+                    <td><code>@{/etc/passwd}</code></td>
+                    <td>拒絕</td>
+                    <td>防止 prompt injection 直接把工作區外檔案拉進來。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>大小限制本身就是 prompt 設計的一部分</h2>
+    <p>GCD 對文字注入有 400 行與 32KB 的上限，目錄 listing 則上限 200 個檔案。這些數字看起來只是常數，但其實反映了一個重要判斷：提示詞組裝 不能只追求「把更多東西塞進去」，還要顧及 provider 成本、上下文膨脹與可讀性。這也是為什麼 prompt engineering 和 外殼 工程 不該分開看。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">L1</div>
+            <h3>400 行上限</h3>
+            <p>避免注入單一大檔時把 prompt 直接撐爆。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">L2</div>
+            <h3>32KB 上限</h3>
+            <p>即使每行都不長，也要從總 byte 數控制膨脹。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">L3</div>
+            <h3>200 個目錄項目上限</h3>
+            <p>目錄注入重點在建立概覽，不是把整棵樹全部展平。</p>
+        </article>
+    </div>
+
+    <h2>Skills 在這條線裡是顯式加載，不是自動召回</h2>
+    <p><code>assemble_prompt()</code> 只會在 <code>selected_skill</code> 明確存在時，才加進 <code># Loaded Skill</code> section。這個設計很保守，但也很可教。因為讀者可以清楚知道：某輪 prompt 為什麼有 skill，是因為執行時明確選了它，而不是系統悄悄做了某種難以追溯的 prompt routing。</p>
+
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">這是一個刻意的取捨</div>
+        <p>自動召回技能並不是不能做，但一旦做了，就必須額外處理可解釋性、衝突排序與除錯成本。GCD 目前選擇先把 skill 當成顯式輸入，這很符合它作為教學用的範例系統 樣本的定位。</p>
+    </div>
+
+    <h2>Session Continuation 不在 <code>assemble_prompt()</code> 裡，這點很重要</h2>
+    <p>這是很多讀者最容易忽略的地方。<code>assemble_prompt()</code> 組完後，<code>App::exec</code> 會根據 <code>resume</code> / <code>fork</code> 狀態，另外呼叫 <code>render_session_context()</code> 生成 continuation，再用 <code>inject_section_before_task()</code> 把它插到 <code># Task</code> 前面。換句話說，session 不是 prompt module 的內部常駐成分，而是 app orchestration 依情境追加的 執行時的上下文。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>如果你想問的是</th>
+                    <th>答案</th>
+                    <th>應該去哪裡看</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>基礎 最終提示詞 section 順序是什麼</td>
+                    <td>看 <code>prompt.rs</code></td>
+                    <td><code>assemble_prompt()</code></td>
+                </tr>
+                <tr>
+                    <td>resume / fork 為什麼會多一段 session 摘要</td>
+                    <td>因為 <code>app.rs</code> 在 prompt 組完後又插了一段</td>
+                    <td><code>render_session_context()</code> + <code>inject_section_before_task()</code></td>
+                </tr>
+                <tr>
+                    <td>為什麼有些 prompt 看起來比 pipeline 圖多一塊</td>
+                    <td>通常就是因為你正在看的是帶 continuation 的最終結果</td>
+                    <td>先對照 session reuse mode</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>最值得注意的幾個 實況檢查</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>目前只支援單一 selected skill</h3>
+            <p>沒有多 skill 排序與合併主要流程，所以不要把它寫成已成熟的 skill orchestration。</p>
+        </div>
+        <div class="check-item">
+            <h3>binary attachment 會形成 metadata，但不等於各 provider 都完整吃得到</h3>
+            <p>prompt 層已經保留了 <code>BinaryReference</code>，但從這裡到各 adapter 的實際做出來仍需保守標 <code>Implemented</code>。</p>
+        </div>
+        <div class="check-item">
+            <h3>工作接續 是 app 層追加，不是 prompt 模組原生 section</h3>
+            <p>這個差異會影響你怎麼 debug prompt，也會影響你未來如果想抽象化 提示詞組裝器 的邊界。</p>
+        </div>
+        <div class="check-item">
+            <h3>shell pending list 是從模板文字抽出，不是模型自己提議的 shell</h3>
+            <p>它代表 workflow 預先埋好的命令意圖，不該和 執行時 tool call 混成同一件事。</p>
+        </div>
+    </div>
+
+    <h2>如果你要自己重建一輪 prompt，最推薦的順序</h2>
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>先看 user input 有沒有命中 command</h3>
+                <p>這會決定你一開始是在處理 plain task，還是先有一層 <code># Custom Command</code> 模板。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>再看 trust 與 selected skill</h3>
+                <p>這兩件事會決定 <code># Repository Instructions</code> 與 <code># Loaded Skill</code> 是否存在。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>再看有沒有 <code>@{...}</code> 與 <code>!{...}</code></h3>
+                <p>這會直接影響 attachments 與 待審核指令s。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>最後再確認有沒有 resume / fork</h3>
+                <p>如果有，才會在最後多出一段 continuation；如果沒有，就不要把 session context 腦補進所有 prompt。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>把這一章濃縮成一句話</h2>
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">Prompt 不是一個字串，而是一條有順序的編輯管線</div>
+        <p>GCD 的 最終提示詞 不是把資料隨便串起來，而是先經過 command render、file injection、shell sanitize、section 組裝，再由 app 層視情況插入 工作接續。當你能把這條順序重建出來，你就不只是「看過 prompt」，而是真的開始理解 外殼 如何把工作流寫進模型上下文。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('workflow')">← Instructions、Commands、Skills 如何形成工作流語言</button>
+    <button class="btn btn-primary" onclick="navigateTo('attachments')">Binary Attachment、Multimodal 與 Provider 實際做出來斷點 →</button>
+</div>

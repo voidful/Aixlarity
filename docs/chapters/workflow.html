@@ -1,0 +1,471 @@
+<div class="chapter-header">
+    <span class="chapter-number">Workflow Language</span>
+    <h1>Instructions、Commands、Skills 如何形成工作流語言</h1>
+    <p class="chapter-desc">同樣都是文字，repo instructions、commands、skills 有什麼差別？各自負責什麼？這一章幫你搞清楚。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先講結論</div>
+        <p>對 GCD 來說，<strong>instructions 是長期規範，commands 是任務模板，skills 是顯式選用的專題能力包</strong>。這三層不是同義詞，也不該互相取代。如果把 repo 規範全塞進 command、把一次性任務寫成 skill、或把專題方法論常駐在 <code>AGENTS.md</code>，最後只會讓 prompt 愈來愈長，卻沒有更清楚的工作流。</p>
+    </div>
+
+    <h2>為什麼要把這一層單獨寫成一章</h2>
+    <p>如果說 <a href="#" onclick="navigateTo('sources'); return false;">提示詞來源</a> 章是在回答「最終 prompt 的材料從哪裡來」，那這一章就在回答「這些材料應該如何分工，才會形成可維護的工作流語言」。對工程團隊而言，這是一個很實際的問題，因為一個 AI 助手 是否好用，很大程度不是看模型多強，而是看團隊有沒有把工作方法分成正確的層。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">W1</div>
+            <h3>Instructions 負責不變的事</h3>
+            <p>像語氣、repo 規範、測試習慣、提交原則，這些不該每次手動重講。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">W2</div>
+            <h3>Commands 負責一類任務的展開方式</h3>
+            <p>例如 review、refactor、bugfix，各自怎麼拉上下文、怎麼安排步驟。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">W3</div>
+            <h3>Skills 負責專題型方法論</h3>
+            <p>像 code review、Rust 測試、資料庫 migration 檢查，這些不是每輪都要用。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">W4</div>
+            <h3>Trust 決定這套語言能不能啟動</h3>
+            <p>不可信工作區下，這三層都會被大幅限制，agent 會更像通用助理。</p>
+        </article>
+    </div>
+
+    <h2>先用同一個任務，看三層到底怎麼分工</h2>
+    <p>假設團隊很常做這種事：<strong>review 一個 Rust 檔案，必要時跑測試，再用專案規則判斷風險</strong>。如果你把這件事拆對了，三層大概會長成下面這樣。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>層</th>
+                    <th>適合放什麼</th>
+                    <th>範例</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Instructions</td>
+                    <td>repo 永久規則</td>
+                    <td>「變更前先理解現有結構」、「文件一律用繁體中文」、「不要把基本架構寫成完整功能」。</td>
+                </tr>
+                <tr>
+                    <td>Command</td>
+                    <td>這類任務怎麼展開</td>
+                    <td>「review 時先拉 README，再把目標檔案與測試步驟放進任務模板」。</td>
+                </tr>
+                <tr>
+                    <td>Skill</td>
+                    <td>評估方法與專題 checklist</td>
+                    <td>「code-review skill 會特別看行為回歸、例外處理、測試缺口與風險排序」。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：同一件 review 任務，三層怎麼分攤</span>
+        </div>
+        <div class="window-body">
+<pre><code>AGENTS.md
+- 先做 實況檢查
+- review 時先找 bug / regression / missing tests
+- 文件與分析一律用繁體中文
+
+review.toml
+description = "Review a target file with repo context"
+prompt = """
+Use @{README.md} as project context.
+Review target: {{args}}
+If needed, run !{cargo test -p gcd-core}
+"""
+
+skills/code-review/SKILL.md
+# Code Review
+先找會壞的地方，再談風格。
+優先看：
+- 行為回歸
+- 邊界條件
+- 錯誤處理
+- 缺失測試</code></pre>
+        </div>
+    </div>
+
+    <p>分成這樣之後，repo 規範不會只在某個 command 裡生效，任務模板也不會把每一種評估方法都寫死在裡面。這就是工作流語言的價值：<strong>把不同時間尺度的規則，放回對的層</strong>。</p>
+
+    <h2>三層最大的差別，不在內容，而在觸發方式</h2>
+    <p>同樣都是文字，三層的真正差別其實是「何時會被帶進 prompt」。instructions 在 trusted workspace 下自動載入；commands 只有在使用者輸入 <code>/command</code> 時才會展開；skills 則必須由執行選項顯式指定。這種觸發差異，決定它們適合承載哪一種工作知識。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>層</th>
+                    <th>觸發方式</th>
+                    <th>適合承載的知識</th>
+                    <th>不適合承載的知識</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Instructions</td>
+                    <td>trusted workspace 下自動載入</td>
+                    <td>repo 常駐規範、語氣、全域限制。</td>
+                    <td>一次性任務流程、偶爾才需要的長篇專題方法。</td>
+                </tr>
+                <tr>
+                    <td>Commands</td>
+                    <td>使用者輸入 <code>/review</code>、<code>/refactor:rust</code> 等命令</td>
+                    <td>一類任務的展開腳本、固定上下文、常見檢查步驟。</td>
+                    <td>整個 repo 永久規則、跨任務通用的大型方法論。</td>
+                </tr>
+                <tr>
+                    <td>Skills</td>
+                    <td>由執行選項顯式指定</td>
+                    <td>專題能力包、分析框架、深度 checklist。</td>
+                    <td>每一輪都該常駐的 repo 準則。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Instructions：最像 repo 憲法，但也最需要節制</h2>
+    <p><code>InstructionBundle::load()</code> 目前只會讀四個固定檔名：<code>AGENTS.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code>、<code>GCD.md</code>。這意味著 instructions 的定位不是任意掃描工作區，而是由團隊顯式選擇「哪些檔名代表高權重規則」。這種設計是好的，因為它讓 repo 規範的入口清楚；但所以更需要節制，避免把每個一次性流程都塞成常駐規則。</p>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>適合放在 instructions 的內容</h3>
+            <p>例如 coding style 原則、測試要求、文件語氣、權限與安全提醒、評估優先順序。</p>
+        </div>
+        <div class="check-item">
+            <h3>不適合放在 instructions 的內容</h3>
+            <p>例如某一次 hotfix 的操作步驟、某一種 review 的專用檢查表、某個實驗工具的短期使用方式。</p>
+        </div>
+        <div class="check-item">
+            <h3>為什麼要節制</h3>
+            <p>instructions 會自動進 prompt。內容一旦膨脹，所有任務都會背著同一大包文字前進，反而降低訊噪比。</p>
+        </div>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例對照：這段話該不該進 AGENTS.md</span>
+        </div>
+        <div class="window-body">
+<pre><code>適合：
+- Review 時優先找 bug、regression 與 missing tests
+- 變更後請跑對應測試
+- 文件用繁體中文
+
+不太適合：
+- 這次 release 請先改 foo，再跑 bar，最後檢查 baz
+
+原因：
+前者是 repo 級常駐規則，後者比較像單類任務 workflow</code></pre>
+        </div>
+    </div>
+
+    <h2>Commands：把任務模板檔案化，不再靠口耳相傳</h2>
+    <p><code>CommandCatalog::load()</code> 會讀 <code>~/.gcd/commands</code> 與工作區 <code>.gcd/commands</code> 下的 TOML 檔。對使用者來說，command 最重要的價值不是快捷鍵，而是把「一類任務該怎麼展開」變成能審查、能版本化、能被 replay 的文字模板。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>檔案路徑</th>
+                    <th>最後命令名</th>
+                    <th>代表什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>~/.gcd/commands/review.toml</code></td>
+                    <td><code>review</code></td>
+                    <td>個人常用的全域命令。</td>
+                </tr>
+                <tr>
+                    <td><code>.gcd/commands/review/security.toml</code></td>
+                    <td><code>review:security</code></td>
+                    <td>專案特化且帶分類的工作流模板。</td>
+                </tr>
+                <tr>
+                    <td><code>.gcd/commands/refactor/rust.toml</code></td>
+                    <td><code>refactor:rust</code></td>
+                    <td>由目錄層級自然長出的命令命名空間。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>這裡很值得教的一點是：command 名稱不是額外寫在檔案裡，而是由相對路徑推導出來。這讓工作流 catalog 本身就帶有結構感，而不是扁平的命令清單。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：一個比較好的 command 模板</span>
+        </div>
+        <div class="window-body">
+<pre><code>description = "Review a Rust file with project context"
+prompt = """
+Use @{README.md} as project context.
+Review target: {{args}}
+Focus on correctness, regression risk, and missing tests.
+If needed, run !{cargo test -p gcd-core}
+"""</code></pre>
+        </div>
+    </div>
+
+    <p>這種 command 的好處在於：它把「這類任務的預設上下文與步驟」固定下來，但又保留 <code>{{args}}</code> 讓使用者把當輪目標帶進去。這比每次手打長 prompt 更可追蹤，也比把所有規則硬塞進 instructions 更精準。</p>
+
+    <h2>Skills：不是快捷模板，而是顯式選用的方法包</h2>
+    <p><code>SkillCatalog::load()</code> 會讀 <code>~/.gcd/skills</code> 與工作區 <code>.gcd/skills</code> 下的 Markdown。如果檔名是 <code>SKILL.md</code>，名稱取自父目錄；否則取自檔案路徑。這讓 skill 比較像一個具名知識包，而不是任務命令的別名。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>技能檔案</th>
+                    <th>最後名稱</th>
+                    <th>它比較像什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>skills/code-review/SKILL.md</code></td>
+                    <td><code>code-review</code></td>
+                    <td>一個完整的 review 方法包。</td>
+                </tr>
+                <tr>
+                    <td><code>skills/rust/testing.md</code></td>
+                    <td><code>rust:testing</code></td>
+                    <td>一個較小、較聚焦的領域技能。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>現在 GCD 對 skill 的選擇很保守：它不是自動召回，而是由執行選項顯式指定。這個取捨很值得保留，因為它讓 prompt 來源保持可追蹤。你知道這一輪為什麼會帶進某個 skill，而不是讓系統在背景偷偷替你做 prompt routing。</p>
+
+    <div class="callout callout-info revealable">
+        <div class="callout-title">這也是 command 和 skill 最容易混淆的地方</div>
+        <p>command 比較像「怎麼展開這類任務」，skill 比較像「帶著哪一套方法論去做」。前者主導流程，後者主導看問題的角度。把兩者混成同一層，就會出現 command 太胖、skill 太像快捷鍵的問題。</p>
+    </div>
+
+    <h2>一個很實用的設計問題：同樣是 review，什麼該放 command，什麼該放 skill？</h2>
+    <p>如果你常做 code review，最直覺的做法可能是把所有東西都寫進 <code>/review</code>。但更好的拆法通常是：command 負責拉 README、展開目標檔案、安排必要測試步驟；skill 則負責告訴模型要怎麼評估風險、怎麼排序 findings、怎麼看 missing tests。這樣同一個 skill 未來也能被 <code>/review:security</code>、<code>/audit</code> 等不同 command 共用。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例對照：太胖的 command vs 較好的拆法</span>
+        </div>
+        <div class="window-body">
+<pre><code>不太理想：
+/review 裡同時塞
+- README 注入
+- 目標檔案注入
+- 測試命令
+- findings 排序規則
+- regression 分析框架
+- 回覆格式要求
+
+較好的拆法：
+/review
+- 拉上下文
+- 放目標
+- 安排必要 shell step
+
+code-review skill
+- findings 先後順序
+- 風險分類
+- regression / missing tests 的分析方法
+
+AGENTS.md
+- 用哪種語氣回覆
+- 文件與 code review 的常駐規範</code></pre>
+        </div>
+    </div>
+
+    <h2>一個重要 實況檢查：重名不等於有明確覆蓋規則</h2>
+    <p>從實作看，commands 與 skills 都是先載入 global，再載入 workspace，最後只按名稱排序，並用 <code>find(name)</code> 取第一個符合名稱的項目。這表示目前<strong>沒有顯式的去重或覆寫規則</strong>。如果同名項目同時存在，你不應該把它當成一條被正式定義的覆蓋機制，而應保守視為尚未明文化的行為。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>情境</th>
+                    <th>目前程式有沒有明確規則</th>
+                    <th>教學上的誠實說法</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>global 與 workspace 有同名 command</td>
+                    <td>沒有明確覆寫階段</td>
+                    <td>不要依賴重名覆蓋，應視為未清楚定義的邊界。</td>
+                </tr>
+                <tr>
+                    <td>global 與 workspace 有同名 skill</td>
+                    <td>沒有明確覆寫階段</td>
+                    <td>同樣不應把重名當成正式設計含義。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Commands 與 skills 的 trust 影響，比直覺更強</h2>
+    <p>這裡有一個很值得拿來教新手的細節。<code>CommandCatalog::load()</code> 與 <code>SkillCatalog::load()</code> 一開始就會先檢查 <code>trust.restricts_project_config()</code>，如果受限就直接回傳空 catalog。這表示在 untrusted workspace 下，不只是工作區內的 commands / skills 消失，而是<strong>整體 command / skill catalog 都被限縮</strong>。這個行為比「只擋 workspace-local config」更保守，也更值得在文件裡說清楚。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>工作區狀態</th>
+                    <th>Instructions</th>
+                    <th>Commands</th>
+                    <th>Skills</th>
+                    <th>對 agent 體驗的影響</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>trusted</td>
+                    <td>可載入</td>
+                    <td>可載入</td>
+                    <td>可載入</td>
+                    <td>能表現出專案特化的工作流。</td>
+                </tr>
+                <tr>
+                    <td>untrusted / unknown</td>
+                    <td>空</td>
+                    <td>空</td>
+                    <td>空</td>
+                    <td>更接近通用型 coding assistant，不再帶 repo 語言與技能結構。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Prompt 可追蹤性其實也有層級差異</h2>
+    <p>GCD 對不同來源的可追蹤性做得並不完全一樣。commands 進 prompt 時，會明確加上 <code># Custom Command</code>、名稱、描述、來源路徑與工作區；skills 則只有 <code># Loaded Skill</code>、名稱、summary 與 body；instructions 則只有檔名 label。這種差異值得寫清楚，因為它會影響你事後 debug prompt 時能看到多少來源資訊。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>來源</th>
+                    <th>進 最終提示詞 時帶哪些追蹤資訊</th>
+                    <th>判讀</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Command</td>
+                    <td>名稱、描述、來源路徑、工作區</td>
+                    <td>可追蹤性最高。</td>
+                </tr>
+                <tr>
+                    <td>Skill</td>
+                    <td>名稱、summary、body</td>
+                    <td>有名稱追蹤，但沒有顯示來源路徑。</td>
+                </tr>
+                <tr>
+                    <td>Instructions</td>
+                    <td>檔名 label、內容</td>
+                    <td>能知道來自哪個固定檔名，但不是完整路徑。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>三個常見反模式</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>反模式一：把 repo 永久規範寫進某個 command</h3>
+            <p>這會讓規則只有在特定命令下才生效，失去 repo 準則應有的一致性。</p>
+        </div>
+        <div class="check-item">
+            <h3>反模式二：把每次都要帶的規則寫成 skill</h3>
+            <p>skill 是顯式選用。如果某個規則每輪都需要，它通常應該回到 instructions。</p>
+        </div>
+        <div class="check-item">
+            <h3>反模式三：把專題方法論全塞進 command 模板</h3>
+            <p>這會讓 command 又長又難重用，之後只要換另一個任務類型，就得重複貼上一整套分析框架。</p>
+        </div>
+    </div>
+
+    <h2>如果你要自己設計一套工作流語言，這裡有一個簡單判斷法</h2>
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>先問：這是 repo 永久規則，還是某類任務腳本？</h3>
+                <p>如果是所有任務都該帶著走，先考慮 instructions；如果是某類任務才需要，先考慮 command。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>再問：它是流程，還是方法論？</h3>
+                <p>流程像「先拉什麼上下文、要不要跑什麼命令」；方法論像「評估時要用哪套 checklist」。流程偏 command，方法論偏 skill。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>最後問：它需不需要常駐，還是顯式選用？</h3>
+                <p>如果它每輪都在，就別把它做成 skill；如果它只在少數任務需要，也別把它灌進 AGENTS.md。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>實況檢查：這一層哪些地方已成熟，哪些還不能寫滿</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>能力</th>
+                    <th>判讀</th>
+                    <th>說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>instructions 固定檔名載入</td>
+                    <td>可信工作區下已穩定載入四種固定檔名。</td>
+                </tr>
+                <tr>
+                    <td>commands 作為檔案化工作流模板</td>
+                    <td><code>/command</code> 解析、<code>{{args}}</code> 置換、header 注入都已加入主要流程。</td>
+                </tr>
+                <tr>
+                    <td>skills 作為顯式能力包</td>
+                    <td>可載入、可查找、可進 prompt，但目前仍採顯式選用。</td>
+                </tr>
+                <tr>
+                    <td>command / skill 重名覆蓋含義</td>
+                    <td>目前沒有明確去重 / 覆寫規則，不應視為正式設計。</td>
+                </tr>
+                <tr>
+                    <td>自動 skill 指派</td>
+                    <td>主要流程尚未實作，文件也不應假裝它已存在。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>把這一章濃縮成一句話</h2>
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">好的工作流語言，會把不同粒度的規則放回對的層</div>
+        <p>Instructions 讓 repo 規範常駐，commands 讓任務展開方式可版本化，skills 讓方法論可顯式帶入。當你開始用這個角度設計 agent，你做的就不再只是 prompt engineering，而是比較接近真正的 外殼 工程。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('sources')">← Instructions、Commands、Skills 與 提示詞來源</button>
+    <button class="btn btn-primary" onclick="navigateTo('promptlab')">Prompt 解剖室：最終 Prompt 如何長出來 →</button>
+</div>

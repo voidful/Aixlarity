@@ -1,0 +1,20 @@
+<div class="chapter-header"><span class="chapter-number">第 21 章</span><h1>容器化沙箱</h1><p class="chapter-desc">Docker/Podman 隔離執行 — <code>tools/container.rs</code></p></div>
+            <div class="content-body">
+                <h2>Container 模式運作</h2>
+                <p>當 Sandbox 設為 <code>container</code> 時，shell 工具的命令會在隔離容器中執行：</p>
+                <ul>
+                    <li>工作區目錄掛載到容器內</li>
+                    <li>容器內無法存取主機其他檔案系統</li>
+                    <li>網路存取可配置（預設隔離）</li>
+                    <li>支援 Docker 和 Podman 兩種 runtime</li>
+                </ul>
+                <div class="callout callout-warning">
+                    <div class="callout-title">適用場景</div>
+                    <p>Container 模式適用於：審查不信任的第三方 PR、執行可能有操作影響的程式碼、在 CI/CD 中安全執行 Agent。</p>
+                </div>
+                <div class="source-ref"><strong>原始碼</strong>：<code>crates/gcd-core/src/tools/container.rs</code></div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch20')">← 20：MCP</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch22')">22：多代理 →</button>
+            </div>

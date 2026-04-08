@@ -1,0 +1,62 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 05 章</span>
+                <h1>信任模型 (Trust System)</h1>
+                <p class="chapter-desc">誰可以控制 Agent 的行為 — <code>trust.rs</code></p>
+            </div>
+            <div class="content-body">
+                <h2>三級信任模型</h2>
+                <div class="trust-levels">
+                    <div class="trust-card trust-trusted">
+                        <span class="trust-badge">Trusted</span>
+                        <h3>完全信任</h3>
+                        <p>載入 .gcd/ 配置、AGENTS.md 指令、自訂命令與技能。適用於你自己的專案。</p>
+                    </div>
+                    <div class="trust-card trust-parent">
+                        <span class="trust-badge">Parent-Trusted</span>
+                        <h3>繼承信任</h3>
+                        <p>從父目錄繼承信任設定。適用於 monorepo 中的子專案。</p>
+                    </div>
+                    <div class="trust-card trust-untrusted">
+                        <span class="trust-badge">Untrusted</span>
+                        <h3>不信任</h3>
+                        <p>拒絕載入任何專案配置。僅使用全域設定和內建工具。適用於檢視第三方 PR。</p>
+                    </div>
+                </div>
+
+                <h2>信任規則儲存</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">~/.gcd/trusted-folders.txt</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-text">trusted	/Users/dev/my-project
+parent	/Users/dev/monorepo
+untrusted	/tmp/random-pr-clone</code></pre>
+                    </div>
+                </div>
+
+                <h2>信任閘門影響範圍</h2>
+                <div class="comparison-table">
+                    <table>
+                        <thead><tr><th>功能</th><th>Trusted</th><th>Parent</th><th>Untrusted</th></tr></thead>
+                        <tbody>
+                            <tr><td>載入 .gcd/ 配置</td><td class="ok">✓</td><td class="ok">✓ (繼承)</td><td class="no">✗</td></tr>
+                            <tr><td>載入 AGENTS.md</td><td class="ok">✓</td><td class="ok">✓</td><td class="no">✗</td></tr>
+                            <tr><td>自訂命令</td><td class="ok">✓</td><td class="ok">✓</td><td class="no">✗</td></tr>
+                            <tr><td>技能目錄</td><td class="ok">✓</td><td class="ok">✓</td><td class="no">✗</td></tr>
+                            <tr><td>MCP 伺服器</td><td class="ok">✓</td><td class="warn">視配置</td><td class="no">✗</td></tr>
+                            <tr><td>全域設定</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">安全意義</div>
+                    <p>信任系統防止惡意 <code>AGENTS.md</code> 注入。如果你 clone 了一個不信任的 repo，其中的指令檔案<strong>不會</strong>被自動載入。這避免了 Prompt Injection 攻擊。</p>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch4')">← 04：組態</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch6')">06：沙箱策略 →</button>
+            </div>

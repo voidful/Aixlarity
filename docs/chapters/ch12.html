@@ -1,0 +1,53 @@
+<div class="chapter-header">
+                <span class="chapter-number">第 12 章</span>
+                <h1>提示詞組裝引擎</h1>
+                <p class="chapter-desc">所有的碎片如何組合成最終的 Prompt — <code>prompt.rs</code></p>
+            </div>
+            <div class="content-body">
+                <h2>PromptAssembly 資料結構</h2>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">prompt.rs — 核心結構</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-rust"><span class="token keyword">pub</span> <span class="token keyword">struct</span> <span class="token class-name">PromptAssembly</span> {
+    <span class="token keyword">pub</span> final_prompt: String,       <span class="token comment">// 最終送出的文字</span>
+    <span class="token keyword">pub</span> provider: <span class="token class-name">ProviderProfile</span>,  <span class="token comment">// 使用的供應商</span>
+    <span class="token keyword">pub</span> sandbox: <span class="token class-name">SandboxPolicy</span>,    <span class="token comment">// 沙箱策略</span>
+    <span class="token keyword">pub</span> attachments: Vec&lt;<span class="token class-name">PromptAttachment</span>&gt;, <span class="token comment">// 附件</span>
+    <span class="token keyword">pub</span> pending_shells: Vec&lt;String&gt;, <span class="token comment">// 待審核 shell</span>
+}</code></pre>
+                    </div>
+                </div>
+
+                <h2>組裝管線</h2>
+                <div class="pipeline">
+                    <div class="pipeline-step"><div class="pipeline-num">1</div><div class="pipeline-content"><strong>命令解析</strong> — 檢查輸入是否以 <code>/</code> 開頭，如果是則替換為命令定義的 prompt</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">2</div><div class="pipeline-content"><strong>檔案注入</strong> — 展開 <code>@{path}</code> 語法，將檔案內容（限 400 行 / 32KB）或目錄列表（限 200 筆）注入</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">3</div><div class="pipeline-content"><strong>Shell 審核</strong> — 提取 <code>!{command}</code> 區塊，標記為待審核</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">4</div><div class="pipeline-content"><strong>指令注入</strong> — 載入 AGENTS.md / GCD.md 等指令檔</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">5</div><div class="pipeline-content"><strong>技能注入</strong> — 如果有選中的技能，追加其內容</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">6</div><div class="pipeline-content"><strong>生成 PromptAssembly</strong> — 打包所有資料供 代理迴圈 使用</div></div>
+                </div>
+
+                <h2>@{} 附件語法</h2>
+                <div class="comparison-table">
+                    <table>
+                        <thead><tr><th>語法</th><th>效果</th><th>限制</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>@{file.rs}</code></td><td>注入檔案內容</td><td>400 行 / 32KB</td></tr>
+                            <tr><td><code>@{src/}</code></td><td>注入目錄列表</td><td>200 筆</td></tr>
+                            <tr><td><code>@{image.png}</code></td><td>標記為二進位參考</td><td>不展開內容</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="source-ref">
+                    <strong>原始碼</strong>：<code>crates/gcd-core/src/prompt.rs</code>、<code>crates/gcd-core/src/prompt/expansion.rs</code>、<code>crates/gcd-core/src/prompt/command_invocation.rs</code>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('ch11')">← 11：技能系統</button>
+                <button class="btn btn-primary" onclick="navigateTo('ch13')">13：Agent 迴圈 →</button>
+            </div>

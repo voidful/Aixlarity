@@ -1,0 +1,249 @@
+<div class="chapter-header">
+    <span class="chapter-number">學習路徑</span>
+    <h1>從讀文件到讀原始碼</h1>
+    <p class="chapter-desc">看完文件後，怎麼接著去讀原始碼？從哪裡開始最順？</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">這一章的目標</div>
+        <p>把「看完網站覺得有道理」變成「我知道下一步該去哪裡看原始碼、該問哪些問題、該怎麼練習」。如果前面幾章是在建立架構感，這一章就是把那份架構感變成可操作的學習路徑。</p>
+    </div>
+
+    <h2>三條閱讀路徑</h2>
+    <div class="reading-paths wide">
+        <article class="path-card revealable">
+            <div class="path-duration">3 分鐘</div>
+            <h3>完全新手先上手</h3>
+            <p>依序看 <strong>首頁 → 前言 → 入門章</strong>。目標只有一個：先知道 agent 比聊天模型多了哪幾層，不求一次記住所有術語。</p>
+            <button class="btn btn-outline" onclick="navigateTo('starter')">先看入門章</button>
+        </article>
+        <article class="path-card revealable">
+            <div class="path-duration">6 分鐘</div>
+            <h3>把術語先分開</h3>
+            <p>依序看 <strong>首頁 → 前言 → 入門章 → 術語速查</strong>。如果你會把 trust、permission、session、memory、provider 混在一起，先走這條會更順。</p>
+            <button class="btn btn-outline" onclick="navigateTo('faq')">看術語速查</button>
+        </article>
+        <article class="path-card revealable">
+            <div class="path-duration">5 分鐘</div>
+            <h3>先建立 外殼 基本概念</h3>
+            <p>依序看 <strong>首頁 → 前言 → 入門章 → 術語速查 → GCD 全景</strong>。目標不是記住所有模組，而是先理解「LLM 只是引擎，外殼才是產品」。</p>
+            <button class="btn btn-outline" onclick="navigateTo('intro')">先看前言</button>
+        </article>
+        <article class="path-card revealable">
+            <div class="path-duration">15 分鐘</div>
+            <h3>完整走一遍所有章節</h3>
+            <p>從前言開始，依序走過入門 → 架構 → 流程 → 各個細節章節 → 比較與參考。用大約 15-30 分鐘，就能對整個系統有完整的認識。</p>
+            <button class="btn btn-outline" onclick="navigateTo('pipeline')">進入流程章</button>
+        </article>
+        <article class="path-card revealable">
+            <div class="path-duration">30 分鐘</div>
+            <h3>帶著工程判斷讀完</h3>
+            <p>全部章節走一遍，再回到原始碼對照。這條路適合已經有一定程式開發經驗的讀者。</p>
+            <button class="btn btn-outline" onclick="navigateTo('refs')">查看參考附錄</button>
+        </article>
+    </div>
+
+    <h2>不同背景的讀者，應該各自抓什麼重點</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>你目前的背景</th>
+                    <th>建議先看</th>
+                    <th>先不要急著鑽哪裡</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>完全沒做過 agent</td>
+                    <td>前言、入門章、術語速查、GCD 全景、Pipeline</td>
+                    <td>不要一開始就執著在 provider API 細節，先把 外殼 六層架起來。</td>
+                </tr>
+                <tr>
+                    <td>做過 prompt chaining / tool calling</td>
+                    <td>Pipeline、對照章、參考矩陣</td>
+                    <td>不要只把 GCD 看成 prompt template 系統，真正的重點在 trust、permission 與 session。</td>
+                </tr>
+                <tr>
+                    <td>在做本地 AI 助手 或 CLI</td>
+                    <td>GCD 全景、Pipeline、Roadmap</td>
+                    <td>不要被功能名稱帶走，先確認哪些邊界已加入主要流程。</td>
+                </tr>
+                <tr>
+                    <td>想把專案當教材</td>
+                    <td>前言、全景、對照章、參考附錄</td>
+                    <td>不要先從產品比較開始，否則讀者很容易只記得品牌差異，忘了 外殼 結構。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>從網站回到原始碼的五個入口</h2>
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">1</div>
+            <h3><code>crates/gcd-core/src/app.rs</code></h3>
+            <p>先看 <code>exec()</code>。這裡最能看出一個 外殼 會先做哪些準備工作，哪些層是 執行前的準備。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">2</div>
+            <h3><code>crates/gcd-core/src/prompt.rs</code></h3>
+            <p>接著看提示詞組裝。理解提示詞怎麼被組合出來，比先看 AI 模型 API 更能讓你理解 AI 助手怎麼運作。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">3</div>
+            <h3><code>crates/gcd-core/src/agent.rs</code></h3>
+            <p>再看工具迴圈、權限控制與備援切換。這是 GCD 的執行核心。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">4</div>
+            <h3><code>crates/gcd-core/src/tools/</code></h3>
+            <p>看沙盒怎麼在不同工具上實際生效。可以幫你判斷「宣稱的安全」和「實際的安全」有沒有差距。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">5</div>
+            <h3><code>crates/gcd-core/src/session/</code></h3>
+            <p>最後看 session 持久化與 replay。這能幫你把 agent 看成持續工作系統，而不是一次性 prompt。</p>
+        </article>
+    </div>
+
+    <h2>帶著問題走回原始碼，比從檔名亂逛有效</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>看 <code>app.rs</code> 時問：哪些事發生在模型呼叫之前？</h3>
+            <p>如果一個能力在 <code>App::exec</code> 之前就決定，通常代表它屬於 外殼 的執行前的設定，而不是模型推理的一部分。</p>
+        </div>
+        <div class="check-item">
+            <h3>看 <code>prompt.rs</code> 時問：最終 prompt 的每一段從哪裡來？</h3>
+            <p>不要只看字串內容，更要看來源：repo instructions、commands、skills、attachments、工作接續 各自負責解哪一種資訊不足的問題。</p>
+        </div>
+        <div class="check-item">
+            <h3>看 <code>agent.rs</code> 時問：tool call 和 操作影響 中間隔了哪些 gate？</h3>
+            <p>這個問題可以幫你快速看出一個 agent 的安全設計是實作還是空談。</p>
+        </div>
+        <div class="check-item">
+            <h3>看 <code>session/</code> 時問：這些資料會不會回到下一輪 prompt？</h3>
+            <p>如果不會，它就比較像 logging；如果會，它才開始接近真正的 工作接續。</p>
+        </div>
+    </div>
+
+    <h2>推薦練習</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>練習 1：追一次 <code>/review</code> 的 prompt 展開</h3>
+            <p>從 <code>commands.rs</code> 找命令，再到 <code>prompt/command_invocation.rs</code> 看 <code>{{args}}</code> 如何進 最終提示詞。你會清楚感受到 workflow file 本身也是 外殼 的一部分。</p>
+        </div>
+        <div class="check-item">
+            <h3>練習 2：改變 trust 狀態，觀察 instructions 是否消失</h3>
+            <p>對照 <code>trust.rs</code> 與 <code>instructions.rs</code>，理解「trusted folder」不是 UI 標籤，而是直接影響 提示詞組裝 的 gate。</p>
+        </div>
+        <div class="check-item">
+            <h3>練習 3：沿著一個 tool call 往回看</h3>
+            <p>從 <code>execute_tool_call</code> 往上看 adapter 解析，再往下看 <code>ToolContext</code> 和具體工具。這能讓你把模型請求與真實系統 操作影響 串起來。</p>
+        </div>
+        <div class="check-item">
+            <h3>練習 4：對照文件的 <code>Implemented</code> 標記</h3>
+            <p>挑一個像 <code>MEMORY.md</code> 或 container sandbox 的項目，確認它是不是只有局部連接。這個練習能訓練你避免被 AI 助手專案的模組名稱誤導。</p>
+        </div>
+        <div class="check-item">
+            <h3>練習 5：追一次 hook deny 與 sub-agent 委派</h3>
+            <p>先看 <code>hooks.rs</code> 的退出碼含義，再看 <code>tools/coordinator.rs</code> 如何建立 sub-agent options。這能幫你理解 安全管理層不只是 prompt 或工具清單，而是另一套實際插點。</p>
+        </div>
+        <div class="check-item">
+            <h3>練習 6：把同一條規則分到 instructions / command / skill</h3>
+            <p>挑一個常見任務，例如 review 或 bugfix，試著自己判斷哪些內容應該常駐、哪些應該命令化、哪些應該做成方法論 skill。這能訓練你設計工作流語言，而不是只會堆 prompt。</p>
+        </div>
+        <div class="check-item">
+            <h3>練習 7：自己解釋一次 trust / permission / sandbox 的差別</h3>
+            <p>不要先背定義，試著用「它在問什麼問題」來解釋這三層。能自己講得清楚，後面讀工具與 trust 章時就比較不會混淆。</p>
+        </div>
+    </div>
+
+    <h2>如果你不知道怎麼開始，這裡有一個 20 分鐘實作練習</h2>
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>先假設自己是 runtime</h3>
+                <p>拿一個任務，例如「review <code>src/app.rs</code>」，先在紙上寫出：哪些上下文要在模型呼叫前決定？哪些是 prompt 組裝時才知道？哪些要靠工具？</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>再對照 GCD 主要流程</h3>
+                <p>回到 <code>app.rs</code>、<code>prompt.rs</code>、<code>agent.rs</code>，逐一確認你的猜測是否真的在程式裡出現。這一步能幫你把抽象架構轉成執行順序。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>最後試著自己判斷完成度</h3>
+                <p>挑一個功能（例如 memory、MCP、container），試著自己判斷它是完整實作、部分實作、還是只有基本架構，再回來對照網站的說法。</p>
+            </div>
+        </article>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">初學者可直接複製的觀察筆記模板</span>
+        </div>
+        <div class="window-body">
+<pre><code>任務：
+我要理解 /review src/app.rs 這件事是怎麼完成的
+
+我先猜：
+1. 工作區與 trust 會先決定
+2. prompt 會載入 AGENTS.md
+3. 模型可能呼叫 read_file / shell
+4. 結果應該會寫進 session
+
+我在原始碼看到：
+- app.rs: 先 discover workspace，再 load trust / providers / commands
+- prompt.rs: 組 最終提示詞，插入 instructions 與 待審核指令s
+- agent.rs: 解析 tool call，經過 permission / hooks
+- session/: turn 與 events 會被保存
+
+我的判斷：
+- 提示詞組裝 = Implemented
+- memory integration = Implemented</code></pre>
+        </div>
+    </div>
+
+    <h2>如果你要拿這個網站做讀書會或內部教學</h2>
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>第一段先建立結構，不先比產品</h3>
+                <p>用前言與全景章把六層 外殼 建起來。這一步的成果是讓所有人先有共同詞彙。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>第二段再看一條真正會動的 pipeline</h3>
+                <p>把 trust、sandbox、permission、提示詞組裝 與 session 放在同一張圖裡看，讀者才會理解這些層不是平行 feature，而是執行順序上的關卡。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>第三段最後才做三大產品對照</h3>
+                <p>等讀者已經知道 外殼 結構後，再講 Claude Code、Gemini CLI、OpenAI Codex 的差異，吸收速度會快很多，也比較不會變成品牌印象比較。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>如果你想把 GCD 當成教學樣本</h2>
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">教學建議</div>
+        <p>先用 GCD 解釋 外殼 的六個層次，再把 Claude Code、Gemini CLI、OpenAI Codex 放進比較章。這樣讀者會先建立結構，再去理解參考，而不是把三個產品的功能清單背一遍。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('strategy')">← 設計決策的來源</button>
+    <button class="btn btn-primary" onclick="navigateTo('roadmap')">下一步要做什麼 →</button>
+</div>

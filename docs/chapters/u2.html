@@ -1,0 +1,109 @@
+<div class="chapter-header">
+                <span class="chapter-number">使用者指南 · 第 2 章</span>
+                <h1>互動模式與基本操作</h1>
+                <p class="chapter-desc">掌握 GCD 的兩種工作模式與核心操作</p>
+            </div>
+            <div class="content-body">
+                <h2>兩種工作模式</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-num">1</div>
+                        <h3>REPL 互動模式</h3>
+                        <p>直接輸入 <code>gcd</code> 啟動。支援 rustyline 行編輯、歷史記錄、Ctrl+R 搜尋。適合探索式開發與多輪對話。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-num">2</div>
+                        <h3>單次執行模式</h3>
+                        <p>使用 <code>gcd exec "任務"</code>。適合 CI/CD 流程、腳本自動化、一次性任務。支援 <code>--json</code> / <code>--jsonl</code> 輸出。</p>
+                    </div>
+                </div>
+
+                <h2>核心 CLI 命令</h2>
+                <div class="comparison-table">
+                    <table>
+                        <thead>
+                            <tr><th>命令</th><th>說明</th><th>範例</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>gcd</code></td><td>啟動 REPL</td><td><code>gcd</code></td></tr>
+                            <tr><td><code>gcd exec</code></td><td>執行單次任務</td><td><code>gcd exec "寫測試"</code></td></tr>
+                            <tr><td><code>gcd overview</code></td><td>檢視工作區概覽</td><td><code>gcd overview --json</code></td></tr>
+                            <tr><td><code>gcd providers</code></td><td>管理 LLM 供應商</td><td><code>gcd providers doctor</code></td></tr>
+                            <tr><td><code>gcd trust</code></td><td>管理信任規則</td><td><code>gcd trust status</code></td></tr>
+                            <tr><td><code>gcd sessions</code></td><td>管理歷史會話</td><td><code>gcd sessions list</code></td></tr>
+                            <tr><td><code>gcd commands</code></td><td>重載自訂命令</td><td><code>gcd commands reload</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>exec 常用參數</h2>
+                <div class="comparison-table">
+                    <table>
+                        <thead>
+                            <tr><th>參數</th><th>說明</th><th>預設值</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>--provider &lt;id&gt;</code></td><td>指定 LLM 供應商</td><td>自動偵測</td></tr>
+                            <tr><td><code>--sandbox &lt;level&gt;</code></td><td>沙箱隔離等級</td><td>workspace-write</td></tr>
+                            <tr><td><code>--permission &lt;level&gt;</code></td><td>權限等級</td><td>auto-edit</td></tr>
+                            <tr><td><code>--git</code></td><td>執行後自動 commit</td><td>關閉</td></tr>
+                            <tr><td><code>--plan</code></td><td>輸出 execution plan 與 prompt 預覽，不直加入入 live 代理迴圈</td><td>關閉</td></tr>
+                            <tr><td><code>--resume &lt;id&gt;</code></td><td>恢復舊會話</td><td>—</td></tr>
+                            <tr><td><code>--fork &lt;id&gt;</code></td><td>複製舊會話繼續</td><td>—</td></tr>
+                            <tr><td><code>--checkpoint</code></td><td>儲存提示詞快照</td><td>關閉</td></tr>
+                            <tr><td><code>--no-stream</code></td><td>禁用串流輸出</td><td>開啟</td></tr>
+                            <tr><td><code>--no-session</code></td><td>不持久化會話</td><td>持久化</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">關於 <code>--plan</code></div>
+                    <p>依目前 <code>App::exec</code> 的實作，<code>--plan</code> 會建立計畫型輸出、可選 checkpoint 與 session 記錄，但不會自動進到後續 live execution。文件如果寫成「先規劃再執行」，容易讓人以為它會在同一次命令內完成兩階段工作。</p>
+                </div>
+
+                <h2>權限模式詳解</h2>
+                <div class="trust-levels">
+                    <div class="trust-card trust-trusted">
+                        <span class="trust-badge">suggest</span>
+                        <h3>建議模式</h3>
+                        <p>所有寫入操作需人工確認。最安全，適合不熟悉的 codebase。</p>
+                    </div>
+                    <div class="trust-card trust-parent">
+                        <span class="trust-badge">auto-edit</span>
+                        <h3>自動編輯</h3>
+                        <p>檔案寫入自動執行，shell 和 patch 需確認。預設模式，平衡效率與安全。</p>
+                    </div>
+                    <div class="trust-card trust-untrusted">
+                        <span class="trust-badge">full-auto</span>
+                        <h3>完全自動</h3>
+                        <p>所有工具自動執行。最快速，僅在信任環境使用。</p>
+                    </div>
+                </div>
+
+                <h2>提示詞增強語法</h2>
+                <p>GCD 支援特殊語法在提示詞中注入上下文：</p>
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="window-title">prompt examples</span>
+                    </div>
+                    <div class="window-body">
+<pre><code class="language-bash"><span class="token comment"># 注入檔案內容</span>
+gcd exec <span class="token string">"分析 @{src/main.rs} 的效能問題"</span>
+
+<span class="token comment"># 注入目錄結構</span>
+gcd exec <span class="token string">"基於 @{src/} 目錄設計新模組"</span>
+
+<span class="token comment"># 使用自訂命令</span>
+gcd exec <span class="token string">"/review src/auth.rs"</span>
+
+<span class="token comment"># Shell 區塊（需審核）</span>
+gcd exec <span class="token string">"依據 !{cargo test} 的結果修復錯誤"</span></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="chapter-nav">
+                <button class="btn btn-outline" onclick="navigateTo('u1')">← U1：安裝</button>
+                <button class="btn btn-primary" onclick="navigateTo('u3')">U3：配置供應商 →</button>
+            </div>

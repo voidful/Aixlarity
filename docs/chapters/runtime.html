@@ -1,0 +1,402 @@
+<div class="chapter-header">
+    <span class="chapter-number">Runtime</span>
+    <h1>備援和保護機制</h1>
+    <p class="chapter-desc">這一章專門講 GCD 在真正跑起來之後，怎麼處理上下文膨脹、供應商失敗、token 累計與自動 commit。重點不是功能列表，而是 執行時 如何避免自己失控。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先講結論</div>
+        <p>GCD 目前已經有一套很務實的 執行過程中的保護機制：用估算 token budget 觸發 context compaction、用 retryable error 觸發 provider fallback、用結構化 token 用量 做執行摘要、用 auto-git 的 undercover mode 降低 commit message 洩漏風險。這些都不是模型能力，而是 外殼 穩定性設計。</p>
+    </div>
+
+    <h2>為什麼 執行過程中的保護機制 值得單獨成章</h2>
+    <p>很多文件會把重點放在 prompt、tools、provider 協定，卻忽略另一個同樣核心的問題：<strong>當 agent 真的持續跑下去時，它怎麼避免自己越跑越肥、越跑越不穩、越跑越難收拾？</strong></p>
+
+    <p>這就是 執行過程中的保護機制 的工作。它不像 提示詞組裝 那麼顯眼，但卻直接決定一個 agent 在真實專案裡能不能穩定工作。對 GCD 來說，這個部分目前最值得看的有四個面向：上下文預算、provider fallback、token accounting、auto-git。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>面向</th>
+                    <th>它在保護什麼</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Context budget 與 compaction</td>
+                    <td>避免對話歷史無限制膨脹。</td>
+                </tr>
+                <tr>
+                    <td>Provider fallback</td>
+                    <td>避免主 provider 瞬時失敗就整輪中斷。</td>
+                </tr>
+                <tr>
+                    <td>Family-aware / cost-aware fallback policy</td>
+                    <td>避免 fallback 雖然可用，卻切到含義差太多的替代 provider。</td>
+                </tr>
+                <tr>
+                    <td>Token accounting</td>
+                    <td>讓 執行時 summary、session 與證據鏈能回答成本問題。</td>
+                </tr>
+                <tr>
+                    <td>Auto-git 與 undercover mode</td>
+                    <td>降低 commit 訊息直接洩漏敏感字串或絕對路徑。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Context budget 目前是固定上限 + 啟發式估算</h2>
+    <p>GCD 在 <code>runtime_support.rs</code> 裡把 <code>CONTEXT_WINDOW_BUDGET</code> 固定設成 <code>100_000</code>。每輪呼叫 provider 前，會先用 <code>estimate_total_tokens(messages)</code> 做一次近似估算。這個估算不是 provider tokenizer，也不是帳單級精度，而是用來決定「現在是不是該先壓縮上下文」的 執行時 判斷規則。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>元件</th>
+                    <th>目前怎麼算</th>
+                    <th>你該怎麼理解</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>單段文字 token 估算</td>
+                    <td><code>text.len() / 4</code></td>
+                    <td>粗略、跨 provider 通用，不是精確 tokenizer。</td>
+                </tr>
+                <tr>
+                    <td>對話總量估算</td>
+                    <td>累加每則 message 的 <code>content</code> 與 tool call arguments JSON。</td>
+                    <td>目的是觸發壓縮，不是做費用結算。</td>
+                </tr>
+                <tr>
+                    <td>觸發條件</td>
+                    <td>估算值超過 <code>100_000</code></td>
+                    <td>一旦超過，就先 compact，再進 provider call。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">這裡最重要的 實況檢查</div>
+        <p>這套 budget 不是模型計費 token，也不是 provider 真正 context window 的逐模型精算。它比較像一條跨供應商、低成本、夠穩定的「先別爆掉」護欄。這個設計很務實，但文件不能把它寫成精確 token 計算器。</p>
+    </div>
+
+    <h2>Compaction 不是縮排歷史，而是有損摘要</h2>
+    <p>一旦估算值超過上限，GCD 會呼叫 <code>compact_messages()</code>。這裡的做法很具體，也很值得文件化：保留第一則訊息、保留最後四則訊息，然後把中間歷史濃縮成一則新的 <code>user</code> message。這表示 compaction 不是無損壓縮，而是明確的說明重寫。</p>
+
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>少於 6 則訊息，不 compact</h3>
+                <p>這讓短回合工作不會太早進入摘要模式。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>保留第一則訊息</h3>
+                <p>初始任務與前置 planning framing 會被留下，避免整輪工作失去起點。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>保留最後四則訊息</h3>
+                <p>最新上下文通常最有機會影響當前決策，因此直接保留。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>中間歷史被改寫成摘要 user message</h3>
+                <p>assistant 內容會截到前 100 字；tool result 只會變成一個泛化標記 <code>- (tool result)</code>。</p>
+            </div>
+        </article>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">教學性示意：compaction 後的歷史會怎麼變</span>
+        </div>
+        <div class="window-body">
+<pre><code>原始 messages
+1. user      "Review src/app.rs"
+2. assistant "我先看一下 provider 連接"
+3. assistant tool_call read_file(...)
+4. tool      {...}
+5. assistant "我懷疑 fallback policy 有問題..."
+6. assistant tool_call search_files(...)
+7. tool      {...}
+8. assistant "我找到 app.rs 的 fallback 建構點"
+9. user      "請繼續"
+
+compact 後
+1. user      "Review src/app.rs"
+2. user      "[Context compacted: 4 messages summarized]
+- Assistant: 我先看一下 provider 連接...
+- Called tool `read_file`
+- (tool result)
+- Assistant: 我懷疑 fallback policy 有問題..."
+3. assistant tool_call search_files(...)
+4. tool      {...}
+5. assistant "我找到 app.rs 的 fallback 建構點"
+6. user      "請繼續"</code></pre>
+        </div>
+    </div>
+
+    <p>這裡有兩個很值得說清楚的後果。第一，tool result 的細節在 compaction 後基本上消失了，只剩存在過的痕跡。第二，中間歷史的角色會被重新寫成 <code>user</code> 訊息，這是為了讓摘要比較容易被後續模型讀成新的上下文說明。</p>
+
+    <h2>因此，compaction 的價值在保命，不在保真</h2>
+    <p>如果把 compaction 當成高保真記憶系統，你會對它期望過高。它的價值更接近「在 context 快爆掉時，把最重要的脈絡活著帶過去」。而完整事實仍應該由 session、checkpoint、replay 與 JSON 輸出去承擔。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>如果你要的是</th>
+                    <th>比較該依賴什麼</th>
+                    <th>原因</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>不中斷地繼續跑</td>
+                    <td>Compaction</td>
+                    <td>它的目標是把當前回合救下來。</td>
+                </tr>
+                <tr>
+                    <td>完整重建歷史</td>
+                    <td>Session / Replay</td>
+                    <td>compaction 本身就是有損摘要。</td>
+                </tr>
+                <tr>
+                    <td>精確成本對帳</td>
+                    <td>Provider usage + TokenUsage</td>
+                    <td>budget 判斷規則 不是計費 token。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Fallback 機制已經能工作，但 policy 還不夠細</h2>
+    <p>當主 provider 失敗時，GCD 會先看錯誤訊息字串是否屬於 retryable error，例如 <code>429</code>、<code>500</code>、<code>502</code>、<code>503</code>、<code>timeout</code>、<code>connection refused</code>。如果符合，就會依序嘗試 fallback providers，並發出 <code>ProviderFallback</code> 事件。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>階段</th>
+                    <th>GCD 目前怎麼做</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>retryable error 判定</td>
+                    <td>靠錯誤字串匹配關鍵詞。</td>
+                </tr>
+                <tr>
+                    <td>fallback 事件紀錄</td>
+                    <td>會發 <code>ProviderFallback</code>，保留 from / to / reason。</td>
+                </tr>
+                <tr>
+                    <td>fallback provider 順序</td>
+                    <td>依 registry 中可讀到 key 的其他 profiles 順序。</td>
+                </tr>
+                <tr>
+                    <td>family-aware / style-aware / cost-aware policy</td>
+                    <td>目前沒有真正實際做出來排序規則。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">值得注意的實作差異</div>
+        <p><code>App::exec</code> 裡的 fallback 機制會把所有「不是主 provider 且能讀到 API key」的 profiles 都放進 fallback list。fallback 機制已完整實作並接入 代理迴圈。</p>
+    </div>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">範例：目前 fallback 可能長什麼樣</span>
+        </div>
+        <div class="window-body">
+<pre><code>主 provider：
+- openai-env
+
+可讀到 key 的其他 profiles：
+- gemini-env
+- anthropic-env
+- openrouter-codex
+
+目前 fallback list：
+1. gemini-env
+2. anthropic-env
+3. openrouter-codex
+
+重點：
+這不保證 same-family，
+也不保證成本或回答風格最接近。</code></pre>
+        </div>
+    </div>
+
+    <h2>因此，fallback 目前比較像「保可用性」而不是「保一致性」</h2>
+    <p>這個判讀很重要。對很多團隊來說，主 provider 掛掉時能不能先保住任務不中斷，已經很有價值；但如果你的需求是「切換後也要維持近似行為、成本與風格」，那現在的 fallback policy 還不能說已經做滿。</p>
+
+    <h2>TokenUsage 是 執行時 事後統計，不是 compaction 判準</h2>
+    <p>GCD 有兩種不同的 token 概念，這一點非常值得分開講。第一種是前面說的 判斷規則 budget estimate，用來決定是否 compact；第二種是 provider 回傳的 usage，被累積進 <code>TokenUsage</code>，用來做 執行時 summary、session 持久化與 JSON 輸出。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>token 概念</th>
+                    <th>來源</th>
+                    <th>用途</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>budget estimate</td>
+                    <td><code>text.len() / 4</code> 類型啟發式</td>
+                    <td>決定是否 compact messages。</td>
+                </tr>
+                <tr>
+                    <td>TokenUsage</td>
+                    <td>各 provider response / streaming usage 欄位</td>
+                    <td>統計 prompt / completion / total tokens 與 API calls。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>這也意味著：如果某個 provider 沒回 usage，或回法和其他家不同，你的 cost observability 就會受影響；但 compaction 仍會照 判斷規則 照常運作。兩者是互補，不是替代。</p>
+
+    <h2>ContextCompacted 與 ProviderFallback 都是重要 執行時 事件</h2>
+    <p>從 observability 角度來看，這條章節和 Evidence 章是互相呼應的。因為 GCD 不只在內部做 compaction 與 fallback，它也把這些事正式寫成事件。這讓你可以在 replay、JSONL 或 session turn 裡看到：「某輪到底是因為 context 太大被壓縮，還是因為 provider 掛掉而改走替代路徑。」</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>事件</th>
+                    <th>它會告訴你什麼</th>
+                    <th>學習價值</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>ContextCompacted</code></td>
+                    <td>哪一輪因為估算 token 超預算而壓縮、估算值是多少、budget 是多少。</td>
+                    <td>幫你判讀 提示詞變太大問題。</td>
+                </tr>
+                <tr>
+                    <td><code>ProviderFallback</code></td>
+                    <td>從哪個 provider 切到哪個 provider，切換原因是什麼。</td>
+                    <td>幫你判讀穩定性問題與供應商依賴。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Auto-git 不只是 convenience，也是一條操作影響護欄</h2>
+    <p>如果使用者開了 <code>--git</code>，GCD 在 run 完後會檢查當前路徑是不是 git worktree、是否真的有變更，然後做 <code>git add -A</code> 與 <code>git commit -m</code>。這條線看起來像方便功能，但其實也包含一個很值得教學的「undercover mode」。</p>
+
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>先確認是不是 git repo</h3>
+                <p>不是 worktree 就直接跳過，不會硬做 git 操作。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>只有真的有變更才 commit</h3>
+                <p>如果 <code>git status --porcelain</code> 是空的，就不會做多餘 commit。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>如果 repo 有 remote，就啟動 undercover mode</h3>
+                <p>這裡的「public repo indicator」其實是更保守的規則：只要有任何 remote，就視為可能公開。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>commit message 會先被 sanitize</h3>
+                <p>敏感字串與絕對路徑會被遮罩或縮寫，再組成 <code>gcd: ...</code> commit message。</p>
+            </div>
+        </article>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">範例：undercover mode 在保護什麼</span>
+        </div>
+        <div class="window-body">
+<pre><code>原始 summary：
+Updated config with api_key=sk-12345 after checking /Users/alice/project/src/app.rs
+
+可能被 sanitize 後：
+[redacted]
+
+或：
+Modified .../src/app.rs</code></pre>
+        </div>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">這裡同樣要誠實描述</div>
+        <p>undercover mode 目前不是在辨識 repo 真的「公開」與否，而是只要偵測到任何 remote，就一律採取比較保守的訊息清理策略。這很實用，但文件不該把它寫成精準的 public/private 判斷器。</p>
+    </div>
+
+    <h2>如果你拿這章回頭看前面的 evidence 與 provider 章，會更有立體感</h2>
+    <p>Provider Lab 告訴你 request shape 怎麼變；Evidence 章告訴你事件怎麼留下；而這章則補上第三層：runtime 是怎麼在真實壓力下保持可用的。這三章一起讀，才會真的看到一個 production-minded 外殼 的樣子。</p>
+
+    <h2>實況檢查：這一章最值得記住的六件事</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>上下文預算 用的是 判斷規則，不是精確 tokenizer</h3>
+            <p>它的目標是防止爆炸，不是做帳單對帳。</p>
+        </div>
+        <div class="check-item">
+            <h3>compaction 是有損摘要</h3>
+            <p>它會保住工作延續性，但不能替代完整 session 記錄。</p>
+        </div>
+        <div class="check-item">
+            <h3>fallback 已經能工作，但 policy 還不夠細</h3>
+            <p>目前比較像 availability-first，而不是 consistency-first。</p>
+        </div>
+        <div class="check-item">
+            <h3>TokenUsage 和 budget estimate 是兩套不同概念</h3>
+            <p>前者是事後統計，後者是事前護欄。</p>
+        </div>
+        <div class="check-item">
+            <h3>auto-git 真正做的是操作影響收尾</h3>
+            <p>它不只是方便，而是把變更收束進 git workflow 的一種 執行時 策略。</p>
+        </div>
+        <div class="check-item">
+            <h3>undercover mode 是保守 sanitization，不是公開倉庫偵測器</h3>
+            <p>只要有 remote，就會啟動更保守的 commit message 清理。</p>
+        </div>
+    </div>
+
+    <h2>把這一章濃縮成一句話</h2>
+    <div class="callout callout-info revealable">
+        <div class="callout-title">Runtime 安全機制 的價值，在於讓 agent 在真實世界裡撐得住</div>
+        <p>Prompt、tools、providers 決定 agent 能做什麼；而 context compaction、fallback、token accounting、auto-git 則決定它在長回合、壞網路、多供應商與真實 repo 裡能不能穩定活下去。這一層越清楚，GCD 就越像工程系統，而不是短暫 demo。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('providerlab')">← 同一個任務，四種 Provider 協定如何變形</button>
+    <button class="btn btn-primary" onclick="navigateTo('state')">工作記錄和記憶 →</button>
+</div>
