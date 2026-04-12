@@ -6,7 +6,7 @@
 
 - 🦀 **Rust 原生** — 編譯為單一二進位檔 `gcd`，啟動迅速、記憶體安全
 - 🤖 **Agent Loop** — 真正的 LLM 工具迴圈：送出 → 回覆 → 工具呼叫 → 執行 → 迴圈
-- 🔧 **8 個內建工具** — read_file, write_file, list_dir, shell, search_files, fetch_url, apply_patch, spawn_agent
+- 🔧 **11 個內建工具** — read_file, write_file, list_dir, shell, search_files, fetch_url, apply_patch, spawn_agent, memory, skill_manager, session_search
 - 🎯 **多供應商** — 同時支援 Gemini、OpenAI、Anthropic API（完整 Tool Calling）
 - 🛡️ **Sandbox 策略** — 四級安全模型：off / read-only / workspace-write / container
 - 🔒 **Permission Prompt** — 三級權限：suggest / auto-edit / full-auto（靈感來自 codex）
@@ -21,7 +21,11 @@
 - 👀 **協調事件證據** — session / replay 可見 coordinator batch、delegated task lifecycle 與聚合結果
 - 🔄 **Git 整合** — `--git` 自動在 session 結束後 commit 變更
 - 📋 **Planning 輸出** — `--plan` 產生 execution plan 與 prompt 預覽，方便人工確認
-- 🧬 **Memory 系統** — MEMORY.md 持久化跨 session 知識（Dream-inspired）
+- 🧬 **雙重記憶系統** — MEMORY.md（環境知識）+ USER.md（使用者偏好），agent 可透過 `memory` 工具自主讀寫，含安全掃描防注入（Hermes-inspired）
+- 🎓 **技能學習迴圈** — `skill_manager` 工具讓 agent 在成功完成任務後自動建立可重用 skill，支援 create/edit/patch/delete（Hermes-inspired）
+- 🔍 **Session 搜尋** — `session_search` 工具搜尋過往對話紀錄，回溯類似問題的解法
+- 📑 **Progressive Skill Disclosure** — 技能支援 YAML frontmatter，三層漸進載入（metadata → full body → linked files），節省 token
+- 🛡️ **記憶安全掃描** — 寫入 MEMORY.md / USER.md / SKILL.md 前自動掃描 prompt injection 與 exfiltration pattern
 - 💻 **互動式 REPL** — rustyline 行編輯，支援歷史記錄、Ctrl+R 搜尋
 
 ## 快速開始
@@ -115,13 +119,16 @@ crates/
 │   │              #   ├─ Git 自動 commit
 │   │              #   ├─ Planning 模式
 │   │              #   └─ Memory 系統
-│   ├── tools.rs   # Tool trait + 8 個內建工具
+│   ├── tools.rs   # Tool trait + 11 個內建工具
 │   │              #   ├─ read_file, write_file (含 diff 預覽)
 │   │              #   ├─ list_dir, shell (10KB 輸出截斷)
 │   │              #   ├─ search_files (rg/grep)
 │   │              #   ├─ fetch_url (web 抓取)
 │   │              #   ├─ apply_patch (unified diff 修補)
-│   │              #   └─ spawn_agent (coordinator 子任務委派)
+│   │              #   ├─ spawn_agent (coordinator 子任務委派)
+│   │              #   ├─ memory (雙重記憶: MEMORY.md + USER.md)
+│   │              #   ├─ skill_manager (技能學習迴圈: create/edit/patch/delete)
+│   │              #   └─ session_search (過往對話搜尋)
 │   ├── providers.rs   # 多供應商管理
 │   │                  #   ├─ Gemini (完整 functionCall)
 │   │                  #   ├─ OpenAI (完整 tool_calls)
@@ -131,7 +138,7 @@ crates/
 │   ├── trust.rs       # 工作區信任邊界
 │   ├── config.rs      # 路徑檢測與偏好設定
 │   ├── commands.rs    # 自訂命令
-│   ├── skills.rs      # 技能系統 (SKILL.md)
+│   ├── skills.rs      # 技能系統 (SKILL.md + YAML frontmatter + progressive disclosure)
 │   ├── hooks.rs       # PreToolUse / PostToolUse 生命週期鉤子
 │   ├── plugins.rs     # Plugin JSON 工具擴充
 │   ├── mcp.rs         # MCP (Model Context Protocol) Client
@@ -162,6 +169,7 @@ crates/
 | [Claude Code](https://github.com/roger2ai/Claude-Code-Compiled) | Trust 邊界、Session 分支、Skill 系統 |
 | [claurst](https://github.com/Kuberwastaken/claurst) | Rust 重寫方法論、Dream 記憶系統、Coordinator |
 | [open-agent-sdk](https://github.com/codeany-ai/open-agent-sdk-typescript) | Agent SDK 抽象層設計 |
+| [hermes-agent](https://github.com/NousResearch/hermes-agent) | 技能學習迴圈、雙重記憶系統、記憶安全掃描、Session 搜尋、Progressive Skill Disclosure |
 
 ## 授權
 

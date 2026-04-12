@@ -4,9 +4,12 @@ use super::apply_patch::ApplyPatchTool;
 use super::coordinator::CoordinatorTool;
 use super::fetch_url::FetchUrlTool;
 use super::list_dir::ListDirTool;
+use super::memory_tool::MemoryTool;
 use super::read_file::ReadFileTool;
 use super::search_files::SearchFilesTool;
+use super::session_search::SessionSearchTool;
 use super::shell::ShellTool;
+use super::skill_manager::SkillManagerTool;
 use super::write_file::WriteFileTool;
 use super::Tool;
 
@@ -21,6 +24,9 @@ pub fn builtin_tools() -> Vec<Box<dyn Tool>> {
         Box::new(FetchUrlTool),
         Box::new(ApplyPatchTool),
         Box::new(CoordinatorTool),
+        Box::new(MemoryTool),
+        Box::new(SkillManagerTool),
+        Box::new(SessionSearchTool),
     ]
 }
 

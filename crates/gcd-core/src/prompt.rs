@@ -132,10 +132,30 @@ pub fn assemble_prompt(request: PromptRequest<'_>) -> io::Result<PromptAssembly>
     if let Some(memory) = request.memory_content {
         let trimmed = memory.trim();
         if !trimmed.is_empty() {
-            sections.push(format!("# Persistent Memory\n{}", trimmed));
+            if trimmed.contains("<memory-context>") {
+                // New dual-memory format: inject the fenced block as-is.
+                // The <memory-context> tags prevent the model from treating
+                // recalled context as user discourse.
+                sections.push(trimmed.to_string());
+            } else {
+                // Legacy format: single MEMORY.md without fencing.
+                sections.push(format!("# Persistent Memory\n{}", trimmed));
+            }
         }
     }
 
+    // Progressive skill disclosure tier 1: list available skills as metadata
+    if !request.skills.skills.is_empty() {
+        let listing = request.skills.metadata_listing();
+        let mut catalog = String::from("# Available Skills\n");
+        for (name, description) in &listing {
+            catalog.push_str(&format!("- **{}**: {}\n", name, description));
+        }
+        catalog.push_str("\nUse `/skill <name>` to activate a skill.");
+        sections.push(catalog);
+    }
+
+    // Progressive skill disclosure tier 2+3: full body + linked files
     if let Some(skill) = &active_skill {
         sections.push(render_skill_section(skill));
     }
@@ -166,12 +186,28 @@ pub fn assemble_prompt(request: PromptRequest<'_>) -> io::Result<PromptAssembly>
 }
 
 fn render_skill_section(skill: &SkillDefinition) -> String {
-    format!(
-        "# Loaded Skill\nName: {}\nSummary: {}\n\n{}",
-        skill.name,
-        skill.summary,
-        skill.body.trim()
-    )
+    let mut section = format!(
+        "# Loaded Skill\nName: {}\nSummary: {}",
+        skill.name, skill.summary
+    );
+
+    // Tier 2: show version from frontmatter if available
+    if let Some(version) = &skill.frontmatter.version {
+        section.push_str(&format!("\nVersion: {}", version));
+    }
+
+    section.push_str(&format!("\n\n{}", skill.body.trim()));
+
+    // Tier 3: list linked files so the agent knows what references are available
+    if !skill.linked_files.is_empty() {
+        section.push_str("\n\n## Linked Files\n");
+        for file in &skill.linked_files {
+            section.push_str(&format!("- {}\n", file.display()));
+        }
+        section.push_str("\nUse `read_file` to load linked files when needed.");
+    }
+
+    section
 }
 
 #[cfg(test)]

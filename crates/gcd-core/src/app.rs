@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 use crate::agent::{run_agent, AgentEvent, AgentRunOptions, PermissionLevel};
 use crate::agent::memory::read_memory;
+use crate::tools::build_memory_prompt_block;
 use crate::commands::CommandCatalog;
 use crate::config::{display_path, AppPaths, RuntimePreferences, SandboxPolicy};
 use crate::instructions::InstructionBundle;
@@ -569,7 +570,10 @@ impl App {
             }
         };
 
-        let memory_content = read_memory(&workspace.root);
+        // Dual memory: try new tool-based memory (MEMORY.md + USER.md via §-delimited
+        // entries) first, fall back to legacy section-based MEMORY.md.
+        let memory_content = build_memory_prompt_block(&workspace.root)
+            .or_else(|| read_memory(&workspace.root));
 
         let mut assembly = assemble_prompt(PromptRequest {
             workspace: &workspace,
