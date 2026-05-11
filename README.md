@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/aixlarity-icon.svg" width="96" alt="Aixlarity icon">
+  <img src="docs/assets/aixlarity-icon.png" width="96" alt="Aixlarity icon">
 </p>
 
 <h1 align="center">Aixlarity IDE</h1>
