@@ -24,6 +24,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  BUILD_SOURCEVERSION: ${{ github.sha }}
   CARGO_TERM_COLOR: always
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   VSCODE_QUALITY: stable
@@ -108,7 +109,7 @@ jobs:
           set -euo pipefail
           mkdir -p dist/release
           cp target/release/aixlarity "dist/release/aixlarity-cli-darwin-${VSCODE_ARCH}"
-          ditto -c -k --sequesterRsrc --keepParent "../VSCode-darwin-${VSCODE_ARCH}/Aixlarity.app" "dist/release/Aixlarity-darwin-${VSCODE_ARCH}.zip"
+          ditto -c -k --sequesterRsrc --keepParent "VSCode-darwin-${VSCODE_ARCH}/Aixlarity.app" "dist/release/Aixlarity-darwin-${VSCODE_ARCH}.zip"
           mkdir -p aixlarity-ide/.build/darwin
           node aixlarity-ide/build/darwin/create-dmg.ts "$PWD" "$PWD/aixlarity-ide/.build/darwin"
           cp "aixlarity-ide/.build/darwin/VSCode-darwin-${VSCODE_ARCH}.dmg" "dist/release/Aixlarity-darwin-${VSCODE_ARCH}.dmg"
@@ -173,7 +174,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path dist/release | Out-Null
           Copy-Item target/release/aixlarity.exe "dist/release/aixlarity-cli-win32-$env:VSCODE_ARCH.exe"
-          Compress-Archive -Path "../VSCode-win32-$env:VSCODE_ARCH/*" -DestinationPath "dist/release/Aixlarity-win32-$env:VSCODE_ARCH.zip" -Force
+          Compress-Archive -Path "VSCode-win32-$env:VSCODE_ARCH/*" -DestinationPath "dist/release/Aixlarity-win32-$env:VSCODE_ARCH.zip" -Force
           $installer = Get-ChildItem "aixlarity-ide/.build/win32-$env:VSCODE_ARCH/user-setup/*.exe" | Select-Object -First 1
           if (-not $installer) {
             throw "Windows user installer was not produced."
@@ -264,7 +265,7 @@ jobs:
           set -euo pipefail
           mkdir -p dist/release
           cp target/release/aixlarity "dist/release/aixlarity-cli-linux-${VSCODE_ARCH}"
-          tar -czf "dist/release/Aixlarity-linux-${VSCODE_ARCH}.tar.gz" -C .. "VSCode-linux-${VSCODE_ARCH}"
+          tar -czf "dist/release/Aixlarity-linux-${VSCODE_ARCH}.tar.gz" -C . "VSCode-linux-${VSCODE_ARCH}"
           cp aixlarity-ide/.build/linux/deb/"${DEB_ARCH}"/deb/*.deb "dist/release/Aixlarity-linux-${VSCODE_ARCH}.deb"
           cp aixlarity-ide/.build/linux/rpm/"${RPM_ARCH}"/*.rpm "dist/release/Aixlarity-linux-${VSCODE_ARCH}.rpm"
           sha256sum dist/release/* > "dist/release/SHASUMS256-linux-${VSCODE_ARCH}.txt"
