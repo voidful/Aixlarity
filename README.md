@@ -95,7 +95,7 @@ Release workflow 會在原生 runner 上產出 macOS、Windows、Linux x64/arm64
 | Linux x64 | [deb](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-x64.deb) · [rpm](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-x64.rpm) · [tar.gz](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-x64.tar.gz) |
 | Linux arm64 | [deb](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-arm64.deb) · [rpm](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-arm64.rpm) · [tar.gz](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-arm64.tar.gz) |
 
-第一次開啟尚未簽章的預覽版時，系統可能需要你手動信任。下載後可用 [SHASUMS256.txt](https://github.com/voidful/Aixlarity/releases/latest/download/SHASUMS256.txt) 驗證檔案。
+macOS 預覽包會先通過 bundle 簽章與 DMG 掛載檢查；若 release 尚未完成 Apple notarization，第一次開啟仍可能需要用右鍵開啟或手動信任。下載後可用 [SHASUMS256.txt](https://github.com/voidful/Aixlarity/releases/latest/download/SHASUMS256.txt) 驗證檔案。
 
 ## 快速開始：先用，再拆
 
@@ -176,6 +176,8 @@ npm run test-aixlarity-ui          # 啟動 Electron 做操作煙測
 npm run compile-check-ts-native
 npm run compile
 ```
+
+macOS release 會先驗證 app bundle 簽章、ZIP 解壓後簽章、DMG 掛載後簽章。若要讓下載後直接通過 Gatekeeper，維護者需要在 GitHub Actions 設定 `MACOS_CERTIFICATE_P12`、`MACOS_CERTIFICATE_PASSWORD`、`APPLE_ID`、`APPLE_APP_SPECIFIC_PASSWORD`、`APPLE_TEAM_ID`，流程會自動做 Developer ID signing 與 notarization。
 
 ## Persona 系統
 

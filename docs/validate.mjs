@@ -128,6 +128,9 @@ const homepageChecks = [
   ['release workflow publishes exact homepage artifact name templates', releaseWorkflow.includes('Aixlarity-darwin-${VSCODE_ARCH}.dmg') && releaseWorkflow.includes('Aixlarity-win32-$env:VSCODE_ARCH-user-setup.exe') && releaseWorkflow.includes('Aixlarity-linux-${VSCODE_ARCH}.deb')],
   ['release workflow emits combined SHA-256 checksums', releaseWorkflow.includes('SHASUMS256.txt') && releaseWorkflow.includes('sha256sum Aixlarity-* aixlarity-cli-*')],
   ['release workflow archives VS Code build output from repo root', releaseWorkflow.includes('"VSCode-darwin-${VSCODE_ARCH}/Aixlarity.app"') && releaseWorkflow.includes('"VSCode-win32-$env:VSCODE_ARCH/*"') && releaseWorkflow.includes('-C . "VSCode-linux-${VSCODE_ARCH}"')],
+  ['release workflow signs macOS app bundles before packaging', releaseWorkflow.includes('Sign macOS app bundle') && releaseWorkflow.includes('codesign --force --deep --sign - "$APP_PATH"') && releaseWorkflow.includes('codesign --verify --deep --strict --verbose=4 "$APP_PATH"')],
+  ['release workflow can notarize Developer ID macOS archives', releaseWorkflow.includes('Notarize macOS archives') && releaseWorkflow.includes('xcrun notarytool submit "$DMG_PATH"') && releaseWorkflow.includes('xcrun stapler validate "$DMG_PATH"')],
+  ['release workflow mounts packaged DMGs and verifies the contained app', releaseWorkflow.includes('Validate macOS archives') && releaseWorkflow.includes('hdiutil verify "$DMG_PATH"') && releaseWorkflow.includes('codesign --verify --deep --strict --verbose=4 "$MOUNT_POINT/Aixlarity.app"')],
   ['release workflow provides build commit to Windows installer', releaseWorkflow.includes('BUILD_SOURCEVERSION: ${{ github.sha }}')],
   ['release workflow has tracked IDE build scripts', fs.existsSync(path.join(rootDir, 'aixlarity-ide', 'build', 'gulpfile.vscode.ts')) && fs.existsSync(path.join(rootDir, 'aixlarity-ide', 'build', 'npm', 'preinstall.ts'))],
   ['release workflow has tracked Copilot extension postinstall helpers', fs.existsSync(path.join(rootDir, 'aixlarity-ide', 'extensions', 'copilot', 'script', 'build', 'compressTikToken.ts')) && fs.existsSync(path.join(rootDir, 'aixlarity-ide', 'extensions', 'copilot', 'script', 'build', 'copyStaticAssets.ts'))],
@@ -169,7 +172,7 @@ console.log(JSON.stringify({
     'chapter HTML container tags are balanced',
     'legacy project naming and broken text fragments are absent',
     'IDE landing page icon, release downloads, screenshot showcase, visual capability board, and workflow rail are wired',
-    'release workflow builds native macOS, Windows, and Linux artifacts with checksums',
+    'release workflow builds native macOS, Windows, and Linux artifacts with checksums and macOS package validation',
     'README product hero assets, Aixlarity domain, and Knowledge Ledger selling point are wired',
   ],
 }, null, 2));
