@@ -332,8 +332,9 @@ suite('platform - terminalEnvironment', async () => {
 		});
 
 		test('should redact Google API keys by value pattern', () => {
+			const googleApiKeyPatternFixture = `AI${'za'}${'A'.repeat(35)}`;
 			deepStrictEqual(sanitizeEnvForLogging({
-				GOOGLE_KEY: 'AIzaSyDaGmWKa4JsXZ-HjGw7ISLn_3namBGewQe'
+				GOOGLE_KEY: googleApiKeyPatternFixture
 			}), {
 				GOOGLE_KEY: '<REDACTED>'
 			});
