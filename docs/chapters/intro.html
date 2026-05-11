@@ -11,8 +11,13 @@
     </div>
 
     <div class="callout callout-tip revealable">
+        <div class="callout-title">為什麼這份文件改用 IDE 當主角</div>
+        <p>Harness 原本很抽象：prompt assembly、tool permission、session persistence、artifact evidence 都藏在 runtime 裡。Aixlarity IDE 把它們變成可看的控制面：Approval card 是 permission，Mission Control 是 task state，Diff Review 是 artifact gate，Terminal Replay 和 Browser Recording 是 evidence。用 IDE 讀 harness，比只看 CLI 輸出更容易建立直覺。</p>
+    </div>
+
+    <div class="callout callout-tip revealable">
         <div class="callout-title">第一次看？先別急</div>
-        <p>不用一次把所有名詞都背下來。建議看完這一章後，先看下一章的<strong>入門範例</strong>，用一個小任務把 prompt（提示詞）、tool（工具）、session（工作記錄）這幾個基本詞搞懂就好。剩下的名詞，後面讀到時自然就會理解。</p>
+        <p>不用一次把所有名詞都背下來。建議看完這一章後，先看 <strong>IDE Harness Lab</strong>，用一個小任務把 prompt（提示詞）、tool（工具）、artifact（工件）、session（工作記錄）這幾個基本詞搞懂就好。剩下的名詞，後面讀到時自然就會理解。</p>
     </div>
 
     <h2>為什麼要先講這個？</h2>
@@ -188,8 +193,8 @@ AI：根據測試結果和程式碼內容，有兩個具體風險⋯⋯</code></
         </article>
     </div>
 
-    <h2>GCD 為什麼適合用來學這些？</h2>
-    <p>GemiClawDex 不是世界上最完美的 AI 助手，但它有一條<strong>非常清楚的 Rust 程式碼路徑</strong>：從 CLI 入口 → 工作區偵測 → 信任檢查 → 提示詞組裝 → AI 對話迴圈 → 工作記錄保存，每一步都看得到程式碼。</p>
+    <h2>Aixlarity 為什麼適合用來學這些？</h2>
+    <p>Aixlarity 不是世界上最完美的 AI 助手，但它有一條<strong>非常清楚的 Rust 程式碼路徑</strong>：從 CLI 入口 → 工作區偵測 → 信任檢查 → 提示詞組裝 → AI 對話迴圈 → 工作記錄保存，每一步都看得到程式碼。</p>
 
     <p>更重要的是，它同時展示了兩種學習價值：</p>
     <ul>
@@ -199,11 +204,11 @@ AI：根據測試結果和程式碼內容，有兩個具體風險⋯⋯</code></
 
     <div class="callout callout-tip revealable">
         <div class="callout-title">建議的閱讀順序</div>
-        <p>如果你第一次看，接下來最順的順序是：<strong>入門範例 → 名詞速查 → 架構全貌</strong>。先用一個小任務理解 AI 助手的基本運作，搞懂幾個常見名詞，再回來看完整的系統架構。</p>
+        <p>如果你第一次看，接下來最順的順序是：<strong>IDE Harness Lab → 入門範例 → 名詞速查 → 架構全貌</strong>。先用 IDE 看見 permission、artifact、terminal evidence，再回頭讀 Rust runtime，整個系統會清楚很多。</p>
     </div>
 </div>
 
 <div class="chapter-nav">
     <button class="btn btn-outline" onclick="navigateTo('home')">← 首頁</button>
-    <button class="btn btn-primary" onclick="navigateTo('starter')">入門範例 →</button>
+    <button class="btn btn-primary" onclick="navigateTo('harness-lab')">IDE Harness Lab →</button>
 </div>

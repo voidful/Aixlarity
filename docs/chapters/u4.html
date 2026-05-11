@@ -5,7 +5,7 @@
             </div>
             <div class="content-body">
                 <h2>專案指令 (AGENTS.md)</h2>
-                <p>在專案根目錄放置 <code>AGENTS.md</code>，GCD 會自動注入到 System Prompt：</p>
+                <p>在專案根目錄放置 <code>AGENTS.md</code>，Aixlarity 會自動注入到 System Prompt：</p>
                 <div class="code-window">
                     <div class="window-header">
                         <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
@@ -31,15 +31,15 @@
 
                 <div class="callout callout-info">
                     <div class="callout-title">多指令檔案</div>
-                    <p>GCD 同時支援 <code>GCD.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code> 等供應商特定指令檔。當使用特定供應商時，會額外載入對應的指令。</p>
+                    <p>Aixlarity 同時支援 <code>AIXLARITY.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code> 等供應商特定指令檔。當使用特定供應商時，會額外載入對應的指令。</p>
                 </div>
 
                 <h2>自訂命令</h2>
-                <p>在 <code>.gcd/commands/</code> 目錄放置 TOML 檔案，定義可複用的命令：</p>
+                <p>在 <code>.aixlarity/commands/</code> 目錄放置 TOML 檔案，定義可複用的命令：</p>
                 <div class="code-window">
                     <div class="window-header">
                         <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-                        <span class="window-title">.gcd/commands/review.toml</span>
+                        <span class="window-title">.aixlarity/commands/review.toml</span>
                     </div>
                     <div class="window-body">
 <pre><code class="language-toml">description = "程式碼審查"
@@ -55,14 +55,14 @@ prompt = """
 """</code></pre>
                     </div>
                 </div>
-                <p>使用方式：<code>gcd exec "/review src/auth.rs"</code></p>
+                <p>使用方式：<code>aixlarity exec "/review src/auth.rs"</code></p>
 
                 <h2>技能系統 (Skills)</h2>
-                <p>在 <code>.gcd/skills/</code> 目錄放置 Markdown 檔案，作為可選注入的專業知識：</p>
+                <p>在 <code>.aixlarity/skills/</code> 目錄放置 Markdown 檔案，作為可選注入的專業知識：</p>
                 <div class="code-window">
                     <div class="window-header">
                         <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-                        <span class="window-title">.gcd/skills/rust-optimization/SKILL.md</span>
+                        <span class="window-title">.aixlarity/skills/rust-optimization/SKILL.md</span>
                     </div>
                     <div class="window-body">
 <pre><code class="language-markdown">Rust 效能最佳化專家
@@ -77,11 +77,11 @@ prompt = """
                 </div>
 
                 <h2>MCP 伺服器</h2>
-                <p>在 <code>.gcd/mcp.json</code> 中配置 MCP 伺服器，擴充 Agent 工具能力：</p>
+                <p>在 <code>.aixlarity/mcp.json</code> 中配置 MCP 伺服器，擴充 Agent 工具能力：</p>
                 <div class="code-window">
                     <div class="window-header">
                         <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-                        <span class="window-title">.gcd/mcp.json</span>
+                        <span class="window-title">.aixlarity/mcp.json</span>
                     </div>
                     <div class="window-body">
 <pre><code class="language-json">{

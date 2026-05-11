@@ -1,7 +1,7 @@
 <div class="chapter-header">
                 <span class="chapter-number">使用者指南 · 第 2 章</span>
                 <h1>互動模式與基本操作</h1>
-                <p class="chapter-desc">掌握 GCD 的兩種工作模式與核心操作</p>
+                <p class="chapter-desc">掌握 Aixlarity 的兩種工作模式與核心操作</p>
             </div>
             <div class="content-body">
                 <h2>兩種工作模式</h2>
@@ -9,12 +9,12 @@
                     <div class="feature-card">
                         <div class="feature-num">1</div>
                         <h3>REPL 互動模式</h3>
-                        <p>直接輸入 <code>gcd</code> 啟動。支援 rustyline 行編輯、歷史記錄、Ctrl+R 搜尋。適合探索式開發與多輪對話。</p>
+                        <p>直接輸入 <code>aixlarity</code> 啟動。支援 rustyline 行編輯、歷史記錄、Ctrl+R 搜尋。適合探索式開發與多輪對話。</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-num">2</div>
                         <h3>單次執行模式</h3>
-                        <p>使用 <code>gcd exec "任務"</code>。適合 CI/CD 流程、腳本自動化、一次性任務。支援 <code>--json</code> / <code>--jsonl</code> 輸出。</p>
+                        <p>使用 <code>aixlarity exec "任務"</code>。適合 CI/CD 流程、腳本自動化、一次性任務。支援 <code>--json</code> / <code>--jsonl</code> 輸出。</p>
                     </div>
                 </div>
 
@@ -25,13 +25,13 @@
                             <tr><th>命令</th><th>說明</th><th>範例</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td><code>gcd</code></td><td>啟動 REPL</td><td><code>gcd</code></td></tr>
-                            <tr><td><code>gcd exec</code></td><td>執行單次任務</td><td><code>gcd exec "寫測試"</code></td></tr>
-                            <tr><td><code>gcd overview</code></td><td>檢視工作區概覽</td><td><code>gcd overview --json</code></td></tr>
-                            <tr><td><code>gcd providers</code></td><td>管理 LLM 供應商</td><td><code>gcd providers doctor</code></td></tr>
-                            <tr><td><code>gcd trust</code></td><td>管理信任規則</td><td><code>gcd trust status</code></td></tr>
-                            <tr><td><code>gcd sessions</code></td><td>管理歷史會話</td><td><code>gcd sessions list</code></td></tr>
-                            <tr><td><code>gcd commands</code></td><td>重載自訂命令</td><td><code>gcd commands reload</code></td></tr>
+                            <tr><td><code>aixlarity</code></td><td>啟動 REPL</td><td><code>aixlarity</code></td></tr>
+                            <tr><td><code>aixlarity exec</code></td><td>執行單次任務</td><td><code>aixlarity exec "寫測試"</code></td></tr>
+                            <tr><td><code>aixlarity overview</code></td><td>檢視工作區概覽</td><td><code>aixlarity overview --json</code></td></tr>
+                            <tr><td><code>aixlarity providers</code></td><td>管理 LLM 供應商</td><td><code>aixlarity providers doctor</code></td></tr>
+                            <tr><td><code>aixlarity trust</code></td><td>管理信任規則</td><td><code>aixlarity trust status</code></td></tr>
+                            <tr><td><code>aixlarity sessions</code></td><td>管理歷史會話</td><td><code>aixlarity sessions list</code></td></tr>
+                            <tr><td><code>aixlarity commands</code></td><td>重載自訂命令</td><td><code>aixlarity commands reload</code></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -82,7 +82,7 @@
                 </div>
 
                 <h2>提示詞增強語法</h2>
-                <p>GCD 支援特殊語法在提示詞中注入上下文：</p>
+                <p>Aixlarity 支援特殊語法在提示詞中注入上下文：</p>
                 <div class="code-window">
                     <div class="window-header">
                         <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
@@ -90,16 +90,16 @@
                     </div>
                     <div class="window-body">
 <pre><code class="language-bash"><span class="token comment"># 注入檔案內容</span>
-gcd exec <span class="token string">"分析 @{src/main.rs} 的效能問題"</span>
+aixlarity exec <span class="token string">"分析 @{src/main.rs} 的效能問題"</span>
 
 <span class="token comment"># 注入目錄結構</span>
-gcd exec <span class="token string">"基於 @{src/} 目錄設計新模組"</span>
+aixlarity exec <span class="token string">"基於 @{src/} 目錄設計新模組"</span>
 
 <span class="token comment"># 使用自訂命令</span>
-gcd exec <span class="token string">"/review src/auth.rs"</span>
+aixlarity exec <span class="token string">"/review src/auth.rs"</span>
 
 <span class="token comment"># Shell 區塊（需審核）</span>
-gcd exec <span class="token string">"依據 !{cargo test} 的結果修復錯誤"</span></code></pre>
+aixlarity exec <span class="token string">"依據 !{cargo test} 的結果修復錯誤"</span></code></pre>
                     </div>
                 </div>
             </div>

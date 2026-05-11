@@ -1,13 +1,13 @@
 <div class="chapter-header">
                 <span class="chapter-number">第 03 章</span>
                 <h1>工作區發現機制</h1>
-                <p class="chapter-desc">GCD 如何找到你的專案根目錄 — <code>workspace.rs</code></p>
+                <p class="chapter-desc">Aixlarity 如何找到你的專案根目錄 — <code>workspace.rs</code></p>
             </div>
             <div class="content-body">
                 <h2>偵測策略</h2>
-                <p>GCD 從當前目錄開始往上搜尋，尋找以下標記檔案來識別專案根目錄：</p>
+                <p>Aixlarity 從當前目錄開始往上搜尋，尋找以下標記檔案來識別專案根目錄：</p>
                 <div class="pipeline">
-                    <div class="pipeline-step"><div class="pipeline-num">1</div><div class="pipeline-content"><strong><code>.gcd/</code></strong> — GCD 專屬配置目錄（最高優先）</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">1</div><div class="pipeline-content"><strong><code>.aixlarity/</code></strong> — Aixlarity 專屬配置目錄（最高優先）</div></div>
                     <div class="pipeline-step"><div class="pipeline-num">2</div><div class="pipeline-content"><strong><code>.git/</code></strong> — Git 倉庫根目錄</div></div>
                     <div class="pipeline-step"><div class="pipeline-num">3</div><div class="pipeline-content"><strong><code>Cargo.toml</code></strong> — Rust 專案根</div></div>
                     <div class="pipeline-step"><div class="pipeline-num">4</div><div class="pipeline-content"><strong><code>package.json</code></strong> — Node.js 專案根</div></div>
@@ -18,11 +18,11 @@
                 <div class="code-window">
                     <div class="window-header">
                         <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-                        <span class="window-title">crates/gcd-core/src/workspace.rs</span>
+                        <span class="window-title">crates/aixlarity-core/src/workspace.rs</span>
                     </div>
                     <div class="window-body">
 <pre><code class="language-rust"><span class="token keyword">pub</span> <span class="token keyword">fn</span> <span class="token function">discover</span>(start: &amp;Path) -&gt; PathBuf {
-    <span class="token keyword">let</span> markers = [<span class="token string">".gcd"</span>, <span class="token string">".git"</span>, <span class="token string">"Cargo.toml"</span>, <span class="token string">"package.json"</span>];
+    <span class="token keyword">let</span> markers = [<span class="token string">".aixlarity"</span>, <span class="token string">".git"</span>, <span class="token string">"Cargo.toml"</span>, <span class="token string">"package.json"</span>];
     <span class="token keyword">let</span> <span class="token keyword">mut</span> dir = start.to_path_buf();
     <span class="token keyword">loop</span> {
         <span class="token keyword">for</span> m <span class="token keyword">in</span> &amp;markers {

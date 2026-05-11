@@ -1,6 +1,6 @@
 # 貢獻指南 / Contributing Guide
 
-感謝你對 GemiClawDex 的興趣！這是一個教學專案，歡迎各種形式的貢獻。
+感謝你對 Aixlarity 的興趣！這是一個教學專案，歡迎各種形式的貢獻。
 
 ## 貢獻方式
 
@@ -8,7 +8,7 @@
 
 - **修正錯字或翻譯問題**：文件全站繁體中文，如果發現用詞不自然或簡體用語，歡迎提 PR。
 - **補充練習題**：在 `exercises/` 目錄新增動手練習。
-- **新增 Skill**：在 `.gcd/skills/` 目錄新增可重用技能，格式參考 `code-review/SKILL.md`。
+- **新增 Skill**：在 `.aixlarity/skills/` 目錄新增可重用技能，格式參考 `code-review/SKILL.md`。
 
 ### 🟡 中等難度
 
@@ -18,16 +18,16 @@
 
 ### 🔴 需要 Rust 經驗
 
-- **新增工具**：在 `crates/gcd-core/src/tools/` 實作新的 Tool trait。
-- **改善 Provider 適配**：在 `crates/gcd-core/src/agent/adapters/` 改善 API 格式處理。
+- **新增工具**：在 `crates/aixlarity-core/src/tools/` 實作新的 Tool trait。
+- **改善 Provider 適配**：在 `crates/aixlarity-core/src/agent/adapters/` 改善 API 格式處理。
 - **寫測試**：為現有功能補充單元測試。
 
 ## 開發環境設定
 
 ```bash
 # 克隆
-git clone https://github.com/voidful/GemiClawDex.git
-cd GemiClawDex
+git clone https://github.com/voidful/Aixlarity.git
+cd Aixlarity
 
 # 編譯
 cargo build
@@ -57,7 +57,7 @@ version: 1.0.0
 author: Your Name
 license: Apache-2.0
 metadata:
-  gcd:
+  aixlarity:
     tags: [tag1, tag2]
     related_skills: [existing-skill-name]
 ---

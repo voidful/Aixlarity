@@ -1,0 +1,172 @@
+<div class="chapter-header">
+    <span class="chapter-number">Demo</span>
+    <h1>Aixlarity IDE Demo 工作坊：用 20 分鐘教懂 Harness</h1>
+    <p class="chapter-desc">這一章是一份可直接拿去做分享、課堂或產品展示的腳本。目標不是炫耀 AI 會寫 code，而是讓觀眾看見 harness 如何讓 AI 行動變得可控、可驗證、可交付。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">Demo 的中心句</div>
+        <p><strong>模型負責生成可能的下一步；Harness 負責決定下一步能不能做、怎麼做、做完留下什麼證據、誰來批准。</strong>整場 demo 都圍繞這句話展開。</p>
+    </div>
+
+    <h2>Demo 前準備</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr><th>準備項目</th><th>指令或檢查</th><th>目的</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Rust daemon</td>
+                    <td><code>cargo build --release -p aixlarity</code></td>
+                    <td>確認 IDE 背後有可執行的 agent runtime。</td>
+                </tr>
+                <tr>
+                    <td>Electron artifact</td>
+                    <td><code>cd aixlarity-ide && npm run electron</code></td>
+                    <td>產生 Aixlarity.app，避免用錯舊 bundle identity。</td>
+                </tr>
+                <tr>
+                    <td>Submission preflight</td>
+                    <td><code>npm run test-aixlarity-submission</code></td>
+                    <td>確認 product identity、URL protocol、compiled entrypoints、release binary 都正確。</td>
+                </tr>
+                <tr>
+                    <td>UI smoke</td>
+                    <td><code>npm run test-aixlarity-ui</code></td>
+                    <td>確認 approval、Fleet、artifact inspector、diff review 能操作。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>20 分鐘展示流程</h2>
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">00</div>
+            <div class="roadmap-content">
+                <h3>開場：先拆掉「AI IDE = 聊天框」的印象</h3>
+                <p>先打開 Aixlarity IDE，不要立刻輸入 prompt。指給觀眾看 Chat、Fleet / Mission Control、Evidence、Provider、Local History。說明這些不是附屬功能，而是 harness 的控制面。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>送出小任務：讓 agent 產生可審核改動</h3>
+                <p>選一個小檔案，要求 agent 做安全的小修改，例如 rename、補錯誤訊息、補一個測試提示。保持任務小，讓觀眾專注在 harness，而不是解業務問題。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>停在 Approval Card：展示 permission gate</h3>
+                <p>當 agent 想跑 shell 或改檔時，停下來講解 Allow / Deny / Always 的差異。這裡要強調：permission 是 engine-level gate，不是 prompt 裡的一句「請小心」。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>打開 Terminal Replay：展示「測過」的證據</h3>
+                <p>讓觀眾看到 command、cwd、stdout、stderr、exit code、duration。這一段的重點是：agent 的自然語言總結不能取代 transcript。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>打開 Visual Diff Review：展示每輪 AI 改了什麼</h3>
+                <p>切換 side-by-side / unified，挑一個 hunk 留言或 approve。說明 review gate 為什麼比「整份 patch 看起來不錯」更可靠。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">05</div>
+            <div class="roadmap-content">
+                <h3>打開 Browser Recording：展示 managed browser evidence</h3>
+                <p>如果 demo 涉及前端，展示 DOM、console、network、screenshot、video。重點是：瀏覽器 agent 的價值不是會點網頁，而是能把它看到的世界附回任務。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">06</div>
+            <div class="roadmap-content">
+                <h3>回到 Mission Control：展示任務不是聊天訊息</h3>
+                <p>指給觀眾看 task status、timeline、approval、artifact count、audit。最後 approve artifact 或 export evidence，完成一次完整的人機協作閉環。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>講者備忘稿</h2>
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">可以照念的 90 秒開場</span>
+        </div>
+        <div class="window-body">
+<pre><code>今天我們不展示「AI 多會寫程式」。
+我們展示的是：AI 怎麼被放進一個可控、可驗證、可交付的工程外殼。
+
+如果只有模型，你得到的是一段回答。
+如果有 harness，你得到的是：
+- 一個任務狀態
+- 一組工具批准紀錄
+- 一份 terminal transcript
+- 一個 browser recording
+- 一份可逐 hunk 審核的 diff artifact
+- 一條可以重啟後繼續的 Mission Control timeline
+
+這就是 Aixlarity IDE 想教的事：
+模型是引擎，harness 才是產品。</code></pre>
+        </div>
+    </div>
+
+    <h2>觀眾常問問題</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr><th>問題</th><th>回答方向</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>這和一般 AI chat sidebar 差在哪？</td>
+                    <td>Chat sidebar 主要處理自然語言互動；Aixlarity IDE 把任務狀態、工具批准、diff review、terminal/browser evidence 都變成一級產品物件。</td>
+                </tr>
+                <tr>
+                    <td>為什麼要 fork VS Code？</td>
+                    <td>因為這裡要教的是完整 agent workbench，不只是 extension。Fork 讓 Mission Control、editor actions、IPC daemon、artifact workspace 能深度整合。</td>
+                </tr>
+                <tr>
+                    <td>多 provider 的教學價值是什麼？</td>
+                    <td>它逼你面對真實 harness 成本：protocol、stream parsing、tool schema、fallback、model identity、API key hygiene、workspace/user scope。</td>
+                </tr>
+                <tr>
+                    <td>為什麼一直強調 evidence？</td>
+                    <td>因為 production-ready agent 不能只說「我做完了」。它要能證明做了什麼、在哪裡做、結果是什麼、誰批准。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Workshop 作業</h2>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>作業 1：找出你的專案需要哪三種 artifact</h3>
+            <p>例如 code diff、test report、browser screenshot。不要先追求自動化，先定義什麼證據能讓 reviewer 放心。</p>
+        </div>
+        <div class="check-item">
+            <h3>作業 2：寫一條 approval policy</h3>
+            <p>列出哪些 shell command 可以 auto-allow，哪些必須 ask，哪些永遠 deny。這就是最小 permission harness。</p>
+        </div>
+        <div class="check-item">
+            <h3>作業 3：把 AGENTS.md 連到驗證迴圈</h3>
+            <p>在 AGENTS.md 裡明確寫出修改後要跑哪些測試，然後觀察 Terminal Replay 是否留下對應 transcript。</p>
+        </div>
+    </div>
+
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">Demo 成功的判準</div>
+        <p>如果觀眾最後只記得「Aixlarity 也是 AI IDE」，demo 還不夠好。如果觀眾最後能說出「好的 AI IDE 需要任務狀態、工具批准、證據、diff review、provider hygiene」，這場 demo 才真的把 harness 宣傳出去。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('harness-lab')">← IDE Harness Lab</button>
+    <button class="btn btn-primary" onclick="navigateTo('agents-md-workshop')">AGENTS.md 工作坊 →</button>
+</div>

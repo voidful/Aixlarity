@@ -1,16 +1,16 @@
 <div class="chapter-header"><span class="chapter-number">第 20 章</span><h1>MCP 協議客戶端</h1><p class="chapter-desc">連接外部工具伺服器 — <code>mcp.rs</code></p></div>
             <div class="content-body">
                 <h2>MCP (Model Context Protocol) 概述</h2>
-                <p>MCP 是 Anthropic 提出的開放標準，讓 AI Agent 能動態發現和呼叫外部工具。GCD 實作了 MCP 客戶端，透過 stdio 傳輸層與 MCP 伺服器通訊。</p>
+                <p>MCP 是 Anthropic 提出的開放標準，讓 AI Agent 能動態發現和呼叫外部工具。Aixlarity 實作了 MCP 客戶端，透過 stdio 傳輸層與 MCP 伺服器通訊。</p>
                 <h2>運作流程</h2>
                 <div class="pipeline">
-                    <div class="pipeline-step"><div class="pipeline-num">1</div><div class="pipeline-content">讀取 <code>.gcd/mcp.json</code> 配置</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">1</div><div class="pipeline-content">讀取 <code>.aixlarity/mcp.json</code> 配置</div></div>
                     <div class="pipeline-step"><div class="pipeline-num">2</div><div class="pipeline-content">啟動 MCP 伺服器子程序（例如 <code>npx @modelcontextprotocol/server-filesystem</code>）</div></div>
                     <div class="pipeline-step"><div class="pipeline-num">3</div><div class="pipeline-content">透過 JSON-RPC 2.0 發送 <code>tools/list</code> 請求，發現可用工具</div></div>
-                    <div class="pipeline-step"><div class="pipeline-num">4</div><div class="pipeline-content">將 MCP 工具包裝為 GCD 的 <code>Tool</code> trait 物件</div></div>
+                    <div class="pipeline-step"><div class="pipeline-num">4</div><div class="pipeline-content">將 MCP 工具包裝為 Aixlarity 的 <code>Tool</code> trait 物件</div></div>
                     <div class="pipeline-step"><div class="pipeline-num">5</div><div class="pipeline-content">Agent 呼叫 MCP 工具時，透過 JSON-RPC 轉發到伺服器</div></div>
                 </div>
-                <div class="source-ref"><strong>原始碼</strong>：<code>crates/gcd-core/src/mcp.rs</code></div>
+                <div class="source-ref"><strong>原始碼</strong>：<code>crates/aixlarity-core/src/mcp.rs</code></div>
             </div>
             <div class="chapter-nav">
                 <button class="btn btn-outline" onclick="navigateTo('ch19')">← 19：設計原理</button>

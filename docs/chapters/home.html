@@ -1,235 +1,280 @@
-<div class="hero hero-home">
-    <div class="hero-copy">
-        <div class="hero-badge">AI 程式助手的內部運作</div>
-        <h1 class="hero-title">
-            用 <span class="gradient-text">GemiClawDex</span>
-            <br>
-            搞懂 AI 寫程式助手是怎麼做出來的
-        </h1>
-        <p class="hero-desc">
-            你可能用過 ChatGPT、Copilot 或 Cursor 這類 AI 工具來幫你寫程式。
-            但你有沒有想過：<strong>它們背後是怎麼運作的？</strong>
-            這個網站用一個真正用 Rust 寫出來的開源專案，帶你一步步看懂
-            AI 程式助手的每一個零件是怎麼拼在一起的。
-        </p>
-
-        <div class="hero-actions">
-            <button class="btn btn-primary" onclick="navigateTo('starter')">3 分鐘入門</button>
-            <button class="btn btn-outline" onclick="navigateTo('overview')">看完整架構</button>
-        </div>
-    </div>
-
-    <div class="hero-stage revealable">
-        <div class="constellation">
-            <article class="signal-card origin-claude">
-                <div class="signal-label">學習對象一</div>
-                <h3>Claude Code</h3>
-                <p>怎麼組合提示詞、工具和安全規則</p>
-            </article>
-            <article class="signal-card origin-gemini">
-                <div class="signal-label">學習對象二</div>
-                <h3>Gemini CLI</h3>
-                <p>怎麼在終端機裡跑 AI、管理設定檔和外部工具</p>
-            </article>
-            <article class="signal-card origin-codex">
-                <div class="signal-label">學習對象三</div>
-                <h3>OpenAI Codex</h3>
-                <p>怎麼在本地端執行 AI 助手、控制權限和沙盒</p>
-            </article>
-            <div class="merge-core">
-                <span class="merge-kicker">主角</span>
-                <h3>GemiClawDex</h3>
-                <p>用 Rust 寫的 AI 程式助手教學範例</p>
+<section class="ide-product-hero revealable">
+    <div class="ide-product-visual" aria-hidden="true">
+        <div class="ide-window">
+            <div class="ide-titlebar">
+                <span></span><span></span><span></span>
+                <strong>Aixlarity IDE</strong>
             </div>
-            <div class="merge-line line-1"></div>
-            <div class="merge-line line-2"></div>
-            <div class="merge-line line-3"></div>
+            <div class="ide-workbench">
+                <aside class="ide-activity">
+                    <div class="ide-app-dot active"></div>
+                    <div class="ide-app-dot"></div>
+                    <div class="ide-app-dot"></div>
+                    <div class="ide-app-dot"></div>
+                </aside>
+                <section class="ide-mission-pane">
+                    <div class="ide-pane-title">Mission Control</div>
+                    <div class="ide-mission active">
+                        <span class="ide-status running"></span>
+                        <div>
+                            <strong>Fix checkout flow</strong>
+                            <small>browser evidence pending</small>
+                        </div>
+                    </div>
+                    <div class="ide-mission">
+                        <span class="ide-status review"></span>
+                        <div>
+                            <strong>Refactor provider switch</strong>
+                            <small>2 artifacts ready</small>
+                        </div>
+                    </div>
+                    <div class="ide-mission">
+                        <span class="ide-status waiting"></span>
+                        <div>
+                            <strong>Explain diagnostics</strong>
+                            <small>approval required</small>
+                        </div>
+                    </div>
+                </section>
+                <section class="ide-editor-pane">
+                    <div class="ide-tabs">
+                        <span class="active">checkout.ts</span>
+                        <span>diff review</span>
+                        <span>test report</span>
+                    </div>
+                    <div class="ide-code-line add">+ await browser.captureEvidence();</div>
+                    <div class="ide-code-line add">+ assertArtifact("network", "console", "video");</div>
+                    <div class="ide-code-line neutral">  return mission.complete({ verified: true });</div>
+                    <div class="ide-diff-strip">
+                        <span></span><span></span><span></span><span></span>
+                    </div>
+                </section>
+                <section class="ide-agent-pane">
+                    <div class="ide-pane-title">Agent Evidence</div>
+                    <div class="ide-evidence browser">DOM · console · network · screenshot</div>
+                    <div class="ide-evidence terminal">stdout · stderr · exit code · cwd</div>
+                    <div class="ide-evidence artifact">plan · diff · test report · approval</div>
+                    <div class="ide-provider-pill">Provider: OpenAI · Workspace scope</div>
+                </section>
+            </div>
         </div>
     </div>
+
+    <div class="ide-product-copy">
+        <div class="ide-brand-lockup">
+            <img src="assets/aixlarity-icon.svg" alt="" aria-hidden="true">
+            <div>
+                <span>Aixlarity IDE</span>
+                <strong>Open Agent Workbench</strong>
+            </div>
+        </div>
+        <div class="hero-badge">Open-source AI Agent IDE · Evidence-first Workflow</div>
+        <h1 class="ide-product-title hero-title">Aixlarity IDE</h1>
+        <p class="ide-product-subtitle">
+            為需要把 AI coding agent 放進真實工程流程的團隊而生。Aixlarity 把任務編排、每輪 diff、
+            瀏覽器與終端證據、多模型切換、Knowledge Ledger 收束成一個安靜、有秩序、可審核的工作台。
+        </p>
+        <div class="hero-actions">
+            <button class="btn btn-primary" onclick="navigateTo('ide')">看產品能力</button>
+            <button class="btn btn-outline" onclick="navigateTo('ide-demo-workshop')">跑一輪 Demo</button>
+            <button class="btn btn-outline" onclick="navigateTo('harness-lab')">理解 Harness</button>
+        </div>
+    </div>
+
+    <div class="ide-hero-tags" aria-label="Aixlarity IDE 核心能力">
+        <span>Mission Control</span>
+        <span>Review Gate</span>
+        <span>Evidence Trail</span>
+        <span>Provider Control</span>
+        <span>Open Learning</span>
+    </div>
+</section>
+
+<section class="ide-product-strip revealable" aria-label="Aixlarity IDE 產品定位">
+    <div>
+        <strong>給每天要 review AI 改動的工程師</strong>
+        <span>每輪 code change 都能進 diff、留言、approve 或 reject，不再靠信任聊天紀錄。</span>
+    </div>
+    <div>
+        <strong>給正在導入 agent workflow 的團隊</strong>
+        <span>長任務、背景 agent、危險命令、browser evidence 都有狀態與審核軌跡。</span>
+    </div>
+    <div>
+        <strong>給想做開源 AI IDE 的 builders</strong>
+        <span>Rust runtime、VS Code fork、provider switch、artifact system 都能讀、能改、能測。</span>
+    </div>
+</section>
+
+<section class="ide-capability-board revealable" aria-label="Aixlarity IDE 核心視覺功能">
+    <article class="capability-tile tile-mission">
+        <div class="capability-icon mission-icon">
+            <span></span><span></span><span></span>
+        </div>
+        <h2>Mission Control</h2>
+    </article>
+    <article class="capability-tile tile-review">
+        <div class="capability-icon review-icon">
+            <span></span><span></span><span></span>
+        </div>
+        <h2>Diff Review</h2>
+    </article>
+    <article class="capability-tile tile-evidence">
+        <div class="capability-icon evidence-icon">
+            <span></span><span></span><span></span><span></span>
+        </div>
+        <h2>Evidence Replay</h2>
+    </article>
+    <article class="capability-tile tile-provider">
+        <div class="capability-icon provider-icon">
+            <span></span><span></span><span></span>
+        </div>
+        <h2>Provider Switch</h2>
+    </article>
+</section>
+
+<section class="ide-interface-showcase revealable" aria-label="Aixlarity IDE interface screenshots">
+    <div class="section-heading compact-heading">
+        <span>Product Surface</span>
+        <h2>不是聊天外掛，是 AI agent 的工作台</h2>
+        <p>任務、審核、證據與模型切換都留在 IDE 介面裡，使用者可以在每一步看見 agent 做了什麼、卡在哪裡、用什麼證據證明。</p>
+    </div>
+    <div class="ide-screenshot-grid">
+        <figure class="ide-screenshot-card">
+            <img src="assets/aixlarity-ide-mission-control.png" alt="Aixlarity IDE Mission Control interface">
+            <figcaption>
+                <strong>Mission Control</strong>
+                <span>長任務、approval、artifact readiness 與 verification passport 同屏管理。</span>
+            </figcaption>
+        </figure>
+        <figure class="ide-screenshot-card">
+            <img src="assets/aixlarity-ide-diff-review.png" alt="Aixlarity IDE visual diff review interface">
+            <figcaption>
+                <strong>Visual Diff Review</strong>
+                <span>逐輪比較 AI 修改，讓每個 hunk 都能被確認、留言或退回。</span>
+            </figcaption>
+        </figure>
+        <figure class="ide-screenshot-card">
+            <img src="assets/aixlarity-ide-knowledge-ledger.png" alt="Aixlarity IDE Knowledge Ledger settings interface">
+            <figcaption>
+                <strong>Knowledge Ledger</strong>
+                <span>continuous learning 可審核、可匯出、可關閉，不藏在黑箱記憶裡。</span>
+            </figcaption>
+        </figure>
+    </div>
+</section>
+
+<div class="content-body ide-home-content">
+<h2>Aixlarity IDE 的主工作流</h2>
+<div class="ide-flow-visual revealable">
+    <div class="flow-track" aria-hidden="true">
+        <div class="flow-pulse"></div>
+    </div>
+    <article>
+        <span>Ask</span>
+        <strong>Context</strong>
+    </article>
+    <article>
+        <span>Plan</span>
+        <strong>Artifact</strong>
+    </article>
+    <article>
+        <span>Act</span>
+        <strong>Permission</strong>
+    </article>
+    <article>
+        <span>Prove</span>
+        <strong>Evidence</strong>
+    </article>
+    <article>
+        <span>Review</span>
+        <strong>Diff</strong>
+    </article>
 </div>
 
-<div class="stats-grid">
-    <article class="stat-card revealable">
-        <div class="stat-value">2</div>
-        <div class="stat-label">程式模組</div>
-        <p>CLI（使用者介面）和核心邏輯分開放，方便理解。</p>
+<h2>核心工作台</h2>
+<div class="feature-grid">
+    <article class="feature-card revealable">
+        <div class="feature-num">MC</div>
+        <h3>Mission Control</h3>
+        <p>多 workspace、多 task、多 agent 的任務控制台，支援 pause、resume、cancel、retry 與背景長任務追蹤。</p>
     </article>
-    <article class="stat-card revealable">
-        <div class="stat-value">3</div>
-        <div class="stat-label">學習對象</div>
-        <p>參考了 Claude Code、Gemini CLI、OpenAI Codex 的設計。</p>
+    <article class="feature-card revealable">
+        <div class="feature-num">AR</div>
+        <h3>Artifact Review</h3>
+        <p>Implementation Plan、Task List、Diff、Test Report、Screenshot、Browser Recording 都是可留言、可批准、可重生的 artifact。</p>
     </article>
-    <article class="stat-card revealable">
-        <div class="stat-value">59</div>
-        <div class="stat-label">通過的測試數</div>
-        <p>每個功能都有自動化測試，不是只有紙上說明。</p>
+    <article class="feature-card revealable">
+        <div class="feature-num">BR</div>
+        <h3>Integrated Browser Agent</h3>
+        <p>Managed browser 不只截圖，也能收 DOM、console、network、screenshot、video，並把 browser state 餵回 prompt。</p>
     </article>
-    <article class="stat-card revealable">
-        <div class="stat-value">11</div>
-        <div class="stat-label">內建工具</div>
-        <p>讀檔、寫檔、搜尋、執行指令、下載網頁、記憶、技能管理等等。</p>
+    <article class="feature-card revealable">
+        <div class="feature-num">TR</div>
+        <h3>Terminal Replay</h3>
+        <p>命令 ownership、stdout、stderr、exit code、cwd、env 摘要都可附到 artifact，避免「測過但沒有證據」。</p>
+    </article>
+    <article class="feature-card revealable">
+        <div class="feature-num">DF</div>
+        <h3>Visual Diff Review</h3>
+        <p>詳細視覺化每次 AI 修改，支援逐檔、逐 hunk、逐輪確認，讓 code review 成為 agent workflow 的核心。</p>
+    </article>
+    <article class="feature-card revealable">
+        <div class="feature-num">PV</div>
+        <h3>Provider Control Center</h3>
+        <p>OpenAI、Anthropic、Gemini 與相容端點可依 user/workspace scope 切換；provider 必須自己填模型，API key 不進匯出檔。</p>
+    </article>
+    <article class="feature-card revealable">
+        <div class="feature-num">KL</div>
+        <h3>Knowledge Ledger</h3>
+        <p>把 continuous learning 做成可審核規則表：rules、memory、workflow、MCP activation 都能匯出與關閉。</p>
+    </article>
+    <article class="feature-card revealable">
+        <div class="feature-num">EA</div>
+        <h3>Editor-native Actions</h3>
+        <p>diagnostic hover、Problems panel、selection、terminal output 都能直接送給 agent，不需要離開當前工作上下文。</p>
     </article>
 </div>
 
+<section class="ide-start-panel revealable">
+    <div>
+        <div class="callout-title">從原始碼啟動 IDE</div>
+        <p>這個首頁也會作為 IDE 的入口，所以它保留最短的開發者路徑：先啟動 Rust runtime，再啟動 VS Code fork 的工作台。</p>
+    </div>
+    <pre><code class="language-bash">cargo build --release -p aixlarity
+cd aixlarity-ide
+npm run electron
+npm run test-aixlarity-submission</code></pre>
+</section>
+
+<h2>它同時也是 Harness 教學網站</h2>
 <div class="reading-paths">
     <article class="path-card revealable">
-        <div class="path-duration">3 分鐘</div>
-        <h3>第一次接觸？從這裡開始</h3>
-        <p>用一個「請 AI 幫你 review 程式碼」的小例子，快速理解 AI 助手和普通聊天機器人有什麼不同。</p>
-        <button class="btn btn-outline" onclick="navigateTo('starter')">看入門章</button>
-    </article>
-    <article class="path-card revealable">
-        <div class="path-duration">再花 3 分鐘</div>
-        <h3>先搞懂這些名詞</h3>
-        <p>trust（信任）、permission（權限）、sandbox（沙盒）、session（工作記錄）⋯⋯ 這些名詞很容易搞混，這裡幫你一次分清楚。</p>
-        <button class="btn btn-outline" onclick="navigateTo('faq')">看名詞速查</button>
-    </article>
-    <article class="path-card revealable">
         <div class="path-duration">5 分鐘</div>
-        <h3>AI 助手的「外殼」是什麼？</h3>
-        <p>AI 模型本身只會聊天。要讓它變成能讀檔案、跑測試、修改程式碼的「助手」，需要一層外殼（叫做 harness）。這裡告訴你外殼包含什麼。</p>
-        <button class="btn btn-outline" onclick="navigateTo('intro')">從前言開始</button>
+        <h3>先看 IDE Demo</h3>
+        <p>用一個任務看懂 approval、terminal transcript、diff artifact、browser evidence 如何串成 harness。</p>
+        <button class="btn btn-outline" onclick="navigateTo('ide-demo-workshop')">看 Demo 腳本</button>
     </article>
     <article class="path-card revealable">
-        <div class="path-duration">15 分鐘</div>
-        <h3>整個系統怎麼組起來的</h3>
-        <p>從「使用者輸入一句話」到「AI 真的修改了你的檔案」，中間經過哪些步驟？這條路線帶你走一遍完整流程。</p>
-        <button class="btn btn-outline" onclick="navigateTo('pipeline')">看完整流程</button>
+        <div class="path-duration">10 分鐘</div>
+        <h3>理解 IDE 工作台</h3>
+        <p>把 Mission Control、Artifact System、Browser Agent、Terminal Replay 對到實際 UI。</p>
+        <button class="btn btn-outline" onclick="navigateTo('ide')">看 IDE 工作台</button>
     </article>
     <article class="path-card revealable">
         <div class="path-duration">30 分鐘</div>
-        <h3>設計決策：為什麼這樣做？</h3>
-        <p>AI 程式助手有很多做法可以選。GCD 參考了哪些產品的設計？又故意沒學哪些？為什麼？</p>
-        <button class="btn btn-outline" onclick="navigateTo('comp')">看設計比較</button>
-    </article>
-    <article class="path-card revealable">
-        <div class="path-duration">動手做</div>
-        <h3>寫你自己的 Harness</h3>
-        <p>學完概念後，最有效的下一步是動手。從寫 AGENTS.md 開始，到建立自訂 Skill，五個漸進式練習帶你從「看懂」走到「會做」。</p>
-        <button class="btn btn-outline" onclick="navigateTo('agents-md-workshop')">開始實戰</button>
+        <h3>追到 Rust runtime</h3>
+        <p>從 <code>aixlarityView.ts</code>、JSON-RPC、<code>app.rs</code>、<code>agent.rs</code> 一路看懂 agent loop。</p>
+        <button class="btn btn-outline" onclick="navigateTo('learn')">從文件走到原始碼</button>
     </article>
 </div>
 
 <div class="callout callout-tip revealable">
-    <div class="callout-title">建議的閱讀順序</div>
-    <p>如果你是第一次看，最順的讀法是：<strong>這一頁 → 前言 → Context Engineering → 入門章 → 架構全景 → 完整流程</strong>。想動手做的話，接著看 <strong>AGENTS.md 工作坊 → 驗證迴圈 → 練習題</strong>。先把「AI 助手的最小運作方式」看懂，後面的細節就不會覺得像在背名詞。</p>
+    <div class="callout-title">一句話定位</div>
+    <p><strong>Aixlarity IDE 是開源版 Antigravity-style AI agent workbench。</strong>它把模型、工具、權限、證據、diff、provider 和教學都放在同一個可觀察的產品介面裡。</p>
 </div>
-
-<div class="callout callout-info revealable">
-    <div class="callout-title">這個網站的重點</div>
-    <p>我們不是要推銷某個 AI 產品有多厲害。重點是讓你理解：<strong>一個 AI 程式助手需要哪些零件？這些零件怎麼接在一起？為什麼這樣設計？</strong>視覺和動畫只是幫你建立直覺，真正的內容都有程式碼可以對照。</p>
-</div>
-
-<h2>這個網站幫你回答的四個問題</h2>
-<div class="feature-grid">
-    <article class="feature-card revealable">
-        <div class="feature-num">1</div>
-        <h3>AI 助手的「外殼」是什麼？</h3>
-        <p>AI 模型只會生成文字。要讓它變成能讀檔案、跑指令、修改程式碼的助手，需要在外面包一層工程系統（提示詞組裝、工具管理、安全範圍、工作記錄⋯）。</p>
-    </article>
-    <article class="feature-card revealable">
-        <div class="feature-num">2</div>
-        <h3>GCD 做到了哪些功能？</h3>
-        <p>每個功能都有實際的 Rust 程式碼，並且通過自動化測試。不是說說而已。</p>
-    </article>
-    <article class="feature-card revealable">
-        <div class="feature-num">3</div>
-        <h3>和其他產品比，差在哪？</h3>
-        <p>不只是比功能多少，而是告訴你每個設計背後的取捨：學了什麼、沒學什麼、為什麼。</p>
-    </article>
-    <article class="feature-card revealable">
-        <div class="feature-num">4</div>
-        <h3>我可以怎麼用它來學習？</h3>
-        <p>提供閱讀路線、程式碼入口點和練習方向。讓你從「讀文件」走到「讀原始碼」再走到「自己動手改」。</p>
-    </article>
-</div>
-
-<h2>想知道什麼？直接跳過去</h2>
-<div class="comparison-table">
-    <table>
-        <thead>
-            <tr>
-                <th>你想知道的事</th>
-                <th>去哪裡看</th>
-                <th>你會學到什麼</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>AI 助手和普通聊天機器人差在哪？</td>
-                <td>入門章</td>
-                <td>用一個「review 程式碼」的例子，看見 agent 如何自己決定要讀哪些檔案、跑哪些指令。</td>
-            </tr>
-            <tr>
-                <td>「外殼」（Harness）到底包含什麼？</td>
-                <td>前言</td>
-                <td>從最簡單的「問一個問題」開始，一步步加上工具、安全、記錄，最後變成完整的助手系統。</td>
-            </tr>
-            <tr>
-                <td>trust、permission、sandbox 這些名詞搞不清楚</td>
-                <td>名詞速查</td>
-                <td>8 個最容易搞混的概念，用白話文一次講清楚。</td>
-            </tr>
-            <tr>
-                <td>同一個任務換不同 AI 模型（GPT、Gemini、Claude）會怎樣？</td>
-                <td>Provider 章</td>
-                <td>不同模型的 API 格式完全不一樣，GCD 怎麼讓你一鍵切換。</td>
-            </tr>
-            <tr>
-                <td>AI 跑太久、記憶體爆掉、API 掛了怎麼辦？</td>
-                <td>Runtime 章</td>
-                <td>自動壓縮對話、備援切換、token 用量追蹤⋯⋯ 這些保護機制怎麼運作。</td>
-            </tr>
-            <tr>
-                <td>權限、沙盒、提示詞怎麼一起配合？</td>
-                <td>流程章</td>
-                <td>從你打字到 AI 真的改了檔案，中間每一步驟的完整流程。</td>
-            </tr>
-            <tr>
-                <td>工作記錄（session）可以回放嗎？</td>
-                <td>執行證據章</td>
-                <td>每次執行都會留下完整記錄，可以回放、續接、分叉。</td>
-            </tr>
-            <tr>
-                <td>container 沙盒到底隔離了什麼？</td>
-                <td>Container 章</td>
-                <td>哪些指令會在 Docker 容器裡跑、哪些還是在你的電腦上跑。</td>
-            </tr>
-            <tr>
-                <td>MCP、plugin 和內建工具差在哪？</td>
-                <td>擴充章</td>
-                <td>三種不同層次的工具擴充方式，各自的安全範圍和限制。</td>
-            </tr>
-            <tr>
-                <td>hooks 是什麼？可以在 AI 執行前後做事嗎？</td>
-                <td>政策章</td>
-                <td>怎麼在 AI 呼叫工具前後插入自定義檢查或動作。</td>
-            </tr>
-            <tr>
-                <td>trust 規則具體影響了哪些功能？</td>
-                <td>Trust 章</td>
-                <td>哪些專案設定只有在信任的工作區才會載入、哪些一律可用。</td>
-            </tr>
-            <tr>
-                <td>最終送進 AI 的提示詞是怎麼拼出來的？</td>
-                <td>Prompt 章</td>
-                <td>你的輸入、專案規則、工具清單、歷史記錄是怎麼被組合成一份完整提示詞的。</td>
-            </tr>
-            <tr>
-                <td>AGENTS.md、command、skill 分別要怎麼用？</td>
-                <td>工作流章</td>
-                <td>專案規範、任務模板、方法論能力包：三種不同的設定方式和適用時機。</td>
-            </tr>
-            <tr>
-                <td>這個專案參考了誰？差異在哪？</td>
-                <td>產品比較章</td>
-                <td>和 Claude Code、Gemini CLI、OpenAI Codex 的設計決策比較。</td>
-            </tr>
-        </tbody>
-    </table>
 </div>
 
 <div class="chapter-nav">
     <button class="btn btn-outline" onclick="navigateTo('refs')">看參考來源</button>
-    <button class="btn btn-primary" onclick="navigateTo('intro')">下一章：什麼是 Harness →</button>
+    <button class="btn btn-primary" onclick="navigateTo('ide')">下一章：Aixlarity IDE →</button>
 </div>

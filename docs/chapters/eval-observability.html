@@ -1,7 +1,7 @@
 <div class="chapter-header">
     <span class="chapter-number">補充章</span>
     <h1>怎麼知道你的 Agent 做得好不好</h1>
-    <p class="chapter-desc">從「感覺有用」到「可量化衡量」。用 GCD 的內建工具做 agent 品質評估。</p>
+    <p class="chapter-desc">從「感覺有用」到「可量化衡量」。用 Aixlarity 的內建工具做 agent 品質評估。</p>
 </div>
 
 <div class="content-body">
@@ -20,7 +20,7 @@
         <div class="feature-card revealable">
             <div class="feature-num">2</div>
             <h3>Token 效率</h3>
-            <p>完成同一個任務，用了多少 token？GCD 的每次 session 都會自動追蹤 prompt / completion token 用量。更少的 token 意味著更低的成本和更快的回應。</p>
+            <p>完成同一個任務，用了多少 token？Aixlarity 的每次 session 都會自動追蹤 prompt / completion token 用量。更少的 token 意味著更低的成本和更快的回應。</p>
         </div>
         <div class="feature-card revealable">
             <div class="feature-num">3</div>
@@ -29,7 +29,7 @@
         </div>
     </div>
 
-    <h2>GCD 的內建可觀測性工具</h2>
+    <h2>Aixlarity 的內建可觀測性工具</h2>
 
     <div class="comparison-table">
         <table>
@@ -45,7 +45,7 @@
                 <tr>
                     <td><strong>Session JSONL</strong></td>
                     <td>完整的事件流：每一輪對話、每一次工具呼叫、每一個結果</td>
-                    <td><code>gcd sessions replay &lt;id&gt;</code></td>
+                    <td><code>aixlarity sessions replay &lt;id&gt;</code></td>
                 </tr>
                 <tr>
                     <td><strong>Coordinator 事件</strong></td>
@@ -72,16 +72,16 @@
         <div class="window-body">
 <pre><code class="language-bash"># A 組：沒有 AGENTS.md
 mv AGENTS.md AGENTS.md.bak
-gcd exec "在 src/cache.rs 加入 TTL 過期測試"
+aixlarity exec "在 src/cache.rs 加入 TTL 過期測試"
 # 記錄：token 用量、完成品質、工具呼叫次數
 
 # B 組：有 AGENTS.md
 mv AGENTS.md.bak AGENTS.md
-gcd exec "在 src/cache.rs 加入 TTL 過期測試"
+aixlarity exec "在 src/cache.rs 加入 TTL 過期測試"
 # 記錄：token 用量、完成品質、工具呼叫次數
 
 # 比較兩組的 session replay
-gcd sessions list</code></pre>
+aixlarity sessions list</code></pre>
         </div>
     </div>
 
@@ -91,14 +91,14 @@ gcd sessions list</code></pre>
     <p>如果你要系統化地評估 harness 效果，需要：</p>
     <ul>
         <li><strong>固定測試集</strong>：5-10 個有標準答案的任務（例如「為這個函數寫測試」「修復這個 bug」）</li>
-        <li><strong>自動化執行</strong>：用 <code>gcd exec --no-stream --json</code> 批次執行，收集 JSONL 輸出</li>
+        <li><strong>自動化執行</strong>：用 <code>aixlarity exec --no-stream --json</code> 批次執行，收集 JSONL 輸出</li>
         <li><strong>評分標準</strong>：測試通過（binary）、程式碼品質（LLM-as-judge）、token 成本</li>
         <li><strong>變數控制</strong>：每次只改一個 harness 組件（AGENTS.md、skill set、provider、permission level）</li>
     </ul>
 
     <div class="callout callout-tip revealable">
         <div class="callout-title">Hermes Agent 的做法</div>
-        <p>Hermes Agent 有一個完整的 <code>batch_runner.py</code>（55K 行）和 <code>environments/</code> 目錄，支援 RL 訓練環境、trajectory 壓縮、基準測試。GCD 的規模不需要這麼複雜，但核心概念是一樣的：固定任務、改變配置、量化比較。</p>
+        <p>Hermes Agent 有一個完整的 <code>batch_runner.py</code>（55K 行）和 <code>environments/</code> 目錄，支援 RL 訓練環境、trajectory 壓縮、基準測試。Aixlarity 的規模不需要這麼複雜，但核心概念是一樣的：固定任務、改變配置、量化比較。</p>
     </div>
 </div>
 

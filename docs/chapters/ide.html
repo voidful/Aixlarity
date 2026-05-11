@@ -1,0 +1,336 @@
+<div class="chapter-header">
+    <span class="chapter-number">IDE</span>
+    <h1>Aixlarity IDE：開源版 Antigravity 的 Harness 工作台</h1>
+    <p class="chapter-desc">Aixlarity IDE 基於 VS Code fork，但目標不是複製一個聊天側欄，而是把 agent harness 的任務控制、證據、審核、瀏覽器、終端機、provider、editor actions 全部做成可教學的產品表面。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">一句話定位</div>
+        <p>Aixlarity IDE 是 <strong>Harness Control Surface</strong>：TypeScript 前端負責 human-in-the-loop 操作與視覺化證據，Rust daemon 負責 agent loop、provider adapter、tool permission、session / mission persistence。兩邊用 JSON-RPC over Electron IPC 連接。</p>
+    </div>
+
+    <h2>為什麼 IDE 是教 Harness 最好的入口</h2>
+    <p>CLI 很適合展示 agent runtime，但很多 harness 問題在 CLI 裡不容易看見：人類何時批准？AI 每輪改了什麼？瀏覽器到底看到了什麼？終端機輸出怎麼附回任務？多個長任務如何恢復？IDE 把這些問題變成具體 UI。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Harness 問題</th>
+                    <th>IDE 表面</th>
+                    <th>後端責任</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>任務如何被建模</td>
+                    <td>Mission Control task cards</td>
+                    <td><code>mission_control/load</code> / <code>mission_control/save</code></td>
+                </tr>
+                <tr>
+                    <td>AI 修改如何被審核</td>
+                    <td>Artifact Inspector + Visual Diff Review</td>
+                    <td><code>artifacts/list</code> / <code>artifacts/review</code></td>
+                </tr>
+                <tr>
+                    <td>工具執行如何留下證據</td>
+                    <td>Terminal Replay + Browser Recording</td>
+                    <td>shell transcript、browser evidence、audit log</td>
+                </tr>
+                <tr>
+                    <td>高風險操作如何批准</td>
+                    <td>Approval Cards</td>
+                    <td>permission gate、approval request / response</td>
+                </tr>
+                <tr>
+                    <td>多模型如何安全切換</td>
+                    <td>Provider Control Center</td>
+                    <td>scoped provider registry、API key env、model validation</td>
+                </tr>
+                <tr>
+                    <td>編輯器上下文如何送給 agent</td>
+                    <td>hover / Problems / selection actions</td>
+                    <td><code>ide_context</code> + agent prompt assembly</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>整體架構</h2>
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">Aixlarity IDE control plane</span>
+        </div>
+        <div class="window-body">
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│ Aixlarity IDE (VS Code fork / Electron / TypeScript)    │
+│                                                         │
+│  Chat          Mission Control      Evidence Review     │
+│  Provider UI   Browser Control      Terminal Replay     │
+│  Editor Actions / Problems / Selection / Hover          │
+└───────────────┬─────────────────────────────────────────┘
+                │ JSON-RPC over IPC
+┌───────────────▼─────────────────────────────────────────┐
+│ aixlarity daemon (Rust)                                 │
+│                                                         │
+│  App command facade     Agent loop       Tool registry  │
+│  Provider adapters      Permissions      Mission state  │
+│  Sessions / History     Browser tool     Shell evidence │
+└─────────────────────────────────────────────────────────┘</code></pre>
+        </div>
+    </div>
+
+    <h2>P0：開源 Antigravity 必須有的五個核心面</h2>
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">P0</div>
+            <h3>Mission Control</h3>
+            <p>多 workspace、多 task、多 agent 的控制台。支援 pause / resume / cancel / retry，並把 task timeline、approval、artifact 和 audit 合在一起。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P0</div>
+            <h3>Artifact System</h3>
+            <p>Implementation Plan、Task List、Diff、Test Report、Screenshot、Browser Recording、Terminal Transcript 都是結構化 artifact，可留言、approve / reject、export evidence。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P0</div>
+            <h3>Integrated Browser Agent</h3>
+            <p>Browser evidence 不只截圖。它保留 DOM、console、network、screenshot、video 與 action timeline，讓 browser state 能回到 prompt 和 review。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P0</div>
+            <h3>Terminal Manager / Replay</h3>
+            <p>每個 command 都有 ownership、cwd、env 摘要、stdout、stderr、exit code、duration，可以附到 artifact，危險命令需要 approval。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P0</div>
+            <h3>Editor-native Agent Actions</h3>
+            <p>Diagnostic hover 的 Explain and fix、Problems panel 的 Send all to Agent、selection / terminal output send to agent，讓 agent 進入日常開發位置。</p>
+        </article>
+    </div>
+
+    <h2>Mission Control：從聊天窗變成任務控制台</h2>
+    <p>Fleet 以前比較像 session browser；現在 Mission Control 的重點是任務編排。任務不再只是對話紀錄，而是一個有狀態、有 timeline、有 artifacts、有 approval queue 的工作單元。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr><th>區塊</th><th>用途</th><th>教學價值</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Tasks</td>
+                    <td>顯示 running、paused、waiting_review、failed、completed 任務。</td>
+                    <td>學會把 agent work 建成狀態機，而不是一串聊天訊息。</td>
+                </tr>
+                <tr>
+                    <td>Pending Approvals</td>
+                    <td>集中處理 shell / write / patch 等高風險操作。</td>
+                    <td>學會 human-in-the-loop 的產品位置。</td>
+                </tr>
+                <tr>
+                    <td>Evidence</td>
+                    <td>所有 artifact 的 review queue 與 inspector。</td>
+                    <td>學會把 AI 輸出變成可驗收工件。</td>
+                </tr>
+                <tr>
+                    <td>Audit</td>
+                    <td>記錄 approval、review、thread、export 等事件。</td>
+                    <td>學會讓 agent 行為可追責。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Visual Diff Review：每輪 AI 修改都要能看懂</h2>
+    <p>Aixlarity 參考 JuxtaCode / Meld 的思路，把 AI 每次修改做成細緻的 visual diff review，而不是只顯示一段 patch。這是教學上很重要的一點：AI coding agent 的品質取決於「人能不能快速確認它改了什麼」。</p>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>Side-by-side / Unified 切換</h3>
+            <p>同一個 diff 可以用兩種視角檢查，適合不同類型的 reviewer。</p>
+        </div>
+        <div class="check-item">
+            <h3>Compare Rounds</h3>
+            <p>比較第 N 輪與第 N+1 輪 AI 修改，幫助使用者確認 agent 是否朝正確方向收斂。</p>
+        </div>
+        <div class="check-item">
+            <h3>Hunk Review</h3>
+            <p>每個 hunk 可以 approve、comment、copy evidence，讓 review 不必只有整份 approve / reject。</p>
+        </div>
+        <div class="check-item">
+            <h3>Review Gate</h3>
+            <p>如果仍有 open thread 或未審核 hunk，artifact 不應該被草率標為 ready。</p>
+        </div>
+    </div>
+
+    <h2>Browser Agent：把瀏覽器操作變成 evidence</h2>
+    <p>「AI 開網頁看過了」不是可驗證證據。Aixlarity 的 browser artifact 會把 DOM、console、network、screenshot、video、action timeline 整理成 artifact，讓 reviewer 能知道 agent 實際看到什麼、點了什麼、是否有前端錯誤。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">Browser evidence 包含什麼</span>
+        </div>
+        <div class="window-body">
+<pre><code>browser_recording artifact
+- action timeline
+- current URL and title
+- DOM snapshot / text summary
+- console events
+- network requests
+- screenshot
+- optional video
+- policy: allowed domains / blocked domains / capture switches</code></pre>
+        </div>
+    </div>
+
+    <h2>Terminal Replay：測試不是口頭宣稱</h2>
+    <p>開源 agent 尤其需要可追溯。Terminal Replay 會記錄命令的 ownership、cwd、env 摘要、stdout、stderr、exit code、duration。當 agent 說「測試通過」，IDE 裡應該能打開對應 transcript。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr><th>欄位</th><th>為什麼重要</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>command</code> + <code>cwd</code></td>
+                    <td>同一個指令在不同路徑下結果可能完全不同。</td>
+                </tr>
+                <tr>
+                    <td><code>stdout</code> / <code>stderr</code></td>
+                    <td>模型摘要可能漏掉 warning 或 partial failure，原始輸出要保留。</td>
+                </tr>
+                <tr>
+                    <td><code>exit_code</code></td>
+                    <td>最基本的機械驗收，不能只看自然語言。</td>
+                </tr>
+                <tr>
+                    <td><code>risk reasons</code></td>
+                    <td>危險命令需要讓使用者知道為什麼要批准。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Provider Control Center：多供應商不是雜湊設定</h2>
+    <p>Aixlarity 的 provider 管理吸收了 cc-switch 類工具的核心精神：切換要快，但設定要有秩序。IDE 支援 workspace / user scope、presets、import/export bundle、model required、API key env 管理，並避免把 raw API key 匯入專案。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">Scope</div>
+            <h3>User / Workspace</h3>
+            <p>個人 secret 留在 user scope，團隊可共享的 provider shape 放 workspace scope。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">Model</div>
+            <h3>API provider 必填模型</h3>
+            <p>避免「同 provider 不同模型」造成不可重現的 agent 行為。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">Bundle</div>
+            <h3>安全匯入匯出</h3>
+            <p>分享 provider 設計，不分享 API key。這是開源版本特別重要的底線。</p>
+        </article>
+    </div>
+
+    <h2>IDE Context：讓 agent 不靠使用者重述世界</h2>
+    <p>IDE 會把 active file、cursor、selection、diagnostics、Problems panel、terminal output 等上下文送給 daemon。這讓 agent 可以處理「這個錯誤」、「這段選取」、「這個 terminal output」這類自然工作流，而不是要求使用者手動貼一堆資訊。</p>
+
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">agent_chat 的 IDE context</span>
+        </div>
+        <div class="window-body">
+<pre><code>{
+  "method": "agent_chat",
+  "params": {
+    "prompt": "Explain and fix this diagnostic",
+    "persona": "Developer",
+    "provider": "workspace-openai",
+    "sandbox": "workspace-write",
+    "permission": "suggest",
+    "ide_context": {
+      "active_file": "/repo/src/app.rs",
+      "cursor_line": 42,
+      "selected_text": "...",
+      "diagnostics": "...",
+      "browser_state": "..."
+    }
+  }
+}</code></pre>
+        </div>
+    </div>
+
+    <h2>Submission Readiness：文件承諾要有測試背書</h2>
+    <p>這個 IDE 的產品品質不只靠手動檢查。專案包含多層 acceptance / readiness checks，確保功能不是文件上的願望。</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr><th>驗收</th><th>檢查內容</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>npm run test-aixlarity-quality</code></td>
+                    <td>CI-safe product gate：P1/P2、source readiness、provider readiness、docs 首頁品質。</td>
+                </tr>
+                <tr>
+                    <td><code>npm run test-aixlarity-p1</code></td>
+                    <td>P1 control-plane、provider、artifact、browser/terminal policy、studio 能力的靜態能力檢查。</td>
+                </tr>
+                <tr>
+                    <td><code>npm run test-aixlarity-p2</code></td>
+                    <td>後續 UX / product-quality capability groups。</td>
+                </tr>
+                <tr>
+                    <td><code>npm run test-aixlarity-ui</code></td>
+                    <td>實際啟動 Electron，操作 approval、Fleet、artifact inspector、diff review、hunk approval。</td>
+                </tr>
+                <tr>
+                    <td><code>npm run test-aixlarity-submission</code></td>
+                    <td>Release gate：先跑 product quality，再檢查 Electron artifact、Info.plist、URL protocol、release agent binary。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>原始碼入口</h2>
+    <div class="code-window slim revealable">
+        <div class="window-header">
+            <span class="window-title">最值得先看的檔案</span>
+        </div>
+        <div class="window-body">
+<pre><code>aixlarity-ide/src/vs/workbench/contrib/aixlarity/browser/
+├── aixlarity.contribution.ts
+│   ├── 註冊 ViewContainer
+│   ├── 註冊 editor / Problems / hover actions
+│   └── 註冊 IDE context tracker
+└── aixlarityView.ts
+    ├── Chat / provider / persona / approval UI
+    ├── Mission Control renderer
+    ├── Artifact inspector and visual diff review
+    ├── Browser Control Center
+    ├── Terminal Replay Center
+    ├── Studio policy workspace
+    └── JSON-RPC bridge to daemon
+
+crates/aixlarity-cli/src/main.rs
+└── JSON-RPC daemon methods
+
+crates/aixlarity-core/src/mission_control.rs
+└── durable state, artifacts, audit, workspace index</code></pre>
+        </div>
+    </div>
+
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">把 IDE 當教材的講法</div>
+        <p>最好的 demo 順序是：送出一個小任務 → approval card → terminal transcript → code diff artifact → hunk review → approve artifact → export evidence。這一輪能一次教完 permission、tool execution、evidence、artifact review、human approval 與 durable state。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('personas')">← Persona 與多智能體協作</button>
+    <button class="btn btn-primary" onclick="navigateTo('promptlab')">Prompt 解剖室 →</button>
+</div>

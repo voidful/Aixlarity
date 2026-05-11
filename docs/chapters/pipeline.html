@@ -8,7 +8,7 @@
     <h2>完整的執行流程</h2>
     <p>這條流程回答四個問題：<strong>①</strong> 哪些設定在 AI 回答前就決定好了？<strong>②</strong> 提示詞是怎麼組裝出來的？<strong>③</strong> 哪些操作會在執行前被安全檢查擋住？<strong>④</strong> 哪些結果會被保存？</p>
 
-    <p>GCD 的好處是，這些步驟在原始碼裡都看得到。你不用猜「大概會有信任檢查」，而是能直接找到 <code>Workspace::discover</code>、<code>TrustStore::evaluate</code>、<code>assemble_prompt</code>、<code>run_agent</code> 這些函式。</p>
+    <p>Aixlarity 的好處是，這些步驟在原始碼裡都看得到。你不用猜「大概會有信任檢查」，而是能直接找到 <code>Workspace::discover</code>、<code>TrustStore::evaluate</code>、<code>assemble_prompt</code>、<code>run_agent</code> 這些函式。</p>
 
     <div class="story" data-story="pipeline">
         <div class="story-visual">
@@ -116,7 +116,7 @@
         <article class="feature-card revealable">
             <div class="feature-num">D</div>
             <h3>session 是下一輪工作的基礎</h3>
-            <p>GCD 不是把 session 當旁邊的紀錄檔，而是能在 resume / fork 時把摘要重新插回 prompt，讓 workflow 有延續性。</p>
+            <p>Aixlarity 不是把 session 當旁邊的紀錄檔，而是能在 resume / fork 時把摘要重新插回 prompt，讓 workflow 有延續性。</p>
         </article>
     </div>
 
@@ -126,7 +126,7 @@
     <div class="checklist revealable">
         <div class="check-item">
             <h3>第一步：命令文字先被翻成 workflow 模板</h3>
-            <p><code>assemble_prompt</code> 會先試著解析 slash command。如果符合 <code>/review</code>，GCD 不是把這行文字原封不動丟給模型，而是從命令目錄找對應模板，再把 <code>{{args}}</code> 換成 <code>src/app.rs</code>。</p>
+            <p><code>assemble_prompt</code> 會先試著解析 slash command。如果符合 <code>/review</code>，Aixlarity 不是把這行文字原封不動丟給模型，而是從命令目錄找對應模板，再把 <code>{{args}}</code> 換成 <code>src/app.rs</code>。</p>
         </div>
         <div class="check-item">
             <h3>第二步：repo instructions 決定回答風格與工作方式</h3>
@@ -134,7 +134,7 @@
         </div>
         <div class="check-item">
             <h3>第三步：檔案與 shell 區塊被轉成受控上下文</h3>
-            <p>如果命令模板內含 <code>@{...}</code> 檔案注入，GCD 會展開成有行號的文字片段或目錄 listing；如果包含 <code>!{...}</code> shell 區塊，則不會直接執行，而是被轉寫成 待審核指令 與 approval 區段。</p>
+            <p>如果命令模板內含 <code>@{...}</code> 檔案注入，Aixlarity 會展開成有行號的文字片段或目錄 listing；如果包含 <code>!{...}</code> shell 區塊，則不會直接執行，而是被轉寫成 待審核指令 與 approval 區段。</p>
         </div>
         <div class="check-item">
             <h3>第四步：模型提出 tool call，runtime 才開始真正做事</h3>
@@ -146,7 +146,7 @@
         </div>
         <div class="check-item">
             <h3>第六步：整輪執行被寫入 checkpoint、events 與 session turn</h3>
-            <p>如果使用者開啟 checkpoint 或 工作記錄保存，GCD 會把 prompt、tool 次數、token 用量、events 與最終回答一併保存。這使得失敗執行也能被 replay，而不只是留下模糊印象。</p>
+            <p>如果使用者開啟 checkpoint 或 工作記錄保存，Aixlarity 會把 prompt、tool 次數、token 用量、events 與最終回答一併保存。這使得失敗執行也能被 replay，而不只是留下模糊印象。</p>
         </div>
     </div>
 
@@ -169,7 +169,7 @@ Trust: trusted
 Review src/app.rs and explain risks in Traditional Chinese.
 
 # 待審核指令
-- cargo test -p gcd-core</code></pre>
+- cargo test -p aixlarity-core</code></pre>
         </div>
     </div>
 
@@ -237,7 +237,7 @@ Review src/app.rs and explain risks in Traditional Chinese.
                 <tr>
                     <th>Gate</th>
                     <th>它攔的是什麼</th>
-                    <th>在 GCD 的原始碼依據</th>
+                    <th>在 Aixlarity 的原始碼依據</th>
                     <th>如果沒有這層會怎樣</th>
                 </tr>
             </thead>
@@ -309,7 +309,7 @@ permission=auto-edit
                 
                 <span>來源：<code>instructions.rs</code></span>
             </div>
-            <p>當工作區被視為可信，GCD 會讀 <code>AGENTS.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code>、<code>GCD.md</code>。如果沒有 信任檢查，惡意專案就能直接把模型操作規則塞進執行流程。</p>
+            <p>當工作區被視為可信，Aixlarity 會讀 <code>AGENTS.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code>、<code>AIXLARITY.md</code>。如果沒有 信任檢查，惡意專案就能直接把模型操作規則塞進執行流程。</p>
         </div>
 
         <div class="assembly-panel" data-assembly-panel="commands">
@@ -325,7 +325,7 @@ permission=auto-edit
                 
                 <span>來源：<code>skills.rs</code></span>
             </div>
-            <p>技能目前是顯式選用，而不是自動推斷。這代表 GCD 比比較保守，避免把 技能注入 變成難追蹤的看不見的提示詞演算法。</p>
+            <p>技能目前是顯式選用，而不是自動推斷。這代表 Aixlarity 比比較保守，避免把 技能注入 變成難追蹤的看不見的提示詞演算法。</p>
         </div>
 
         <div class="assembly-panel" data-assembly-panel="attachments">
@@ -341,7 +341,7 @@ permission=auto-edit
                 
                 <span>來源：<code>session/render.rs</code>、<code>app.rs</code></span>
             </div>
-            <p>resume / fork 時，系統會在 最終提示詞 前插入 工作接續摘要。這使 GCD 的 session 不是單純歷史檔案，而是會回傳到後續決策的 執行時的上下文。</p>
+            <p>resume / fork 時，系統會在 最終提示詞 前插入 工作接續摘要。這使 Aixlarity 的 session 不是單純歷史檔案，而是會回傳到後續決策的 執行時的上下文。</p>
         </div>
 
         <div class="assembly-panel" data-assembly-panel="final">
@@ -387,7 +387,7 @@ Name: code-review
         </div>
         <div class="check-item">
             <h3>Skills 的作用：帶入可選用的專題能力</h3>
-            <p>GCD 目前採顯式選用，而不是自動幫你猜。這個設計的取捨是可追蹤性優先，讓你知道是哪一個 skill 進了 prompt，而不是把 技能注入 變成看不透的推薦機制。</p>
+            <p>Aixlarity 目前採顯式選用，而不是自動幫你猜。這個設計的取捨是可追蹤性優先，讓你知道是哪一個 skill 進了 prompt，而不是把 技能注入 變成看不透的推薦機制。</p>
         </div>
         <div class="check-item">
             <h3>Attachments 與 Session Context 的作用：讓一次任務不再只是當下輸入</h3>
@@ -402,7 +402,7 @@ Name: code-review
         <article class="feature-card revealable">
             <div class="feature-num">1</div>
             <h3>Provider 先把回應解析成 tool call</h3>
-            <p>不同 provider 的 function calling / tool use 協定不同，因此 GCD 需要 adapter 去把它們整理成統一的 <code>ToolCall</code> 形狀。</p>
+            <p>不同 provider 的 function calling / tool use 協定不同，因此 Aixlarity 需要 adapter 去把它們整理成統一的 <code>ToolCall</code> 形狀。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">2</div>
@@ -451,7 +451,7 @@ Name: code-review
     </div>
 
     <h2>為什麼切換 AI 模型不是小事</h2>
-    <p>你可能以為「換個 API key 就好」，但實際上不同模型的工具呼叫格式、串流回覆方式、錯誤處理方式都完全不同。GCD 在 <code>run_agent</code> 裡統一處理這些差異，讓你可以一鍵切換 GPT、Gemini、Claude，而不用改任何其他程式碼。</p>
+    <p>你可能以為「換個 API key 就好」，但實際上不同模型的工具呼叫格式、串流回覆方式、錯誤處理方式都完全不同。Aixlarity 在 <code>run_agent</code> 裡統一處理這些差異，讓你可以一鍵切換 GPT、Gemini、Claude，而不用改任何其他程式碼。</p>
 
     <div class="comparison-table">
         <table>
@@ -459,7 +459,7 @@ Name: code-review
                 <tr>
                     <th>連接問題</th>
                     <th>如果只把它當 API wrapper 會怎樣</th>
-                    <th>GCD 現在怎麼處理</th>
+                    <th>Aixlarity 現在怎麼處理</th>
                 </tr>
             </thead>
             <tbody>
@@ -476,7 +476,7 @@ Name: code-review
                 <tr>
                     <td>錯誤與 fallback</td>
                     <td>主 provider 一出錯就整輪失敗，或只能在上層寫大量特判。</td>
-                    <td>GCD 會建立 fallback provider 清單，遇到可重試失敗時交由 adapter 層處理。</td>
+                    <td>Aixlarity 會建立 fallback provider 清單，遇到可重試失敗時交由 adapter 層處理。</td>
                 </tr>
                 <tr>
                     <td>上下文爆量</td>

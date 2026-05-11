@@ -1,0 +1,9 @@
+description = "Spec-driven development: architect designs first, then developer implements"
+prompt = """Use the spawn_agent tool with strategy "sequential" to run these two tasks in order:
+
+1. Task named "design" with persona "Architect": Analyze the following requirement and produce a technical design document with module structure, interfaces, risks, and an ADR. Requirement: {{args}}
+
+2. Task named "implement" with persona "Developer" (depends_on: ["design"]): Implement the architecture from the design phase using incremental vertical slices. Write tests for every behavior change. Follow existing code patterns.
+
+Present the final implementation summary including design decisions and code changes.
+"""

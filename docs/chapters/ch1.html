@@ -1,15 +1,15 @@
 <div class="chapter-header">
                 <span class="chapter-number">第 01 章</span>
                 <h1>專案概觀與設計哲學</h1>
-                <p class="chapter-desc">GCD 為何存在，以及它的設計核心信念</p>
+                <p class="chapter-desc">Aixlarity 為何存在，以及它的設計核心信念</p>
             </div>
             <div class="content-body">
                 <h2>為什麼要重造輪子？</h2>
-                <p>2025-2026 年，AI AI 助手 生態已有 Claude Code、Gemini CLI、OpenAI Codex 三大產品。GCD 並非要取代它們，而是要<strong>統合三者的精華</strong>，並以 Rust 解決它們的共同痛點：</p>
+                <p>2025-2026 年，AI coding agent 生態已經出現 Claude Code、Gemini CLI、OpenAI Codex 等成熟 CLI 產品，也開始走向更完整的 IDE workbench。Aixlarity 並非要取代它們，而是要<strong>把可觀察、可教學、可驗證的 harness 設計重新整理成開源版本</strong>：</p>
                 <ul>
-                    <li><strong>被單一供應商綁住</strong>：Claude Code 只能用 Anthropic、Gemini CLI 只能用 Google、Codex 只能用 OpenAI。GCD 讓你自由切換。</li>
+                    <li><strong>被單一供應商綁住</strong>：Claude Code 只能用 Anthropic、Gemini CLI 只能用 Google、Codex 只能用 OpenAI。Aixlarity 讓你自由切換。</li>
                     <li><strong>啟動開銷</strong>：Node.js/TypeScript 實作的 Agent 啟動需要數百毫秒。Rust 原生二進位啟動僅需幾毫秒。</li>
-                    <li><strong>記憶體效率</strong>：Rust 的零成本抽象讓 GCD 在長時間 session 中保持低記憶體佔用。</li>
+                    <li><strong>記憶體效率</strong>：Rust 的零成本抽象讓 Aixlarity 在長時間 session 中保持低記憶體佔用。</li>
                     <li><strong>安全保證</strong>：Rust 的型別系統從編譯期就排除大量 執行時 錯誤。</li>
                 </ul>
 
@@ -54,8 +54,8 @@
 
                 <h2>名稱由來</h2>
                 <blockquote>
-                    <strong>Gemi</strong>ni + <strong>Claw</strong> (Claude 的爪) + Co<strong>dex</strong> = <strong>GemiClawDex</strong><br>
-                    三大 AI AI 助手 的融合，螃蟹 (🦀 Ferris) 精神的 Rust 實作。
+                    <strong>Aixlarity</strong> 來自 AI + clarity：用清楚、可追溯的方式理解 AI coding agent 的外殼。<br>
+                    它不是某個產品名稱的拼字遊戲，而是一個把 runtime、IDE、證據與教學放在一起的開源 harness project。
                 </blockquote>
             </div>
             <div class="chapter-nav">

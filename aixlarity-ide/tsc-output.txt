@@ -1,0 +1,672 @@
+node_modules/jschardet/index.d.ts(9,32): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+node_modules/jschardet/index.d.ts(11,35): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+src/vs/amdX.ts(41,27): error TS2304: Cannot find name 'TrustedTypePolicy'.
+src/vs/base/browser/browser.ts(145,44): error TS2304: Cannot find name 'TrustedTypePolicyOptions'.
+src/vs/base/browser/browser.ts(148,22): error TS2304: Cannot find name 'TrustedTypePolicy'.
+src/vs/base/browser/browser.ts(148,79): error TS2304: Cannot find name 'TrustedTypePolicyOptions'.
+src/vs/base/browser/dnd.ts(15,19): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/browser/dom.ts(2359,138): error TS2339: Property 'editContext' does not exist on type 'HTMLElement'.
+src/vs/base/browser/domSanitize.ts(238,79): error TS2304: Cannot find name 'TrustedHTML'.
+src/vs/base/browser/domSanitize.ts(243,108): error TS2304: Cannot find name 'TrustedHTML'.
+src/vs/base/browser/domSanitize.ts(244,116): error TS2304: Cannot find name 'TrustedHTML'.
+src/vs/base/browser/domSanitize.ts(333,21): error TS2304: Cannot find name 'TrustedHTML'.
+src/vs/base/browser/markdownRenderer.ts(549,4): error TS2304: Cannot find name 'TrustedHTML'.
+src/vs/base/browser/markdownRenderer.ts(703,35): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/vs/base/browser/touch.ts(128,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/touch.ts(138,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/actionbar/actionbar.ts(16,8): error TS2882: Cannot find module or type declarations for side-effect import of './actionbar.css'.
+src/vs/base/browser/ui/actionbar/actionViewItems.ts(20,8): error TS2882: Cannot find module or type declarations for side-effect import of './actionbar.css'.
+src/vs/base/browser/ui/aria/aria.ts(7,8): error TS2882: Cannot find module or type declarations for side-effect import of './aria.css'.
+src/vs/base/browser/ui/breadcrumbs/breadcrumbsWidget.ts(15,8): error TS2882: Cannot find module or type declarations for side-effect import of './breadcrumbsWidget.css'.
+src/vs/base/browser/ui/breadcrumbs/breadcrumbsWidget.ts(296,20): error TS18046: 'e' is of type 'unknown'.
+src/vs/base/browser/ui/breadcrumbs/breadcrumbsWidget.ts(297,21): error TS18046: 'e' is of type 'unknown'.
+src/vs/base/browser/ui/button/button.ts(22,8): error TS2882: Cannot find module or type declarations for side-effect import of './button.css'.
+src/vs/base/browser/ui/contextview/contextview.ts(13,8): error TS2882: Cannot find module or type declarations for side-effect import of './contextview.css'.
+src/vs/base/browser/ui/countBadge/countBadge.ts(8,8): error TS2882: Cannot find module or type declarations for side-effect import of './countBadge.css'.
+src/vs/base/browser/ui/dialog/dialog.ts(6,8): error TS2882: Cannot find module or type declarations for side-effect import of './dialog.css'.
+src/vs/base/browser/ui/dnd/dnd.ts(7,8): error TS2882: Cannot find module or type declarations for side-effect import of './dnd.css'.
+src/vs/base/browser/ui/dropdown/dropdown.ts(19,8): error TS2882: Cannot find module or type declarations for side-effect import of './dropdown.css'.
+src/vs/base/browser/ui/dropdown/dropdownActionViewItem.ts(22,8): error TS2882: Cannot find module or type declarations for side-effect import of './dropdown.css'.
+src/vs/base/browser/ui/findinput/findInput.ts(18,8): error TS2882: Cannot find module or type declarations for side-effect import of './findInput.css'.
+src/vs/base/browser/ui/findinput/replaceInput.ts(17,8): error TS2882: Cannot find module or type declarations for side-effect import of './findInput.css'.
+src/vs/base/browser/ui/grid/grid.ts(10,8): error TS2882: Cannot find module or type declarations for side-effect import of './gridview.css'.
+src/vs/base/browser/ui/grid/gridview.ts(15,8): error TS2882: Cannot find module or type declarations for side-effect import of './gridview.css'.
+src/vs/base/browser/ui/hover/hoverWidget.ts(11,8): error TS2882: Cannot find module or type declarations for side-effect import of './hoverWidget.css'.
+src/vs/base/browser/ui/inputbox/inputBox.ts(22,8): error TS2882: Cannot find module or type declarations for side-effect import of './inputBox.css'.
+src/vs/base/browser/ui/keybindingLabel/keybindingLabel.ts(15,8): error TS2882: Cannot find module or type declarations for side-effect import of './keybindingLabel.css'.
+src/vs/base/browser/ui/list/listView.ts(1121,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listView.ts(1122,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listView.ts(1123,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listView.ts(1124,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listView.ts(1125,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listView.ts(1126,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listView.ts(1127,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listView.ts(1128,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listView.ts(1129,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listView.ts(1130,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listView.ts(1131,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listWidget.ts(29,8): error TS2882: Cannot find module or type declarations for side-effect import of './list.css'.
+src/vs/base/browser/ui/list/listWidget.ts(127,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listWidget.ts(314,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listWidget.ts(1426,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listWidget.ts(1430,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listWidget.ts(1455,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listWidget.ts(1485,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listWidget.ts(1486,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listWidget.ts(1487,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listWidget.ts(1489,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/list/listWidget.ts(1490,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/progressbar/progressbar.ts(12,8): error TS2882: Cannot find module or type declarations for side-effect import of './progressbar.css'.
+src/vs/base/browser/ui/radio/radio.ts(9,8): error TS2882: Cannot find module or type declarations for side-effect import of './radio.css'.
+src/vs/base/browser/ui/sash/sash.ts(15,8): error TS2882: Cannot find module or type declarations for side-effect import of './sash.css'.
+src/vs/base/browser/ui/sash/sash.ts(181,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/sash/sash.ts(186,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/sash/sash.ts(200,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/sash/sash.ts(205,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/sash/sash.ts(219,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/sash/sash.ts(224,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/browser/ui/sash/sash.ts(435,25): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/browser/ui/scrollbar/scrollableElement.ts(20,8): error TS2882: Cannot find module or type declarations for side-effect import of './media/scrollbars.css'.
+src/vs/base/browser/ui/selectBox/selectBox.ts(13,8): error TS2882: Cannot find module or type declarations for side-effect import of './selectBox.css'.
+src/vs/base/browser/ui/selectBox/selectBoxCustom.ts(26,8): error TS2882: Cannot find module or type declarations for side-effect import of './selectBoxCustom.css'.
+src/vs/base/browser/ui/splitview/paneview.ts(18,8): error TS2882: Cannot find module or type declarations for side-effect import of './paneview.css'.
+src/vs/base/browser/ui/splitview/splitview.ts(17,8): error TS2882: Cannot find module or type declarations for side-effect import of './splitview.css'.
+src/vs/base/browser/ui/toggle/toggle.ts(20,8): error TS2882: Cannot find module or type declarations for side-effect import of './toggle.css'.
+src/vs/base/browser/ui/toolbar/toolbar.ts(17,8): error TS2882: Cannot find module or type declarations for side-effect import of './toolbar.css'.
+src/vs/base/browser/ui/tree/abstractTree.ts(35,8): error TS2882: Cannot find module or type declarations for side-effect import of './media/tree.css'.
+src/vs/base/common/actions.ts(192,4): error TS2322: Type 'unknown' is not assignable to type 'Error | undefined'.
+src/vs/base/common/async.ts(164,50): error TS2304: Cannot find name 'Thenable'.
+src/vs/base/common/async.ts(523,29): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/async.ts(1016,18): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/async.ts(1105,24): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/async.ts(1190,25): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/async.ts(1570,4): error TS2322: Type 'unknown' is not assignable to type 'Error | undefined'.
+src/vs/base/common/async.ts(2044,17): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error'.
+src/vs/base/common/async.ts(2209,19): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error'.
+src/vs/base/common/async.ts(2400,24): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error'.
+src/vs/base/common/async.ts(2460,21): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error'.
+src/vs/base/common/async.ts(2461,21): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error'.
+src/vs/base/common/collections.ts(125,3): error TS2416: Property 'entries' in type 'SetWithKey<T>' is not assignable to the same property in base type 'Set<T>'.
+  Type '() => IterableIterator<[T, T]>' is not assignable to type '() => SetIterator<[T, T]>'.
+    Type 'IterableIterator<[T, T]>' is missing the following properties from type 'SetIterator<[T, T]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/collections.ts(131,2): error TS2416: Property 'keys' in type 'SetWithKey<T>' is not assignable to the same property in base type 'Set<T>'.
+  Type '() => IterableIterator<T>' is not assignable to type '() => SetIterator<T>'.
+    Type 'IterableIterator<T>' is missing the following properties from type 'SetIterator<T>': map, filter, take, drop, and 8 more.
+src/vs/base/common/collections.ts(135,3): error TS2416: Property 'values' in type 'SetWithKey<T>' is not assignable to the same property in base type 'Set<T>'.
+  Type '() => IterableIterator<T>' is not assignable to type '() => SetIterator<T>'.
+    Type 'IterableIterator<T>' is missing the following properties from type 'SetIterator<T>': map, filter, take, drop, and 8 more.
+src/vs/base/common/collections.ts(146,69): error TS2345: Argument of type 'this' is not assignable to parameter of type 'Set<T>'.
+  Type 'SetWithKey<T>' is missing the following properties from type 'Set<T>': union, intersection, difference, symmetricDifference, and 3 more.
+src/vs/base/common/collections.ts(149,2): error TS2416: Property '[Symbol.iterator]' in type 'SetWithKey<T>' is not assignable to the same property in base type 'Set<T>'.
+  Type '() => IterableIterator<T>' is not assignable to type '() => SetIterator<T>'.
+    Type 'IterableIterator<T>' is missing the following properties from type 'SetIterator<T>': map, filter, take, drop, and 8 more.
+src/vs/base/common/dataTransfer.ts(20,14): error TS2304: Cannot find name 'Thenable'.
+src/vs/base/common/event.ts(272,15): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/event.ts(378,15): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/event.ts(409,33): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/event.ts(1562,19): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/history.ts(164,3): error TS2740: Type 'SetWithKey<T>' is missing the following properties from type 'Set<T>': union, intersection, difference, symmetricDifference, and 3 more.
+src/vs/base/common/lazy.ts(39,5): error TS2322: Type 'unknown' is not assignable to type 'Error | undefined'.
+src/vs/base/common/lifecycle.ts(972,9): error TS2345: Argument of type 'ResourceMap<V>' is not assignable to parameter of type 'Map<URI, V>'.
+  The types returned by 'entries()' are incompatible between these types.
+    Type 'IterableIterator<[URI, V]>' is missing the following properties from type 'MapIterator<[URI, V]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/linkedText.ts(20,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/base/common/map.ts(124,32): error TS2345: Argument of type 'this' is not assignable to parameter of type 'Map<URI, T>'.
+  Type 'ResourceMap<T>' is not assignable to type 'Map<URI, T>'.
+    The types returned by 'entries()' are incompatible between these types.
+      Type 'IterableIterator<[URI, T]>' is missing the following properties from type 'MapIterator<[URI, T]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(128,3): error TS2416: Property 'values' in type 'ResourceMap<T>' is not assignable to the same property in base type 'Map<URI, T>'.
+  Type '() => IterableIterator<T>' is not assignable to type '() => MapIterator<T>'.
+    Type 'IterableIterator<T>' is missing the following properties from type 'MapIterator<T>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(134,3): error TS2416: Property 'keys' in type 'ResourceMap<T>' is not assignable to the same property in base type 'Map<URI, T>'.
+  Type '() => IterableIterator<URI>' is not assignable to type '() => MapIterator<URI>'.
+    Type 'IterableIterator<URI>' is missing the following properties from type 'MapIterator<URI>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(140,3): error TS2416: Property 'entries' in type 'ResourceMap<T>' is not assignable to the same property in base type 'Map<URI, T>'.
+  Type '() => IterableIterator<[URI, T]>' is not assignable to type '() => MapIterator<[URI, T]>'.
+    Type 'IterableIterator<[URI, T]>' is missing the following properties from type 'MapIterator<[URI, T]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(146,3): error TS2416: Property '[Symbol.iterator]' in type 'ResourceMap<T>' is not assignable to the same property in base type 'Map<URI, T>'.
+  Type '() => IterableIterator<[URI, T]>' is not assignable to type '() => MapIterator<[URI, T]>'.
+    Type 'IterableIterator<[URI, T]>' is missing the following properties from type 'MapIterator<[URI, T]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(189,73): error TS2345: Argument of type 'this' is not assignable to parameter of type 'Set<URI>'.
+  Type 'ResourceSet' is missing the following properties from type 'Set<URI>': union, intersection, difference, symmetricDifference, and 3 more.
+src/vs/base/common/map.ts(196,2): error TS2416: Property 'entries' in type 'ResourceSet' is not assignable to the same property in base type 'Set<URI>'.
+  Type '() => IterableIterator<[URI, URI]>' is not assignable to type '() => SetIterator<[URI, URI]>'.
+    Type 'IterableIterator<[URI, URI]>' is missing the following properties from type 'SetIterator<[URI, URI]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(200,2): error TS2416: Property 'keys' in type 'ResourceSet' is not assignable to the same property in base type 'Set<URI>'.
+  Type '() => IterableIterator<URI>' is not assignable to type '() => SetIterator<URI>'.
+    Type 'IterableIterator<URI>' is missing the following properties from type 'SetIterator<URI>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(204,2): error TS2416: Property 'values' in type 'ResourceSet' is not assignable to the same property in base type 'Set<URI>'.
+  Type '() => IterableIterator<URI>' is not assignable to type '() => SetIterator<URI>'.
+    Type 'IterableIterator<URI>' is missing the following properties from type 'SetIterator<URI>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(208,2): error TS2416: Property '[Symbol.iterator]' in type 'ResourceSet' is not assignable to the same property in base type 'Set<URI>'.
+  Type '() => IterableIterator<URI>' is not assignable to type '() => SetIterator<URI>'.
+    Type 'IterableIterator<URI>' is missing the following properties from type 'SetIterator<URI>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(343,2): error TS2416: Property 'forEach' in type 'LinkedMap<K, V>' is not assignable to the same property in base type 'Map<K, V>'.
+  Type '(callbackfn: (value: V, key: K, map: LinkedMap<K, V>) => void, thisArg?: unknown) => void' is not assignable to type '(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any) => void'.
+    Types of parameters 'callbackfn' and 'callbackfn' are incompatible.
+      Types of parameters 'map' and 'map' are incompatible.
+        Type 'LinkedMap<K, V>' is not assignable to type 'Map<K, V>'.
+          The types returned by 'entries()' are incompatible between these types.
+            Type 'IterableIterator<[K, V]>' is missing the following properties from type 'MapIterator<[K, V]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(359,2): error TS2416: Property 'keys' in type 'LinkedMap<K, V>' is not assignable to the same property in base type 'Map<K, V>'.
+  Type '() => IterableIterator<K>' is not assignable to type '() => MapIterator<K>'.
+    Type 'IterableIterator<K>' is missing the following properties from type 'MapIterator<K>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(383,2): error TS2416: Property 'values' in type 'LinkedMap<K, V>' is not assignable to the same property in base type 'Map<K, V>'.
+  Type '() => IterableIterator<V>' is not assignable to type '() => MapIterator<V>'.
+    Type 'IterableIterator<V>' is missing the following properties from type 'MapIterator<V>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(407,2): error TS2416: Property 'entries' in type 'LinkedMap<K, V>' is not assignable to the same property in base type 'Map<K, V>'.
+  Type '() => IterableIterator<[K, V]>' is not assignable to type '() => MapIterator<[K, V]>'.
+    Type 'IterableIterator<[K, V]>' is missing the following properties from type 'MapIterator<[K, V]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/map.ts(431,2): error TS2416: Property '[Symbol.iterator]' in type 'LinkedMap<K, V>' is not assignable to the same property in base type 'Map<K, V>'.
+  Type '() => IterableIterator<[K, V]>' is not assignable to type '() => MapIterator<[K, V]>'.
+    Type 'IterableIterator<[K, V]>' is missing the following properties from type 'MapIterator<[K, V]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/network.ts(366,18): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+src/vs/base/common/network.ts(367,37): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+src/vs/base/common/observableInternal/logging/debugger/utils.ts(9,20): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/observableInternal/logging/debugger/utils.ts(29,20): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/observableInternal/map.ts(15,11): error TS2322: Type 'ISettableObservable<this, void>' is not assignable to type 'IObservable<Map<K, V>>'.
+  The types returned by 'get()' are incompatible between these types.
+    Type 'this' is not assignable to type 'Map<K, V>'.
+      Type 'ObservableMap<K, V>' is not assignable to type 'Map<K, V>'.
+        The types returned by 'entries()' are incompatible between these types.
+          Type 'IterableIterator<[K, V]>' is missing the following properties from type 'MapIterator<[K, V]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/observableInternal/map.ts(56,41): error TS2345: Argument of type 'this' is not assignable to parameter of type 'Map<K, V>'.
+  Type 'ObservableMap<K, V>' is not assignable to type 'Map<K, V>'.
+    The types returned by 'entries()' are incompatible between these types.
+      Type 'IterableIterator<[K, V]>' is missing the following properties from type 'MapIterator<[K, V]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/observableInternal/map.ts(60,3): error TS2416: Property 'entries' in type 'ObservableMap<K, V>' is not assignable to the same property in base type 'Map<K, V>'.
+  Type '() => IterableIterator<[K, V]>' is not assignable to type '() => MapIterator<[K, V]>'.
+    Type 'IterableIterator<[K, V]>' is missing the following properties from type 'MapIterator<[K, V]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/observableInternal/map.ts(64,3): error TS2416: Property 'keys' in type 'ObservableMap<K, V>' is not assignable to the same property in base type 'Map<K, V>'.
+  Type '() => IterableIterator<K>' is not assignable to type '() => MapIterator<K>'.
+    Type 'IterableIterator<K>' is missing the following properties from type 'MapIterator<K>': map, filter, take, drop, and 8 more.
+src/vs/base/common/observableInternal/map.ts(68,3): error TS2416: Property 'values' in type 'ObservableMap<K, V>' is not assignable to the same property in base type 'Map<K, V>'.
+  Type '() => IterableIterator<V>' is not assignable to type '() => MapIterator<V>'.
+    Type 'IterableIterator<V>' is missing the following properties from type 'MapIterator<V>': map, filter, take, drop, and 8 more.
+src/vs/base/common/observableInternal/map.ts(72,2): error TS2416: Property '[Symbol.iterator]' in type 'ObservableMap<K, V>' is not assignable to the same property in base type 'Map<K, V>'.
+  Type '() => IterableIterator<[K, V]>' is not assignable to type '() => MapIterator<[K, V]>'.
+    Type 'IterableIterator<[K, V]>' is missing the following properties from type 'MapIterator<[K, V]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/observableInternal/set.ts(15,11): error TS2322: Type 'ISettableObservable<this, void>' is not assignable to type 'IObservable<Set<T>>'.
+  The types returned by 'get()' are incompatible between these types.
+    Type 'this' is not assignable to type 'Set<T>'.
+      Type 'ObservableSet<T>' is missing the following properties from type 'Set<T>': union, intersection, difference, symmetricDifference, and 3 more.
+src/vs/base/common/observableInternal/set.ts(56,3): error TS2416: Property 'entries' in type 'ObservableSet<T>' is not assignable to the same property in base type 'Set<T>'.
+  Type '() => IterableIterator<[T, T]>' is not assignable to type '() => SetIterator<[T, T]>'.
+    Type 'IterableIterator<[T, T]>' is missing the following properties from type 'SetIterator<[T, T]>': map, filter, take, drop, and 8 more.
+src/vs/base/common/observableInternal/set.ts(62,3): error TS2416: Property 'keys' in type 'ObservableSet<T>' is not assignable to the same property in base type 'Set<T>'.
+  Type '() => IterableIterator<T>' is not assignable to type '() => SetIterator<T>'.
+    Type 'IterableIterator<T>' is missing the following properties from type 'SetIterator<T>': map, filter, take, drop, and 8 more.
+src/vs/base/common/observableInternal/set.ts(66,3): error TS2416: Property 'values' in type 'ObservableSet<T>' is not assignable to the same property in base type 'Set<T>'.
+  Type '() => IterableIterator<T>' is not assignable to type '() => SetIterator<T>'.
+    Type 'IterableIterator<T>' is missing the following properties from type 'SetIterator<T>': map, filter, take, drop, and 8 more.
+src/vs/base/common/observableInternal/set.ts(70,2): error TS2416: Property '[Symbol.iterator]' in type 'ObservableSet<T>' is not assignable to the same property in base type 'Set<T>'.
+  Type '() => IterableIterator<T>' is not assignable to type '() => SetIterator<T>'.
+    Type 'IterableIterator<T>' is missing the following properties from type 'SetIterator<T>': map, filter, take, drop, and 8 more.
+src/vs/base/common/observableInternal/utils/utils.ts(41,15): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/observableInternal/utils/utils.ts(91,15): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/observableInternal/utils/utils.ts(136,15): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/common/observableInternal/utils/utils.ts(173,15): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/parts/ipc/common/ipc.net.ts(500,28): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/parts/ipc/common/ipc.net.ts(818,31): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/parts/ipc/common/ipc.net.ts(823,31): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/parts/ipc/common/ipc.net.ts(825,30): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/parts/ipc/common/ipc.ts(324,16): error TS2304: Cannot find name 'Timeout'.
+src/vs/base/parts/ipc/common/ipc.ts(762,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/editor/common/languages.ts(183,56): error TS2304: Cannot find name 'Thenable'.
+src/vs/editor/common/languages/languageConfigurationRegistry.ts(70,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/languages/languageConfigurationRegistry.ts(71,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/textModel.ts(225,264): error TS2345: Argument of type 'SetWithKey<LineHeightChangingDecoration> | null' is not assignable to parameter of type 'Set<LineHeightChangingDecoration> | null'.
+  Type 'SetWithKey<LineHeightChangingDecoration>' is missing the following properties from type 'Set<LineHeightChangingDecoration>': union, intersection, difference, symmetricDifference, and 3 more.
+src/vs/editor/common/model/textModel.ts(310,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/textModel.ts(311,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/textModel.ts(312,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/textModel.ts(313,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/tokens/tokenizationTextModelPart.ts(55,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/tokens/tokenizationTextModelPart.ts(56,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/tokens/tokenizationTextModelPart.ts(57,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/tokens/tokenizationTextModelPart.ts(58,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/tokens/treeSitter/treeSitterSyntaxTokenBackend.ts(35,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/tokens/treeSitter/treeSitterSyntaxTokenBackend.ts(36,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/tokens/treeSitter/treeSitterTokenizationImpl.ts(48,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/tokens/treeSitter/treeSitterTree.ts(41,3): error TS1206: Decorators are not valid here.
+src/vs/editor/common/model/tokens/treeSitter/treeSitterTree.ts(42,3): error TS1206: Decorators are not valid here.
+src/vs/nls.ts(7,20): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+src/vs/nls.ts(11,20): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(39,8): error TS2882: Cannot find module or type declarations for side-effect import of './menuEntryActionViewItem.css'.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(189,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(190,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(191,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(192,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(193,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(194,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(220,36): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'NotificationMessage | NotificationMessage[]'.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(384,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(385,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(386,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(446,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(447,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(448,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(449,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(450,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(451,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(604,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/menuEntryActionViewItem.ts(605,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(94,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(95,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(96,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(97,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(98,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(99,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(345,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(346,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(347,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(348,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(349,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(350,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(351,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/browser/toolbar.ts(352,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/actions.ts(590,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/actions.ts(591,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/menuService.ts(26,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/menuService.ts(27,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/menuService.ts(28,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/menuService.ts(67,14): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/menuService.ts(269,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/menuService.ts(270,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/menuService.ts(271,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/menuService.ts(380,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/menuService.ts(381,3): error TS1206: Decorators are not valid here.
+src/vs/platform/actions/common/menuService.ts(382,3): error TS1206: Decorators are not valid here.
+src/vs/platform/environment/common/environmentService.ts(46,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(49,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(52,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(55,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(58,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(61,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(64,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(67,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(70,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(82,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(85,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(88,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(91,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(94,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(104,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(107,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(110,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(120,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(130,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(150,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(170,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(186,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(191,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(232,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(239,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(241,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(253,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(259,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(262,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(265,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(268,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(271,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/environment/common/environmentService.ts(284,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/history/browser/contextScopedHistoryWidget.ts(79,3): error TS1206: Decorators are not valid here.
+src/vs/platform/history/browser/contextScopedHistoryWidget.ts(91,3): error TS1206: Decorators are not valid here.
+src/vs/platform/history/browser/contextScopedHistoryWidget.ts(102,3): error TS1206: Decorators are not valid here.
+src/vs/platform/hover/browser/hover.ts(49,3): error TS1206: Decorators are not valid here.
+src/vs/platform/hover/browser/hover.ts(50,3): error TS1206: Decorators are not valid here.
+src/vs/platform/opener/browser/link.ts(14,8): error TS2882: Cannot find module or type declarations for side-effect import of './link.css'.
+src/vs/platform/opener/browser/link.ts(88,3): error TS1206: Decorators are not valid here.
+src/vs/platform/opener/browser/link.ts(89,3): error TS1206: Decorators are not valid here.
+src/vs/platform/product/common/product.ts(28,21): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+src/vs/platform/product/common/product.ts(28,56): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+src/vs/platform/product/common/product.ts(30,23): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+src/vs/platform/product/common/product.ts(46,26): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+src/vs/platform/progress/common/progress.ts(148,3): error TS1206: Decorators are not valid here.
+src/vs/platform/progress/common/progress.ts(176,34): error TS2304: Cannot find name 'Timeout'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(238,28): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(300,22): error TS2339: Property 'code' does not exist on type '{}'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(302,29): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(304,22): error TS2339: Property 'code' does not exist on type '{}'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(306,29): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(449,30): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(452,30): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(689,9): error TS18046: 'err' is of type 'unknown'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(691,37): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(698,37): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(704,37): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(708,10): error TS18046: 'err' is of type 'unknown'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(708,38): error TS18046: 'err' is of type 'unknown'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(708,68): error TS18046: 'err' is of type 'unknown'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(708,99): error TS18046: 'err' is of type 'unknown'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(708,129): error TS18046: 'err' is of type 'unknown'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(710,37): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(716,37): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/vs/platform/remote/common/remoteAgentConnection.ts(727,36): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/request/common/request.ts(168,3): error TS18046: 'err' is of type 'unknown'.
+src/vs/platform/secrets/common/secrets.ts(114,3): error TS1206: Decorators are not valid here.
+src/vs/platform/secrets/common/secrets.ts(115,3): error TS1206: Decorators are not valid here.
+src/vs/platform/secrets/common/secrets.ts(116,3): error TS1206: Decorators are not valid here.
+src/vs/platform/secrets/common/secrets.ts(147,28): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/secrets/common/secrets.ts(168,28): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/terminal/common/capabilities/commandDetection/promptInputModel.ts(117,3): error TS1206: Decorators are not valid here.
+src/vs/platform/terminal/common/capabilities/commandDetection/promptInputModel.ts(273,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/platform/terminal/common/capabilities/commandDetection/promptInputModel.ts(273,3): error TS1270: Decorator function return type 'void | TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => void)'.
+  Type 'TypedPropertyDescriptor<unknown>' is not assignable to type 'void | (() => void)'.
+src/vs/platform/tunnel/common/tunnel.ts(241,3): error TS1206: Decorators are not valid here.
+src/vs/platform/tunnel/common/tunnel.ts(242,3): error TS1206: Decorators are not valid here.
+src/vs/platform/url/common/urlService.ts(34,3): error TS1206: Decorators are not valid here.
+src/vs/platform/userDataProfile/common/userDataProfile.ts(237,3): error TS1206: Decorators are not valid here.
+src/vs/platform/userDataProfile/common/userDataProfile.ts(238,3): error TS1206: Decorators are not valid here.
+src/vs/platform/userDataProfile/common/userDataProfile.ts(239,3): error TS1206: Decorators are not valid here.
+src/vs/platform/userDataProfile/common/userDataProfile.ts(240,3): error TS1206: Decorators are not valid here.
+src/vs/platform/userDataProfile/common/userDataProfile.ts(275,27): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/userDataProfile/common/userDataProfile.ts(301,28): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/userDataProfile/common/userDataProfile.ts(476,26): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/userDataProfile/common/userDataProfile.ts(484,30): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error'.
+src/vs/platform/userDataProfile/common/userDataProfile.ts(485,27): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/platform/userDataProfile/common/userDataProfile.ts(540,29): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/workbench/browser/part.ts(6,8): error TS2882: Cannot find module or type declarations for side-effect import of './media/part.css'.
+src/vs/workbench/browser/parts/views/viewFilter.ts(104,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewFilter.ts(105,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewFilter.ts(106,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewFilter.ts(107,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewFilter.ts(108,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewFilter.ts(109,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewMenuActions.ts(25,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewMenuActions.ts(26,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewMenuActions.ts(65,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewMenuActions.ts(66,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewMenuActions.ts(67,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(6,8): error TS2882: Cannot find module or type declarations for side-effect import of './media/paneviewlet.css'.
+src/vs/workbench/browser/parts/views/viewPane.ts(119,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(120,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(121,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(122,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(371,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(372,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(373,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(374,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(375,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(376,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(377,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(378,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(379,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(756,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(757,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(758,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(759,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(760,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(761,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(762,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(763,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/parts/views/viewPane.ts(764,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(45,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(46,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(47,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(48,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(237,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(238,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(239,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(240,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(241,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(242,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(243,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(244,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(245,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/browser/window.ts(246,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/common/editor.ts(1631,22): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/workbench/common/editor/editorGroupModel.ts(221,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/common/editor/editorGroupModel.ts(222,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/common/editor/sideBySideEditorInput.ts(75,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/common/editor/textEditorModel.ts(37,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/common/editor/textEditorModel.ts(38,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/common/editor/textEditorModel.ts(39,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/common/editor/textEditorModel.ts(40,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/common/resources.ts(37,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/common/resources.ts(38,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(45,13): error TS2300: Duplicate identifier 'chatContainer'.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(46,13): error TS2300: Duplicate identifier 'fleetContainer'.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(63,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(64,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(65,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(66,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(67,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(68,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(69,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(70,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(71,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(72,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(73,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts(74,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/accessibility/common/accessibleViewInformationService.ts(20,14): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(119,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(120,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(121,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(122,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(123,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(253,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(254,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(255,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(256,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(257,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(258,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.ts(259,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/driver/browser/driver.ts(25,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/driver/browser/driver.ts(26,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/driver/browser/driver.ts(27,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/driver/browser/driver.ts(28,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/driver/browser/driver.ts(142,32): error TS2339: Property 'editContext' does not exist on type 'HTMLDivElement'.
+src/vs/workbench/services/driver/browser/driver.ts(148,22): error TS2304: Cannot find name 'TextUpdateEvent'.
+src/vs/workbench/services/driver/browser/driver.ts(179,32): error TS2339: Property 'editContext' does not exist on type 'HTMLDivElement'.
+src/vs/workbench/services/environment/browser/environmentService.ts(46,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(49,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(54,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(57,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(98,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(101,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(104,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(107,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(110,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(113,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(116,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(119,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(129,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(132,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(135,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(138,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(141,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(144,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(147,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(152,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(161,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(170,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(179,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(188,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(197,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(206,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(215,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(218,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(221,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(224,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(236,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(239,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(242,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(245,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(248,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(251,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(254,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(257,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(260,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(263,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(266,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(357,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(383,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/environment/browser/environmentService.ts(399,2): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/vs/workbench/services/filesConfiguration/common/filesConfigurationService.ts(164,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/filesConfiguration/common/filesConfigurationService.ts(165,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/filesConfiguration/common/filesConfigurationService.ts(166,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/filesConfiguration/common/filesConfigurationService.ts(167,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/filesConfiguration/common/filesConfigurationService.ts(168,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/filesConfiguration/common/filesConfigurationService.ts(169,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/filesConfiguration/common/filesConfigurationService.ts(170,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/filesConfiguration/common/filesConfigurationService.ts(171,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/lifecycle/browser/lifecycleService.ts(27,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/lifecycle/browser/lifecycleService.ts(28,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/lifecycle/common/lifecycleService.ts(49,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/lifecycle/common/lifecycleService.ts(50,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/preferences/common/preferencesModels.ts(229,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/preferences/common/preferencesModels.ts(1198,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorModel.ts(144,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorModel.ts(145,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorModel.ts(146,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorModel.ts(147,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorModel.ts(148,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorModel.ts(149,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorModel.ts(150,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorModel.ts(151,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorModel.ts(152,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorModel.ts(153,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorService.ts(190,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/untitled/common/untitledTextEditorService.ts(191,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/update/browser/updateService.ts(42,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/update/browser/updateService.ts(43,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/url/browser/urlService.ts(71,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/url/browser/urlService.ts(72,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/url/browser/urlService.ts(73,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/resourceWorkingCopy.ts(46,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(355,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(356,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(357,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(358,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(359,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(360,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(361,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(362,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(363,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(364,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(365,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(517,21): error TS18046: 'error' is of type 'unknown'.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(620,19): error TS18046: 'error' is of type 'unknown'.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(999,116): error TS18046: 'error' is of type 'unknown'.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopy.ts(1088,27): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error'.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopySaveParticipant.ts(25,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopySaveParticipant.ts(26,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/storedFileWorkingCopySaveParticipant.ts(74,29): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Error'.
+src/vs/workbench/services/workingCopy/common/workingCopyEditorService.ts(65,14): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/workingCopyFileOperationParticipant.ts(19,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/workingCopyFileOperationParticipant.ts(20,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/workingCopyFileOperationParticipant.ts(42,26): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/vs/workbench/services/workingCopy/common/workingCopyFileService.ts(310,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/workingCopyFileService.ts(311,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/workingCopyFileService.ts(312,3): error TS1206: Decorators are not valid here.
+src/vs/workbench/services/workingCopy/common/workingCopyFileService.ts(313,3): error TS1206: Decorators are not valid here.

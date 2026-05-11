@@ -1,13 +1,13 @@
 <div class="chapter-header">
     <span class="chapter-number">Extensions</span>
     <h1>工具擴充方式</h1>
-    <p class="chapter-desc">GCD 有三種工具：內建的、Plugin 擴充的、MCP 連接的。它們載入方式不同、安全規則也不同。</p>
+    <p class="chapter-desc">Aixlarity 有三種工具：內建的、Plugin 擴充的、MCP 連接的。它們載入方式不同、安全規則也不同。</p>
 </div>
 
 <div class="content-body">
     <div class="callout callout-warning revealable">
         <div class="callout-title">先講最重要的 實況檢查</div>
-        <p>GCD 的「可擴充性」不是一條單線能力。built-in tools、plugin tools、MCP tools 雖然最後都會出現在同一個 tool registry 裡，但它們的載入來源、信任規則、執行方式、命名規則與安全意義並不一樣。如果把它們都簡化成「外部工具」，文件就會不準確。</p>
+        <p>Aixlarity 的「可擴充性」不是一條單線能力。built-in tools、plugin tools、MCP tools 雖然最後都會出現在同一個 tool registry 裡，但它們的載入來源、信任規則、執行方式、命名規則與安全意義並不一樣。如果把它們都簡化成「外部工具」，文件就會不準確。</p>
     </div>
 
     <h2>先把三層工具面分開看</h2>
@@ -28,12 +28,12 @@
                 </tr>
                 <tr>
                     <td>Plugin tools</td>
-                    <td>全域 <code>~/.gcd/plugins</code> 與 workspace <code>.gcd/plugins</code></td>
+                    <td>全域 <code>~/.aixlarity/plugins</code> 與 workspace <code>.aixlarity/plugins</code></td>
                     <td><code>App::exec</code> 先載入，再傳進 <code>run_agent()</code></td>
                 </tr>
                 <tr>
                     <td>MCP tools</td>
-                    <td>workspace <code>.gcd/mcp.json</code></td>
+                    <td>workspace <code>.aixlarity/mcp.json</code></td>
                     <td><code>run_agent()</code> 啟動時動態連線與發現</td>
                 </tr>
             </tbody>
@@ -41,7 +41,7 @@
     </div>
 
     <h2>工具註冊表是怎麼合併的</h2>
-    <p>GCD 不是讓三種工具各走各的執行路徑，而是最後都合併進同一份工具清單。<code>builtin_tools()</code> 先建立 11 個內建工具，接著 <code>all_tools(plugin_tools, mcp_tools)</code> 會依序把 plugins 與 MCP tools append 到後面。這表示「所有工具都長得像 Tool trait」，但不代表它們擁有相同的風險程度。</p>
+    <p>Aixlarity 不是讓三種工具各走各的執行路徑，而是最後都合併進同一份工具清單。<code>builtin_tools()</code> 先建立 11 個內建工具，接著 <code>all_tools(plugin_tools, mcp_tools)</code> 會依序把 plugins 與 MCP tools append 到後面。這表示「所有工具都長得像 Tool trait」，但不代表它們擁有相同的風險程度。</p>
 
     <div class="code-window slim revealable">
         <div class="window-header">
@@ -65,7 +65,7 @@
    - 由 PluginCatalog 載入
 
 3. MCP tools
-   - 由 .gcd/mcp.json 啟動伺服器後動態發現</code></pre>
+   - 由 .aixlarity/mcp.json 啟動伺服器後動態發現</code></pre>
         </div>
     </div>
 
@@ -76,8 +76,8 @@
         <p>Built-in tools 會先於 plugins 被找到，plugins 又會先於 MCP。換句話說，如果有人真的用相同名字定義 plugin 或 MCP tool，它不一定能覆蓋前面的工具，甚至可能只是被悄悄 shadow。註解說名稱應唯一，但目前沒有強制驗證。</p>
     </div>
 
-    <h2>Built-in tools：最完整，也最像 GCD 的正式含義</h2>
-    <p>內建工具是目前最成熟、也最接近 GCD 官方含義的工具層。它們共享 <code>ToolContext</code>、多數會檢查 sandbox，並與 permission / hooks / session events 有最完整的連接。網站前面那些對 <code>read_file</code>、<code>write_file</code>、<code>apply_patch</code>、<code>shell</code>、<code>spawn_agent</code> 的分析，基本上都是以 built-in path 為準。新增的 <code>memory</code>、<code>skill_manager</code>、<code>session_search</code> 三個工具則操作 <code>~/.gcd/</code> 下的持久知識檔案，不直接影響工作區原始碼。</p>
+    <h2>Built-in tools：最完整，也最像 Aixlarity 的正式含義</h2>
+    <p>內建工具是目前最成熟、也最接近 Aixlarity 官方含義的工具層。它們共享 <code>ToolContext</code>、多數會檢查 sandbox，並與 permission / hooks / session events 有最完整的連接。網站前面那些對 <code>read_file</code>、<code>write_file</code>、<code>apply_patch</code>、<code>shell</code>、<code>spawn_agent</code> 的分析，基本上都是以 built-in path 為準。新增的 <code>memory</code>、<code>skill_manager</code>、<code>session_search</code> 三個工具則操作 <code>~/.aixlarity/</code> 下的持久知識檔案，不直接影響工作區原始碼。</p>
 
     <div class="feature-grid compact">
         <article class="feature-card revealable">
@@ -191,7 +191,7 @@
     </div>
 
     <h2>MCP：不是本地命令模板，而是外部工具協定橋接</h2>
-    <p>MCP 路徑和 plugins 最大的差別，在於它不是直接執行一個命令模板，而是先讀 <code>.gcd/mcp.json</code>，啟動指定的 MCP server 子程序，做一次 <code>initialize</code> 握手，再跑 <code>tools/list</code> 發現可用工具，最後把每個外部工具包成新的 <code>McpToolAdapter</code>。</p>
+    <p>MCP 路徑和 plugins 最大的差別，在於它不是直接執行一個命令模板，而是先讀 <code>.aixlarity/mcp.json</code>，啟動指定的 MCP server 子程序，做一次 <code>initialize</code> 握手，再跑 <code>tools/list</code> 發現可用工具，最後把每個外部工具包成新的 <code>McpToolAdapter</code>。</p>
 
     <div class="code-window revealable">
         <div class="window-header">
@@ -220,13 +220,13 @@
 <pre><code>server name: filesystem
 tool name: read_file
 
-=> GCD 執行時 中的工具名：
+=> Aixlarity 執行時 中的工具名：
 mcp__filesystem__read_file</code></pre>
         </div>
     </div>
 
     <h2>MCP 的擴充價值，在於協定，不在於命令模板</h2>
-    <p>如果說 plugins 比較像把本地命令包成工具，那 MCP 則是在說：「GCD 可以透過標準協定，向外部工具生態要能力」。這對產品邊界來說非常重要，因為它讓工具擴充不必全都塞進本地 repo，也不必全部寫成內建工具。</p>
+    <p>如果說 plugins 比較像把本地命令包成工具，那 MCP 則是在說：「Aixlarity 可以透過標準協定，向外部工具生態要能力」。這對產品邊界來說非常重要，因為它讓工具擴充不必全都塞進本地 repo，也不必全部寫成內建工具。</p>
 
     <div class="feature-grid compact">
         <article class="feature-card revealable">
@@ -237,7 +237,7 @@ mcp__filesystem__read_file</code></pre>
         <article class="feature-card revealable">
             <div class="feature-num">M2</div>
             <h3>工具 schema 來自對方</h3>
-            <p>GCD 會使用對方回傳的 <code>inputSchema</code> 生成 tool definition，而不是自己手寫。</p>
+            <p>Aixlarity 會使用對方回傳的 <code>inputSchema</code> 生成 tool definition，而不是自己手寫。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">M3</div>
@@ -260,27 +260,27 @@ mcp__filesystem__read_file</code></pre>
             </thead>
             <tbody>
                 <tr>
-                    <td><code>.gcd/commands</code></td>
+                    <td><code>.aixlarity/commands</code></td>
                     <td>是</td>
                     <td>untrusted 時 catalog 會變成空的。</td>
                 </tr>
                 <tr>
-                    <td><code>.gcd/skills</code></td>
+                    <td><code>.aixlarity/skills</code></td>
                     <td>是</td>
                     <td>和 commands 類似。</td>
                 </tr>
                 <tr>
-                    <td><code>.gcd/providers.conf</code></td>
+                    <td><code>.aixlarity/providers.conf</code></td>
                     <td>是</td>
                     <td>untrusted 時不讀 workspace provider config。</td>
                 </tr>
                 <tr>
-                    <td><code>.gcd/plugins</code></td>
+                    <td><code>.aixlarity/plugins</code></td>
                     <td>是</td>
                     <td>workspace plugins 只在 trusted workspace 載入。</td>
                 </tr>
                 <tr>
-                    <td><code>.gcd/mcp.json</code></td>
+                    <td><code>.aixlarity/mcp.json</code></td>
                     <td>目前看起來未完整對齊</td>
                     <td>；目前是由 <code>run_agent()</code> 直接讀 workspace config。</td>
                 </tr>
@@ -307,7 +307,7 @@ mcp__filesystem__read_file</code></pre>
             <tbody>
                 <tr>
                     <td>能力來源</td>
-                    <td>GCD 原始碼內建</td>
+                    <td>Aixlarity 原始碼內建</td>
                     <td>本地 JSON 定義 + 本地命令</td>
                     <td>外部 server 透過協定宣告</td>
                 </tr>
@@ -321,7 +321,7 @@ mcp__filesystem__read_file</code></pre>
                     <td>Sandbox 含義</td>
                     <td>最完整</td>
                     <td>目前未完全對齊 built-in</td>
-                    <td>主要依 MCP server 自身與 GCD 包裝邊界</td>
+                    <td>主要依 MCP server 自身與 Aixlarity 包裝邊界</td>
                 </tr>
                 <tr>
                     <td>Permission 含義</td>
@@ -387,7 +387,7 @@ mcp__filesystem__read_file</code></pre>
     <h2>把這一章濃縮成一句話</h2>
     <div class="callout callout-info revealable">
         <div class="callout-title">可擴充性不是功能空談，而是邊界管理</div>
-        <p>GCD 確實有 built-in、plugin、MCP 三層工具面，這很有價值；但它們不是同一種東西，也還沒有完全共享同一套 trust、sandbox、permission 含義。把這條邊界講清楚，比把「支援 MCP / plugins」寫成一行賣點更重要。</p>
+        <p>Aixlarity 確實有 built-in、plugin、MCP 三層工具面，這很有價值；但它們不是同一種東西，也還沒有完全共享同一套 trust、sandbox、permission 含義。把這條邊界講清楚，比把「支援 MCP / plugins」寫成一行賣點更重要。</p>
     </div>
 </div>
 

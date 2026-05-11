@@ -1,17 +1,17 @@
-# GemiClawDex — Development Instructions
+# Aixlarity — Development Instructions
 
 Instructions for AI coding agents working on this codebase.
 
 ## Project Purpose
 
-GCD is a **teaching project** for Harness Engineering. It is a Rust-native AI coding agent that combines design patterns from Claude Code, Gemini CLI, OpenAI Codex, and Hermes Agent. The primary audience is engineers learning how AI agent harnesses work.
+Aixlarity is a **teaching project** for Harness Engineering. It is a Rust-native AI coding agent that combines design patterns from Claude Code, Gemini CLI, OpenAI Codex, and Hermes Agent. The primary audience is engineers learning how AI agent harnesses work.
 
 ## Project Structure
 
 ```
-GemiClawDex/
+Aixlarity/
 ├── crates/
-│   ├── gcd-core/          # Domain logic library (~12,000 lines)
+│   ├── aixlarity-core/          # Domain logic library (~12,000 lines)
 │   │   ├── src/
 │   │   │   ├── agent.rs           # Agent execution loop (main orchestrator)
 │   │   │   ├── agent/             # Adapters, memory, permissions, runtime support
@@ -30,24 +30,29 @@ GemiClawDex/
 │   │   │   ├── mcp.rs             # MCP (Model Context Protocol) client
 │   │   │   ├── cache.rs           # Token cache (hash-based, TTL expiry)
 │   │   │   ├── worktree.rs        # Git worktree execution isolation
-│   │   │   ├── instructions.rs    # AGENTS.md / GEMINI.md / CLAUDE.md / GCD.md loader
+│   │   │   ├── instructions.rs    # AGENTS.md / GEMINI.md / CLAUDE.md / AIXLARITY.md + persona loader
 │   │   │   ├── config.rs          # Path detection and preferences
 │   │   │   ├── commands.rs        # Custom command loading
 │   │   │   ├── workspace.rs       # Workspace detection
 │   │   │   ├── output.rs          # Output rendering
 │   │   │   └── app.rs             # Command routing facade
 │   │   └── Cargo.toml
-│   └── gcd-cli/           # CLI entry point → binary name: gcd
+│   └── aixlarity-cli/           # CLI entry point → binary name: aixlarity
 │       ├── src/main.rs     # clap 4 + rustyline REPL + colored output
 │       └── Cargo.toml
+├── aixlarity-ide/                # VS Code fork — graphical IDE with agent sidebar
+│   └── src/vs/workbench/contrib/aixlarity/browser/
+│       ├── aixlarity.contribution.ts  # ViewContainer + ContextTracker registration
+│       └── aixlarityView.ts           # Agent chat UI, provider/persona dropdowns, approval cards, Local History
 ├── docs/                   # Interactive teaching website
 │   ├── index.html          # SPA entry point
-│   ├── chapters/           # 57 HTML chapter files
+│   ├── chapters/           # HTML chapter files
 │   ├── style.css           # Full CSS
 │   └── script.js           # Navigation + animations
-├── .gcd/                   # GCD's own harness configuration (self-referential example)
+├── .aixlarity/                   # Aixlarity's own harness configuration (self-referential example)
 │   ├── skills/             # Reusable agent skills
-│   ├── commands/           # Custom slash commands
+│   ├── commands/           # Custom slash commands (/review, /ship, /spec, /audit)
+│   ├── personas/           # Agent persona definitions (Markdown + YAML frontmatter)
 │   ├── providers.conf      # Provider configuration
 │   └── active-provider.txt # Current active provider
 ├── exercises/              # Hands-on exercises for learners
@@ -68,12 +73,12 @@ prompt.rs  (assembles system prompt + context)
        ↑
 app.rs  (command routing facade)
        ↑
-gcd-cli/main.rs  (CLI entry point)
+aixlarity-cli/main.rs  (CLI entry point)
 ```
 
 ## Coding Conventions
 
-1. **Keep gcd-core free of unnecessary dependencies.** Every new dependency must justify its inclusion. Prefer standard library solutions.
+1. **Keep aixlarity-core free of unnecessary dependencies.** Every new dependency must justify its inclusion. Prefer standard library solutions.
 2. **Prefer plain-text, testable domain logic over framework-heavy abstractions.** The codebase should be readable without IDE support.
 3. **Make trust and sandbox decisions explicit in the output.** When an operation is denied or requires approval, the user must see why.
 4. **Treat command loading, skill loading, and prompt assembly as separate layers.** These three concerns must not be entangled.
@@ -87,6 +92,8 @@ gcd-cli/main.rs  (CLI entry point)
 - **Why multi-provider?** Teaching project must not be locked to one vendor. Students should compare how Gemini, OpenAI, and Anthropic handle tool calling differently.
 - **Why YAML frontmatter for skills?** Compatibility with Hermes Agent's skill format. Progressive disclosure (metadata → full body → linked files) saves tokens.
 - **Why separate MEMORY.md and USER.md?** MEMORY.md is environment knowledge (project facts). USER.md is personal preferences. Different update frequencies, different security concerns.
+- **Why engine-level tool restrictions for personas?** Prompt-only restrictions ("you are a reviewer, don't write files") can be ignored by the model. Engine-level filtering removes tools from the list before the model sees them — physical isolation, not semantic suggestion. Inspired by [agent-skills](https://github.com/addyosmani/agent-skills).
+- **Why `.aixlarity/personas/` as Markdown files?** Same format as skills (YAML frontmatter + Markdown body). Adding a new persona requires zero Rust code changes — just drop a file.
 
 ## What NOT to Do
 
@@ -99,8 +106,8 @@ gcd-cli/main.rs  (CLI entry point)
 
 ```bash
 cargo test                    # Run all tests
-cargo test -p gcd-core        # Core library only
-cargo test -p gcd-cli         # CLI only
+cargo test -p aixlarity-core        # Core library only
+cargo test -p aixlarity-cli         # CLI only
 cargo clippy                  # Lint
 cargo fmt --check             # Format check
 ```

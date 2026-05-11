@@ -1,0 +1,141 @@
+#!/usr/bin/env node
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const docsDir = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.dirname(docsDir);
+const chaptersDir = path.join(docsDir, 'chapters');
+const failures = [];
+
+function read(relativePath) {
+  return fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+}
+
+function fail(message) {
+  failures.push(message);
+}
+
+function count(text, pattern) {
+  return (text.match(pattern) || []).length;
+}
+
+function assertBalanced(file, text, tag) {
+  const open = count(text, new RegExp(`<${tag}\\b`, 'g'));
+  const close = count(text, new RegExp(`</${tag}>`, 'g'));
+  if (open !== close) {
+    fail(`${file}: unbalanced <${tag}> tags (${open} open, ${close} close)`);
+  }
+}
+
+const manifestPath = path.join(chaptersDir, 'manifest.json');
+const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+const ids = manifest.nav.flatMap((section) => section.items.map((item) => item.id));
+
+for (const id of ids) {
+  const chapterPath = path.join(chaptersDir, `${id}.html`);
+  if (!fs.existsSync(chapterPath)) {
+    fail(`manifest references missing chapter: ${id}`);
+  }
+}
+
+for (const id of ids) {
+  if (ids.indexOf(id) !== ids.lastIndexOf(id)) {
+    fail(`manifest contains duplicate chapter id: ${id}`);
+  }
+}
+
+for (const id of ids) {
+  const chapterPath = path.join(chaptersDir, `${id}.html`);
+  if (!fs.existsSync(chapterPath)) continue;
+  const text = fs.readFileSync(chapterPath, 'utf8');
+  for (const match of text.matchAll(/navigateTo\('([^']+)'\)/g)) {
+    if (!ids.includes(match[1])) {
+      fail(`${id}.html navigates to unknown chapter: ${match[1]}`);
+    }
+  }
+}
+
+for (const file of fs.readdirSync(chaptersDir).filter((name) => name.endsWith('.html'))) {
+  const text = fs.readFileSync(path.join(chaptersDir, file), 'utf8');
+  for (const tag of ['section', 'div', 'article', 'table', 'tbody', 'tr', 'pre']) {
+    assertBalanced(file, text, tag);
+  }
+}
+
+const corpus = [
+  'README.md',
+  'README.en.md',
+  'docs/index.html',
+  'docs/style.css',
+  'docs/script.js',
+  ...fs.readdirSync(chaptersDir).filter((name) => name.endsWith('.html')).map((name) => `docs/chapters/${name}`),
+].map((relativePath) => [relativePath, read(relativePath)]);
+
+const bannedPatterns = [
+  /\bGemiClawDex\b/,
+  /\bGCD\b/,
+  /\.gcd\b/,
+  /\bgcd\b/,
+  /AI AI/,
+  /仍屬 。/,
+  /標 。/,
+  /標  的/,
+  /容易容易/,
+];
+
+for (const [relativePath, text] of corpus) {
+  for (const pattern of bannedPatterns) {
+    if (pattern.test(text)) {
+      fail(`${relativePath}: banned legacy or broken text matched ${pattern}`);
+    }
+  }
+}
+
+const indexHtml = read('docs/index.html');
+const homeHtml = read('docs/chapters/home.html');
+const styleCss = read('docs/style.css');
+const scriptJs = read('docs/script.js');
+const readmeZh = read('README.md');
+const readmeEn = read('README.en.md');
+
+const homepageChecks = [
+  ['docs/assets/aixlarity-icon.svg exists', fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-icon.svg'))],
+  ['docs/assets/aixlarity-ide-mission-control.png exists', fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-ide-mission-control.png'))],
+  ['docs/assets/aixlarity-ide-diff-review.png exists', fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-ide-diff-review.png'))],
+  ['docs/assets/aixlarity-ide-knowledge-ledger.png exists', fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-ide-knowledge-ledger.png'))],
+  ['index uses Aixlarity icon asset', indexHtml.includes('assets/aixlarity-icon.svg')],
+  ['home includes IDE product hero', homeHtml.includes('ide-product-hero')],
+  ['home includes brand lockup icon', homeHtml.includes('ide-brand-lockup') && homeHtml.includes('assets/aixlarity-icon.svg')],
+  ['home includes visual capability board', homeHtml.includes('ide-capability-board')],
+  ['home includes IDE screenshot showcase', homeHtml.includes('ide-interface-showcase') && homeHtml.includes('aixlarity-ide-mission-control.png')],
+  ['home includes animated workflow rail', homeHtml.includes('ide-flow-visual')],
+  ['home styles screenshot cards', styleCss.includes('ide-screenshot-card')],
+  ['README zh uses product icon and IDE screenshot', readmeZh.includes('docs/assets/aixlarity-icon.svg') && readmeZh.includes('docs/assets/aixlarity-ide-mission-control.png')],
+  ['README en uses product icon and IDE screenshot', readmeEn.includes('docs/assets/aixlarity-icon.svg') && readmeEn.includes('docs/assets/aixlarity-ide-mission-control.png')],
+  ['README highlights Knowledge Ledger selling point', readmeZh.includes('Knowledge Ledger') && readmeEn.includes('Knowledge Ledger')],
+  ['home removed old text-only audience cards', !/For builders|For reviewers|For learners/.test(homeHtml)],
+  ['home hides chapter rail for product landing page', styleCss.includes('body[data-current-chapter="home"] .chapter-rail')],
+  ['script exposes current chapter on body', scriptJs.includes('document.body.dataset.currentChapter = id')],
+];
+
+for (const [label, ok] of homepageChecks) {
+  if (!ok) fail(`homepage quality check failed: ${label}`);
+}
+
+if (failures.length) {
+  console.error(JSON.stringify({ ok: false, failures }, null, 2));
+  process.exit(1);
+}
+
+console.log(JSON.stringify({
+  ok: true,
+  checks: [
+    `${ids.length} manifest chapters exist and have valid navigation targets`,
+    'chapter HTML container tags are balanced',
+    'legacy project naming and broken text fragments are absent',
+    'IDE landing page icon, screenshot showcase, visual capability board, and workflow rail are wired',
+    'README product hero assets and Knowledge Ledger selling point are wired',
+  ],
+}, null, 2));

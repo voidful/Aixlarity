@@ -6,12 +6,12 @@
 
 ## 步驟
 
-在 GCD 專案目錄下，執行以下三個變體：
+在 Aixlarity 專案目錄下，執行以下三個變體：
 
 ### 變體 A：只有 prompt
 
 ```bash
-gcd exec "這個專案的 trust 系統是怎麼設計的"
+aixlarity exec "這個專案的 trust 系統是怎麼設計的"
 ```
 
 記錄：回答的具體程度、有沒有引用實際程式碼、token 用量。
@@ -19,7 +19,7 @@ gcd exec "這個專案的 trust 系統是怎麼設計的"
 ### 變體 B：加上檔案注入
 
 ```bash
-gcd exec "分析 @{crates/gcd-core/src/trust.rs} 的 trust 系統設計"
+aixlarity exec "分析 @{crates/aixlarity-core/src/trust.rs} 的 trust 系統設計"
 ```
 
 記錄：同上。
@@ -29,7 +29,7 @@ gcd exec "分析 @{crates/gcd-core/src/trust.rs} 的 trust 系統設計"
 確認 AGENTS.md 存在後：
 
 ```bash
-gcd exec "分析 @{crates/gcd-core/src/trust.rs} 的 trust 系統設計，以及它和 permission 系統的關係"
+aixlarity exec "分析 @{crates/aixlarity-core/src/trust.rs} 的 trust 系統設計，以及它和 permission 系統的關係"
 ```
 
 ### Step 4：比較三組結果

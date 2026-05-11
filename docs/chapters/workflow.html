@@ -7,7 +7,7 @@
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">先講結論</div>
-        <p>對 GCD 來說，<strong>instructions 是長期規範，commands 是任務模板，skills 是顯式選用的專題能力包</strong>。這三層不是同義詞，也不該互相取代。如果把 repo 規範全塞進 command、把一次性任務寫成 skill、或把專題方法論常駐在 <code>AGENTS.md</code>，最後只會讓 prompt 愈來愈長，卻沒有更清楚的工作流。</p>
+        <p>對 Aixlarity 來說，<strong>instructions 是長期規範，commands 是任務模板，skills 是顯式選用的專題能力包</strong>。這三層不是同義詞，也不該互相取代。如果把 repo 規範全塞進 command、把一次性任務寫成 skill、或把專題方法論常駐在 <code>AGENTS.md</code>，最後只會讓 prompt 愈來愈長，卻沒有更清楚的工作流。</p>
     </div>
 
     <h2>為什麼要把這一層單獨寫成一章</h2>
@@ -83,7 +83,7 @@ description = "Review a target file with repo context"
 prompt = """
 Use @{README.md} as project context.
 Review target: {{args}}
-If needed, run !{cargo test -p gcd-core}
+If needed, run !{cargo test -p aixlarity-core}
 """
 
 skills/code-review/SKILL.md
@@ -136,7 +136,7 @@ skills/code-review/SKILL.md
     </div>
 
     <h2>Instructions：最像 repo 憲法，但也最需要節制</h2>
-    <p><code>InstructionBundle::load()</code> 目前只會讀四個固定檔名：<code>AGENTS.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code>、<code>GCD.md</code>。這意味著 instructions 的定位不是任意掃描工作區，而是由團隊顯式選擇「哪些檔名代表高權重規則」。這種設計是好的，因為它讓 repo 規範的入口清楚；但所以更需要節制，避免把每個一次性流程都塞成常駐規則。</p>
+    <p><code>InstructionBundle::load()</code> 目前只會讀四個固定檔名：<code>AGENTS.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code>、<code>AIXLARITY.md</code>。這意味著 instructions 的定位不是任意掃描工作區，而是由團隊顯式選擇「哪些檔名代表高權重規則」。這種設計是好的，因為它讓 repo 規範的入口清楚；但所以更需要節制，避免把每個一次性流程都塞成常駐規則。</p>
 
     <div class="checklist revealable">
         <div class="check-item">
@@ -172,7 +172,7 @@ skills/code-review/SKILL.md
     </div>
 
     <h2>Commands：把任務模板檔案化，不再靠口耳相傳</h2>
-    <p><code>CommandCatalog::load()</code> 會讀 <code>~/.gcd/commands</code> 與工作區 <code>.gcd/commands</code> 下的 TOML 檔。對使用者來說，command 最重要的價值不是快捷鍵，而是把「一類任務該怎麼展開」變成能審查、能版本化、能被 replay 的文字模板。</p>
+    <p><code>CommandCatalog::load()</code> 會讀 <code>~/.aixlarity/commands</code> 與工作區 <code>.aixlarity/commands</code> 下的 TOML 檔。對使用者來說，command 最重要的價值不是快捷鍵，而是把「一類任務該怎麼展開」變成能審查、能版本化、能被 replay 的文字模板。</p>
 
     <div class="comparison-table">
         <table>
@@ -185,17 +185,17 @@ skills/code-review/SKILL.md
             </thead>
             <tbody>
                 <tr>
-                    <td><code>~/.gcd/commands/review.toml</code></td>
+                    <td><code>~/.aixlarity/commands/review.toml</code></td>
                     <td><code>review</code></td>
                     <td>個人常用的全域命令。</td>
                 </tr>
                 <tr>
-                    <td><code>.gcd/commands/review/security.toml</code></td>
+                    <td><code>.aixlarity/commands/review/security.toml</code></td>
                     <td><code>review:security</code></td>
                     <td>專案特化且帶分類的工作流模板。</td>
                 </tr>
                 <tr>
-                    <td><code>.gcd/commands/refactor/rust.toml</code></td>
+                    <td><code>.aixlarity/commands/refactor/rust.toml</code></td>
                     <td><code>refactor:rust</code></td>
                     <td>由目錄層級自然長出的命令命名空間。</td>
                 </tr>
@@ -215,7 +215,7 @@ prompt = """
 Use @{README.md} as project context.
 Review target: {{args}}
 Focus on correctness, regression risk, and missing tests.
-If needed, run !{cargo test -p gcd-core}
+If needed, run !{cargo test -p aixlarity-core}
 """</code></pre>
         </div>
     </div>
@@ -223,7 +223,7 @@ If needed, run !{cargo test -p gcd-core}
     <p>這種 command 的好處在於：它把「這類任務的預設上下文與步驟」固定下來，但又保留 <code>{{args}}</code> 讓使用者把當輪目標帶進去。這比每次手打長 prompt 更可追蹤，也比把所有規則硬塞進 instructions 更精準。</p>
 
     <h2>Skills：不是快捷模板，而是顯式選用的方法包</h2>
-    <p><code>SkillCatalog::load()</code> 會讀 <code>~/.gcd/skills</code> 與工作區 <code>.gcd/skills</code> 下的 Markdown。如果檔名是 <code>SKILL.md</code>，名稱取自父目錄；否則取自檔案路徑。這讓 skill 比較像一個具名知識包，而不是任務命令的別名。</p>
+    <p><code>SkillCatalog::load()</code> 會讀 <code>~/.aixlarity/skills</code> 與工作區 <code>.aixlarity/skills</code> 下的 Markdown。如果檔名是 <code>SKILL.md</code>，名稱取自父目錄；否則取自檔案路徑。這讓 skill 比較像一個具名知識包，而不是任務命令的別名。</p>
 
     <div class="comparison-table">
         <table>
@@ -249,7 +249,7 @@ If needed, run !{cargo test -p gcd-core}
         </table>
     </div>
 
-    <p>現在 GCD 對 skill 的選擇很保守：它不是自動召回，而是由執行選項顯式指定。這個取捨很值得保留，因為它讓 prompt 來源保持可追蹤。你知道這一輪為什麼會帶進某個 skill，而不是讓系統在背景偷偷替你做 prompt routing。</p>
+    <p>現在 Aixlarity 對 skill 的選擇很保守：它不是自動召回，而是由執行選項顯式指定。這個取捨很值得保留，因為它讓 prompt 來源保持可追蹤。你知道這一輪為什麼會帶進某個 skill，而不是讓系統在背景偷偷替你做 prompt routing。</p>
 
     <div class="callout callout-info revealable">
         <div class="callout-title">這也是 command 和 skill 最容易混淆的地方</div>
@@ -351,7 +351,7 @@ AGENTS.md
     </div>
 
     <h2>Prompt 可追蹤性其實也有層級差異</h2>
-    <p>GCD 對不同來源的可追蹤性做得並不完全一樣。commands 進 prompt 時，會明確加上 <code># Custom Command</code>、名稱、描述、來源路徑與工作區；skills 則只有 <code># Loaded Skill</code>、名稱、summary 與 body；instructions 則只有檔名 label。這種差異值得寫清楚，因為它會影響你事後 debug prompt 時能看到多少來源資訊。</p>
+    <p>Aixlarity 對不同來源的可追蹤性做得並不完全一樣。commands 進 prompt 時，會明確加上 <code># Custom Command</code>、名稱、描述、來源路徑與工作區；skills 則只有 <code># Loaded Skill</code>、名稱、summary 與 body；instructions 則只有檔名 label。這種差異值得寫清楚，因為它會影響你事後 debug prompt 時能看到多少來源資訊。</p>
 
     <div class="comparison-table">
         <table>

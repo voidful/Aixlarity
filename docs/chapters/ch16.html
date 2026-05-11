@@ -1,18 +1,18 @@
 <div class="chapter-header">
                 <span class="chapter-number">第 16 章</span>
                 <h1>CLI 介面設計</h1>
-                <p class="chapter-desc">使用者接觸的第一層 — <code>gcd-cli/src/main.rs</code></p>
+                <p class="chapter-desc">使用者接觸的第一層 — <code>aixlarity-cli/src/main.rs</code></p>
             </div>
             <div class="content-body">
                 <h2>Clap 4 命令結構</h2>
-                <p>GCD 使用 Clap 4 的 derive 巨集定義命令結構。所有子命令映射到 <code>app.rs</code> 的 Facade 方法：</p>
+                <p>Aixlarity 使用 Clap 4 的 derive 巨集定義命令結構。所有子命令映射到 <code>app.rs</code> 的 Facade 方法：</p>
                 <div class="code-window">
                     <div class="window-header">
                         <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
                         <span class="window-title">命令層級</span>
                     </div>
                     <div class="window-body">
-<pre><code class="language-text">gcd
+<pre><code class="language-text">aixlarity
 ├── (default)          → 啟動 REPL
 ├── exec &lt;prompt&gt;      → 執行 Agent
 ├── overview           → 顯示工作區概覽
@@ -42,12 +42,12 @@
                 <ul>
                     <li>上下方向鍵瀏覽歷史</li>
                     <li>Ctrl+R 反向搜尋歷史</li>
-                    <li>歷史自動持久化到 <code>~/.gcd/history.txt</code></li>
+                    <li>歷史自動持久化到 <code>~/.aixlarity/history.txt</code></li>
                     <li>空行或 Ctrl+D 退出</li>
                 </ul>
 
                 <div class="source-ref">
-                    <strong>原始碼</strong>：<code>crates/gcd-cli/src/main.rs</code>
+                    <strong>原始碼</strong>：<code>crates/aixlarity-cli/src/main.rs</code>
                 </div>
             </div>
             <div class="chapter-nav">

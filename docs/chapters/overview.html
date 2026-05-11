@@ -1,7 +1,7 @@
 <div class="chapter-header">
     <span class="chapter-number">架構</span>
-    <h1>GCD 的完整架構一覽</h1>
-    <p class="chapter-desc">GCD 的整個系統長什麼樣？沿著 <code>CLI → App → 提示詞 → AI 對話 → 工具 → 記錄</code> 這條路，看看每個零件接在哪裡。</p>
+    <h1>Aixlarity 的完整架構一覽</h1>
+    <p class="chapter-desc">Aixlarity 的整個系統長什麼樣？沿著 <code>CLI → App → 提示詞 → AI 對話 → 工具 → 記錄</code> 這條路，看看每個零件接在哪裡。</p>
 </div>
 
 <div class="content-body">
@@ -12,7 +12,12 @@
 
     <div class="callout callout-tip revealable">
         <div class="callout-title">剛看完入門章？</div>
-        <p>只需要帶著一個問題往下看：<strong>剛才那個小範例裡的四個步驟，在 GCD 裡實際上是由哪些程式碼負責的</strong>。先不用記每個檔名，只要看懂「輸入去哪、提示詞在哪裡組合、工具在哪裡跑、結果在哪裡存」就好。</p>
+        <p>只需要帶著一個問題往下看：<strong>剛才那個小範例裡的四個步驟，在 Aixlarity 裡實際上是由哪些程式碼負責的</strong>。先不用記每個檔名，只要看懂「輸入去哪、提示詞在哪裡組合、工具在哪裡跑、結果在哪裡存」就好。</p>
+    </div>
+
+    <div class="callout callout-info revealable">
+        <div class="callout-title">現在的架構要同時看 CLI 和 IDE</div>
+        <p>Aixlarity 的 harness runtime 在 Rust core，但最容易教學的 control surface 在 <code>aixlarity-ide</code>。CLI 展示「一個任務如何跑完」；IDE 展示「任務如何被批准、審核、回放、比較、附證據」。所以讀架構時，請把 <code>aixlarityView.ts</code> 視為產品層入口，把 <code>crates/aixlarity-core</code> 視為 runtime 層入口。</p>
     </div>
 
     <h2>先沿著「主要流程」看全貌</h2>
@@ -23,14 +28,19 @@
             <thead>
                 <tr>
                     <th>你應該先問的問題</th>
-                    <th>在 GCD 對應哪一層</th>
+                    <th>在 Aixlarity 對應哪一層</th>
                     <th>為什麼重要</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
+                    <td>使用者是在 CLI 還是 IDE 操作</td>
+                    <td><code>aixlarity-cli</code> 或 <code>aixlarity-ide</code></td>
+                    <td>IDE 會多帶 editor context、approval UI、artifact review 和 durable Mission Control。</td>
+                </tr>
+                <tr>
                     <td>使用者輸入先去哪裡</td>
-                    <td><code>gcd-cli</code> 與 <code>App::handle</code></td>
+                    <td><code>aixlarity-cli</code> 與 <code>App::handle</code></td>
                     <td>這決定 CLI 只是外殼，還是偷偷塞滿產品邏輯。</td>
                 </tr>
                 <tr>
@@ -62,7 +72,7 @@
         <article class="layer-card revealable">
             <div class="layer-topline">
                 
-                <span class="layer-source">來源：<code>crates/gcd-cli/src/main.rs</code></span>
+                <span class="layer-source">來源：<code>crates/aixlarity-cli/src/main.rs</code></span>
             </div>
             <h3>CLI 與 REPL 入口</h3>
             <p>CLI 參數、REPL、JSON/JSONL 輸出與命令映射都已接好。這一層的作用是把使用者任務轉成 <code>AppCommand</code>，不是在 CLI 端自行堆太多產品邏輯。</p>
@@ -71,25 +81,25 @@
         <article class="layer-card revealable">
             <div class="layer-topline">
                 
-                <span class="layer-source">來源：<code>crates/gcd-core/src/app.rs</code></span>
+                <span class="layer-source">來源：<code>crates/aixlarity-core/src/app.rs</code></span>
             </div>
             <h3>Workspace / Trust / Provider / Catalog 載入</h3>
-            <p><code>App::exec</code> 會依序做工作區探測、trust 評估、provider 載入、commands / skills / instructions / plugins 載入，再進 prompt 組裝。這代表 GCD 不是單純把輸入直接丟給模型，而是先完成一次 外殼 組態展開。</p>
+            <p><code>App::exec</code> 會依序做工作區探測、trust 評估、provider 載入、commands / skills / instructions / plugins 載入，再進 prompt 組裝。這代表 Aixlarity 不是單純把輸入直接丟給模型，而是先完成一次 外殼 組態展開。</p>
         </article>
 
         <article class="layer-card revealable">
             <div class="layer-topline">
                 
-                <span class="layer-source">來源：<code>crates/gcd-core/src/prompt.rs</code>、<code>prompt/expansion.rs</code></span>
+                <span class="layer-source">來源：<code>crates/aixlarity-core/src/prompt.rs</code>、<code>prompt/expansion.rs</code></span>
             </div>
             <h3>提示詞組裝</h3>
-            <p>指令檔、命令模板、技能、附件注入與需要審核的指令都會被組成最終 prompt。這是 GCD 最接近 Claude Code / Codex 風格的地方，因為它把倉庫語境與任務語境分成明確層次。</p>
+            <p>指令檔、命令模板、技能、附件注入與需要審核的指令都會被組成最終 prompt。這是 Aixlarity 最接近 Claude Code / Codex 風格的地方，因為它把倉庫語境與任務語境分成明確層次。</p>
         </article>
 
         <article class="layer-card revealable">
             <div class="layer-topline">
                 
-                <span class="layer-source">來源：<code>crates/gcd-core/src/agent.rs</code>、<code>agent/adapters/</code></span>
+                <span class="layer-source">來源：<code>crates/aixlarity-core/src/agent.rs</code>、<code>agent/adapters/</code></span>
             </div>
             <h3>Provider Adapter 與 代理迴圈</h3>
             <p>Gemini、OpenAI Responses / Chat、Anthropic Messages 都有實際 adapter；工具迴圈、fallback、streaming、token 用量、context compacting 也都已進主要流程。這一層屬於真正會動的 runtime，不只是介面設計。</p>
@@ -98,7 +108,7 @@
         <article class="layer-card revealable">
             <div class="layer-topline">
                 
-                <span class="layer-source">來源：<code>crates/gcd-core/src/tools/</code>、<code>plugins.rs</code>、<code>mcp.rs</code></span>
+                <span class="layer-source">來源：<code>crates/aixlarity-core/src/tools/</code>、<code>plugins.rs</code>、<code>mcp.rs</code></span>
             </div>
             <h3>工具、插件、MCP、Coordinator</h3>
             <p>內建工具、plugin tools、MCP tool loading、sub-agent coordinator 都會被合併進工具註冊表。內建工具完整覆蓋讀寫搜尋執行；plugins 已接入 live tool registry；MCP client 支援 stdio 連線、工具探測與執行；container sandbox 提供 Docker / Podman 執行隔離。</p>
@@ -107,10 +117,10 @@
         <article class="layer-card revealable">
             <div class="layer-topline">
                 
-                <span class="layer-source">來源：<code>crates/gcd-core/src/session/</code></span>
+                <span class="layer-source">來源：<code>crates/aixlarity-core/src/session/</code></span>
             </div>
             <h3>Session / Checkpoint / Replay</h3>
-            <p>checkpoint、session 儲存、resume / fork / replay 與事件紀錄都有實際資料結構和測試。這一層讓 GCD 不必把每次執行都當成孤立 prompt。</p>
+            <p>checkpoint、session 儲存、resume / fork / replay 與事件紀錄都有實際資料結構和測試。這一層讓 Aixlarity 不必把每次執行都當成孤立 prompt。</p>
         </article>
     </div>
 
@@ -120,11 +130,11 @@
     <div class="checklist revealable">
         <div class="check-item">
             <h3>步驟 1：先探測工作區，再決定 trust</h3>
-            <p><code>Workspace::discover</code> 會往上找 <code>.gcd</code>、<code>.git</code>、<code>Cargo.toml</code>、<code>package.json</code>。接著 <code>TrustStore::evaluate</code> 判定這個工作區是 trusted、trusted-via-parent 還是 untrusted。這一步的重要性在於，repo instructions 與 workspace config 能不能進系統，不是單靠檔案存在與否，而是先過 信任檢查。</p>
+            <p><code>Workspace::discover</code> 會往上找 <code>.aixlarity</code>、<code>.git</code>、<code>Cargo.toml</code>、<code>package.json</code>。接著 <code>TrustStore::evaluate</code> 判定這個工作區是 trusted、trusted-via-parent 還是 untrusted。這一步的重要性在於，repo instructions 與 workspace config 能不能進系統，不是單靠檔案存在與否，而是先過 信任檢查。</p>
         </div>
         <div class="check-item">
             <h3>步驟 2：把 providers、commands、skills、instructions、plugins 都載進 runtime</h3>
-            <p>這一段很值得注意，因為它顯示 GCD 把 command loading、skill loading、提示詞組裝 視為不同層。換句話說，agent 的「工作方式」不是靠一份超長系統 prompt 暗藏，而是先分層讀入，再由 prompt 組裝階段決定如何併合。</p>
+            <p>這一段很值得注意，因為它顯示 Aixlarity 把 command loading、skill loading、提示詞組裝 視為不同層。換句話說，agent 的「工作方式」不是靠一份超長系統 prompt 暗藏，而是先分層讀入，再由 prompt 組裝階段決定如何併合。</p>
         </div>
         <div class="check-item">
             <h3>步驟 3：組 prompt，必要時插入 工作接續</h3>
@@ -132,7 +142,7 @@
         </div>
         <div class="check-item">
             <h3>步驟 4：先決定是不是 plan-only，再決定是否進 live 代理迴圈</h3>
-            <p>如果使用者選的是 <code>plan_only</code>，GCD 會保存 checkpoint / session 相關事件，但不會真正進到 <code>run_agent</code>。這點很重要，因為它代表目前的 規劃模式 比較像「規劃輸出模式」，而不是一條完全獨立的互動 runtime。</p>
+            <p>如果使用者選的是 <code>plan_only</code>，Aixlarity 會保存 checkpoint / session 相關事件，但不會真正進到 <code>run_agent</code>。這點很重要，因為它代表目前的 規劃模式 比較像「規劃輸出模式」，而不是一條完全獨立的互動 runtime。</p>
         </div>
         <div class="check-item">
             <h3>步驟 5：進 live 代理迴圈，最後回寫 session 與 execution events</h3>
@@ -148,7 +158,7 @@
 <pre><code>Task: /review src/app.rs
 
 Case A: trusted workspace
-- 會載入 AGENTS.md / GCD.md
+- 會載入 AGENTS.md / AIXLARITY.md
 - 會讀取 workspace commands / skills / providers
 - 最終 prompt 帶有完整 repo workflow
 
@@ -176,7 +186,7 @@ Case B: untrusted workspace
                 <tr>
                     <td>Workspace discovery</td>
                     <td><code>workspace.rs</code></td>
-                    <td>會往上找 <code>.gcd</code>、<code>.git</code>、<code>Cargo.toml</code>、<code>package.json</code>，主要流程已使用。</td>
+                    <td>會往上找 <code>.aixlarity</code>、<code>.git</code>、<code>Cargo.toml</code>、<code>package.json</code>，主要流程已使用。</td>
                 </tr>
                 <tr>
                     <td>Trust gate</td>
@@ -265,17 +275,19 @@ Case B: untrusted workspace
                     <td>Container sandbox</td>
                     <td>有 <code>container.rs</code> 就代表所有工具都在容器裡跑。</td>
                     <td>回到 <code>tools/shell.rs</code> 看，會發現目前只有 <code>shell</code> 在 <code>sandbox=container</code> 時改走容器路徑。</td>
+                    <td>Partially Wired：是 shell sandbox，不是全工具隔離。</td>
                 </tr>
                 <tr>
                     <td>Memory / <code>MEMORY.md</code></td>
                     <td>有 memory 讀寫函式，就代表系統已有長期記憶。</td>
                     <td>回頭追 <code>App::exec</code>、<code>assemble_prompt</code>、<code>run_agent</code>，目前看不到 memory 穩定回傳到主要流程。</td>
+                    <td>Partially Wired：有持久化介面，仍需主要流程驗證。</td>
                 </tr>
                 <tr>
                     <td>Planning mode</td>
                     <td>有 planning 參數，就代表存在一條獨立的規劃 agent runtime。</td>
                     <td><code>App::exec</code> 的 <code>plan_only</code> 會保存相關事件與輸出，但不會進 live <code>run_agent</code> 工具迴圈。</td>
-                    <td> 的是規劃輸出模式，不是完整獨立 planning runtime</td>
+                    <td>Implemented as output mode：這是規劃輸出模式，不是完整獨立 planning runtime。</td>
                 </tr>
             </tbody>
         </table>
@@ -296,7 +308,7 @@ Case B: untrusted workspace
         <article class="feature-card revealable">
             <div class="feature-num">P</div>
             <h3>MCP</h3>
-            <p> GCD 會從 <code>.gcd/mcp.json</code> 載入 MCP 伺服器，完成初始化與 <code>tools/list</code> 探測，再把工具包進 runtime；但 client 實作仍偏簡化，相容性與錯誤處理描述都該保守。</p>
+            <p> Aixlarity 會從 <code>.aixlarity/mcp.json</code> 載入 MCP 伺服器，完成初始化與 <code>tools/list</code> 探測，再把工具包進 runtime；但 client 實作仍偏簡化，相容性與錯誤處理描述都該保守。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">T</div>
@@ -306,7 +318,7 @@ Case B: untrusted workspace
     </div>
 
     <h2>把一個任務放進全景裡看</h2>
-    <p>用一個具體例子會更容易理解這個全景。假設使用者執行 <code>gcd exec "/review src/app.rs"</code>，實際上會依序發生這些事：</p>
+    <p>用一個具體例子會更容易理解這個全景。假設使用者執行 <code>aixlarity exec "/review src/app.rs"</code>，實際上會依序發生這些事：</p>
 
     <div class="checklist revealable">
         <div class="check-item">
@@ -351,7 +363,7 @@ Case B: untrusted workspace
     <div class="feature-grid compact">
         <article class="feature-card revealable">
             <div class="feature-num">1</div>
-            <h3>GCD 已經是能跑的 外殼，不只是 spec</h3>
+            <h3>Aixlarity 已經是能跑的 外殼，不只是 spec</h3>
             <p>CLI、provider adapter、工具迴圈、工作記錄保存 都有實作與測試，足以拿來當教學樣本。</p>
         </article>
         <article class="feature-card revealable">
@@ -362,7 +374,7 @@ Case B: untrusted workspace
         <article class="feature-card revealable">
             <div class="feature-num">3</div>
             <h3>文件必須把主要流程與基本架構分開</h3>
-            <p>否則讀者會把「有模組」誤讀成「有完整產品能力」，這就是 AI AI 助手文件常見的不準確來源。</p>
+            <p>否則讀者會把「有模組」誤讀成「有完整產品能力」，這就是 AI coding agent 文件常見的不準確來源。</p>
         </article>
     </div>
 </div>

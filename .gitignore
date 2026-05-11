@@ -33,3 +33,23 @@ Thumbs.db
 *.profdata
 lcov.info
 tarpaulin-report.html
+
+# Embedded IDE generated artifacts
+aixlarity-ide/**/node_modules/
+aixlarity-ide/**/out/
+aixlarity-ide/.build/
+aixlarity-ide/**/dist/
+aixlarity-ide/extensions/copilot/test/simulation/cache/
+
+# Scratch / test files (not part of the crate)
+test_patch.rs
+crates/aixlarity-core/src/bin_test.rs
+
+# Aixlarity runtime artifacts (generated at runtime, not source)
+.aixlarity-worktrees/
+aixlarity-ide/.aixlarity/history/
+aixlarity-ide/.aixlarity-worktrees/
+
+# Claude Code / Gemini config (user-specific runtime)
+.claude/
+.devcontainer/

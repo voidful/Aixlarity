@@ -1,13 +1,13 @@
 <div class="chapter-header">
     <span class="chapter-number">Provider</span>
     <h1>切換 AI 模型</h1>
-    <p class="chapter-desc">切換 AI 模型不是換個 API key 就好。這一章講 GCD 怎麼管理不同模型供應商、怎麼自動切換備用模型。</p>
+    <p class="chapter-desc">切換 AI 模型不是換個 API key 就好。這一章講 Aixlarity 怎麼管理不同模型供應商、怎麼自動切換備用模型。</p>
 </div>
 
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">先講結論</div>
-        <p>如果你把 provider layer 想成「換個 base URL 再帶 API key」的薄薄一層，你很快就會在第二家模型加入來時碰壁。GCD 把 provider 清單、profile 載入、protocol 分派、streaming parsing、fallback 與 usage 計算放進同一條主要流程，正是在承認這層本來就是 外殼 的一部分。</p>
+        <p>如果你把 provider layer 想成「換個 base URL 再帶 API key」的薄薄一層，你很快就會在第二家模型加入來時碰壁。Aixlarity 把 provider 清單、profile 載入、protocol 分派、streaming parsing、fallback 與 usage 計算放進同一條主要流程，正是在承認這層本來就是 外殼 的一部分。</p>
     </div>
 
     <h2>為什麼 provider 層值得單獨成章</h2>
@@ -22,7 +22,7 @@
         <article class="feature-card revealable">
             <div class="feature-num">2</div>
             <h3>家族與協定是兩層概念</h3>
-            <p><code>family</code> 表示大致生態，<code>protocol</code> 則決定具體請求形狀。這讓 GCD 能區分「看起來像哪家」與「實際怎麼發送」。</p>
+            <p><code>family</code> 表示大致生態，<code>protocol</code> 則決定具體請求形狀。這讓 Aixlarity 能區分「看起來像哪家」與「實際怎麼發送」。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">3</div>
@@ -36,15 +36,15 @@
         </article>
     </div>
 
-    <h2>GCD 的 provider 清單 是怎麼長出來的</h2>
-    <p>在 <code>ProviderRegistry::load</code> 裡，GCD 會依序把四種來源併進同一份 registry：built-in、environment、global config、workspace config。這個順序本身就有產品意義，因為它讓專案可以同時支援預設 profile、環境驅動部署，以及工作區自訂 provider。</p>
+    <h2>Aixlarity 的 provider 清單 是怎麼長出來的</h2>
+    <p>在 <code>ProviderRegistry::load</code> 裡，Aixlarity 會依序把四種來源併進同一份 registry：built-in、environment、global config、workspace config。這個順序本身就有產品意義，因為它讓專案可以同時支援預設 profile、環境驅動部署，以及工作區自訂 provider。</p>
 
     <div class="comparison-table">
         <table>
             <thead>
                 <tr>
                     <th>來源</th>
-                    <th>在 GCD 的位置</th>
+                    <th>在 Aixlarity 的位置</th>
                     <th>適合解的問題</th>
                     <th>注意事項</th>
                 </tr>
@@ -70,7 +70,7 @@
                 </tr>
                 <tr>
                     <td>Workspace Config</td>
-                    <td>工作區內 <code>.gcd/providers.conf</code></td>
+                    <td>工作區內 <code>.aixlarity/providers.conf</code></td>
                     <td>讓專案自帶 provider 建議與本地路由設定。</td>
                     <td>在 untrusted workspace 下會被 信任檢查 阻擋。</td>
                 </tr>
@@ -94,10 +94,10 @@ strengths = "relay routing | one key for multiple vendors"</code></pre>
         </div>
     </div>
 
-    <p>這個例子真正想說明的，不是 config 語法本身，而是 GCD 把 provider 看成明確的 domain object，而不是零散散落在 CLI 參數與環境變數裡的設定碎片。</p>
+    <p>這個例子真正想說明的，不是 config 語法本身，而是 Aixlarity 把 provider 看成明確的 domain object，而不是零散散落在 CLI 參數與環境變數裡的設定碎片。</p>
 
     <h2><code>family</code>、<code>protocol</code>、<code>profile</code> 三者差在哪裡</h2>
-    <p>這三個詞很容易混在一起，但在 GCD 裡是不同層的概念。理解這個分工，才能看懂為什麼 provider layer 不只是 API wrapper。</p>
+    <p>這三個詞很容易混在一起，但在 Aixlarity 裡是不同層的概念。理解這個分工，才能看懂為什麼 provider layer 不只是 API wrapper。</p>
 
     <div class="comparison-table">
         <table>
@@ -105,7 +105,7 @@ strengths = "relay routing | one key for multiple vendors"</code></pre>
                 <tr>
                     <th>名詞</th>
                     <th>它回答的問題</th>
-                    <th>在 GCD 裡的例子</th>
+                    <th>在 Aixlarity 裡的例子</th>
                 </tr>
             </thead>
             <tbody>
@@ -131,7 +131,7 @@ strengths = "relay routing | one key for multiple vendors"</code></pre>
     <p>把 family 和 protocol 分開，有兩個好處。第一，某些 profile 可以共享同一家族含義，但使用不同 protocol。第二，文件和 UI 可以說「這個 provider 屬於 openai-compatible 家族」，runtime 則更精準地知道「這次應該走 responses API 還是 chat completions」。</p>
 
     <h2>一輪 live execution 是怎麼選 provider 的</h2>
-    <p>在 <code>App::exec</code> 裡，provider 選擇並不是單一來源決定的。GCD 會綜合 explicit provider、預設偏好、workspace active、global active 與 built-in default 來決定這次主 provider，然後再根據可用 API key 組出 fallback providers。</p>
+    <p>在 <code>App::exec</code> 裡，provider 選擇並不是單一來源決定的。Aixlarity 會綜合 explicit provider、預設偏好、workspace active、global active 與 built-in default 來決定這次主 provider，然後再根據可用 API key 組出 fallback providers。</p>
 
     <div class="checklist revealable">
         <div class="check-item">
@@ -144,7 +144,7 @@ strengths = "relay routing | one key for multiple vendors"</code></pre>
         </div>
         <div class="check-item">
             <h3>最後建立 fallback providers</h3>
-            <p>GCD 會遍歷 registry 裡其他 profiles，凡是能成功讀到 key 的，就加入 fallback list。當主 provider 在可重試錯誤上失敗時，這份列表就能接手。</p>
+            <p>Aixlarity 會遍歷 registry 裡其他 profiles，凡是能成功讀到 key 的，就加入 fallback list。當主 provider 在可重試錯誤上失敗時，這份列表就能接手。</p>
         </div>
     </div>
 
@@ -174,14 +174,14 @@ fallback 不是「隨便換一個模型」，
     </div>
 
     <h2>整合成本真正高的地方，不在選 profile，而在協定差異</h2>
-    <p>真正麻煩的不是把 provider 顯示成下拉選單，而是不同協定會把同一輪 代理迴圈 切成完全不同的 request / response 形狀。GCD 在 <code>agent/adapters/</code> 下把 Gemini、OpenAI Responses、OpenAI Chat、Anthropic 分開，就是因為這些差異無法被「一層統一 SDK」簡單抹平。</p>
+    <p>真正麻煩的不是把 provider 顯示成下拉選單，而是不同協定會把同一輪 代理迴圈 切成完全不同的 request / response 形狀。Aixlarity 在 <code>agent/adapters/</code> 下把 Gemini、OpenAI Responses、OpenAI Chat、Anthropic 分開，就是因為這些差異無法被「一層統一 SDK」簡單抹平。</p>
 
     <div class="comparison-table">
         <table>
             <thead>
                 <tr>
                     <th>協定差異</th>
-                    <th>在 GCD 看到的具體處理</th>
+                    <th>在 Aixlarity 看到的具體處理</th>
                     <th>如果偷懶會出現什麼問題</th>
                 </tr>
             </thead>
@@ -198,7 +198,7 @@ fallback 不是「隨便換一個模型」，
                 </tr>
                 <tr>
                     <td>Tool call payload 形狀不同</td>
-                    <td>adapter 會統整成 GCD 內部的 <code>ToolCall</code> 形狀。</td>
+                    <td>adapter 會統整成 Aixlarity 內部的 <code>ToolCall</code> 形狀。</td>
                     <td>runtime 需要為每家 provider 重寫工具執行邏輯。</td>
                 </tr>
                 <tr>
@@ -210,8 +210,8 @@ fallback 不是「隨便換一個模型」，
         </table>
     </div>
 
-    <h2>一個很值得注意的細節：GCD 把 provider 事件寫回 session</h2>
-    <p>在 代理迴圈 裡，provider 呼叫不是看不透的。GCD 會把 <code>RunStarted</code>、<code>ProviderCalled</code>、<code>ProviderFallback</code>、<code>RunCompleted</code> 這些事件寫回 session。這代表 provider layer 不只是執行細節，也是一條可回放、可除錯、可教學的事件線。</p>
+    <h2>一個很值得注意的細節：Aixlarity 把 provider 事件寫回 session</h2>
+    <p>在 代理迴圈 裡，provider 呼叫不是看不透的。Aixlarity 會把 <code>RunStarted</code>、<code>ProviderCalled</code>、<code>ProviderFallback</code>、<code>RunCompleted</code> 這些事件寫回 session。這代表 provider layer 不只是執行細節，也是一條可回放、可除錯、可教學的事件線。</p>
 
     <div class="feature-grid compact">
         <article class="feature-card revealable">

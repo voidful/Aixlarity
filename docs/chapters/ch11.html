@@ -25,7 +25,7 @@
                         <span class="window-title">技能目錄結構</span>
                     </div>
                     <div class="window-body">
-<pre><code class="language-text">.gcd/skills/
+<pre><code class="language-text">.aixlarity/skills/
 ├── rust-patterns.md           ← 單檔技能
 ├── security-audit/
 │   └── SKILL.md               ← 目錄技能
@@ -87,10 +87,10 @@ When working with Rust code, prefer...
                         </tbody>
                     </table>
                 </div>
-                <p>只能修改 user-created skills（<code>~/.gcd/skills/</code>），bundled 與project-level skills 為唯讀。所有寫入前會執行安全掃描：prompt injection pattern、exfiltration pattern、invisible unicode characters。</p>
+                <p>只能修改 user-created skills（<code>~/.aixlarity/skills/</code>），bundled 與project-level skills 為唯讀。所有寫入前會執行安全掃描：prompt injection pattern、exfiltration pattern、invisible unicode characters。</p>
 
                 <div class="source-ref">
-                    <strong>原始碼</strong>：<code>crates/gcd-core/src/skills.rs</code>、<code>crates/gcd-core/src/tools/skill_manager.rs</code>
+                    <strong>原始碼</strong>：<code>crates/aixlarity-core/src/skills.rs</code>、<code>crates/aixlarity-core/src/tools/skill_manager.rs</code>
                 </div>
             </div>
             <div class="chapter-nav">

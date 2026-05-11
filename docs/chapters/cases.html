@@ -7,13 +7,13 @@
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">先說清楚這一章的口徑</div>
-        <p>下面三個案例都以 GCD 目前原始碼為基礎，但其中的 prompt 片段、工具呼叫順序與模型回覆內容屬於教學性示意，不是官方逐字輸出。這一章的價值在於幫你建立判斷方法，而不是假裝列出一份唯一正確的 transcript。</p>
+        <p>下面三個案例都以 Aixlarity 目前原始碼為基礎，但其中的 prompt 片段、工具呼叫順序與模型回覆內容屬於教學性示意，不是官方逐字輸出。這一章的價值在於幫你建立判斷方法，而不是假裝列出一份唯一正確的 transcript。</p>
     </div>
 
     <h2>為什麼一定要看案例</h2>
     <p>很多人第一次接觸 AI 助手 文件時，會把每個模組都看懂，卻還是不知道它們在執行時怎麼互相影響。原因很簡單：<strong>外殼的難點不是名詞，而是順序</strong>。工作區先不先被信任，會改變 instructions 能不能載入；sandbox 與 permission 的組合，會改變同一個 tool call 是否可執行；session 有沒有延續，又會改變 最終提示詞 裡是不是多一大段上下文。</p>
 
-    <p>所以這一章刻意不再抽象地說「有 trust、有 tools、有 session」，而是選三個工程上最常見的任務，沿著 <code>gcd exec</code> 的主要流程，把每一層實際在做的事走一次。</p>
+    <p>所以這一章刻意不再抽象地說「有 trust、有 tools、有 session」，而是選三個工程上最常見的任務，沿著 <code>aixlarity exec</code> 的主要流程，把每一層實際在做的事走一次。</p>
 
     <div class="comparison-table">
         <table>
@@ -52,10 +52,10 @@
             <span class="window-title">教學性命令示意</span>
         </div>
         <div class="window-body">
-<pre><code>gcd exec \
+<pre><code>aixlarity exec \
   --sandbox read-only \
   --permission suggest \
-  "review crates/gcd-core/src/app.rs 的 exec 主流程，指出風險與完成度誤判"</code></pre>
+  "review crates/aixlarity-core/src/app.rs 的 exec 主流程，指出風險與完成度誤判"</code></pre>
         </div>
     </div>
 
@@ -66,7 +66,7 @@
             <div class="roadmap-marker">01</div>
             <div class="roadmap-content">
                 <h3>進入模型之前，先決定工作區與 trust</h3>
-                <p><code>Workspace::discover()</code> 會先決定根目錄，接著 trust state 會影響 instructions、commands、skills 能不能載入。如果這個 repo 已被信任，<code>AGENTS.md</code>、<code>GCD.md</code> 之類檔案就可能進入 提示詞來源 layer。</p>
+                <p><code>Workspace::discover()</code> 會先決定根目錄，接著 trust state 會影響 instructions、commands、skills 能不能載入。如果這個 repo 已被信任，<code>AGENTS.md</code>、<code>AIXLARITY.md</code> 之類檔案就可能進入 提示詞來源 layer。</p>
             </div>
         </article>
         <article class="roadmap-item revealable">
@@ -87,7 +87,7 @@
             <div class="roadmap-marker">04</div>
             <div class="roadmap-content">
                 <h3>任務結束後，session 仍會留下可 replay 的痕跡</h3>
-                <p>即使沒有修改檔案，GCD 仍會把 prompt 準備、工具呼叫、provider fallback 與最終回覆等資訊寫進 session turn。這一點很重要，因為 外殼 的價值之一就是讓你事後能重建發生過什麼。</p>
+                <p>即使沒有修改檔案，Aixlarity 仍會把 prompt 準備、工具呼叫、provider fallback 與最終回覆等資訊寫進 session turn。這一點很重要，因為 外殼 的價值之一就是讓你事後能重建發生過什麼。</p>
             </div>
         </article>
     </div>
@@ -97,10 +97,10 @@
             <span class="window-title">教學性示意：模型在這個案例裡可能想做的事</span>
         </div>
         <div class="window-body">
-<pre><code>1. read_file("crates/gcd-core/src/app.rs")
-2. search_files("plan_only", "crates/gcd-core/src")
-3. read_file("crates/gcd-core/src/prompt.rs")
-4. 建議：!{cargo test -p gcd-core}
+<pre><code>1. read_file("crates/aixlarity-core/src/app.rs")
+2. search_files("plan_only", "crates/aixlarity-core/src")
+3. read_file("crates/aixlarity-core/src/prompt.rs")
+4. 建議：!{cargo test -p aixlarity-core}
 5. 整理風險、完成度與可能的誤判
 
 真正會發生的 gate：
@@ -116,7 +116,7 @@
                 <tr>
                     <th>如果沒有哪一層</th>
                     <th>可能出現什麼問題</th>
-                    <th>GCD 這個案例靠哪一層補上</th>
+                    <th>Aixlarity 這個案例靠哪一層補上</th>
                 </tr>
             </thead>
             <tbody>
@@ -152,14 +152,14 @@
             <span class="window-title">教學性命令示意</span>
         </div>
         <div class="window-body">
-<pre><code>gcd exec \
+<pre><code>aixlarity exec \
   --sandbox workspace-write \
   --permission auto-edit \
   "修補 providers doctor 的錯誤訊息，並補一個最小測試"</code></pre>
         </div>
     </div>
 
-    <p>這裡的心理預期，通常是「改檔可以自動，但測試執行前最好問我一下」。如果你的 外殼 只有單一的「安全 / 不安全」開關，這種需求就很難表達；但 GCD 把 sandbox 和 permission 分開，所以這個協作節奏能被寫成明確 policy。</p>
+    <p>這裡的心理預期，通常是「改檔可以自動，但測試執行前最好問我一下」。如果你的 外殼 只有單一的「安全 / 不安全」開關，這種需求就很難表達；但 Aixlarity 把 sandbox 和 permission 分開，所以這個協作節奏能被寫成明確 policy。</p>
 
     <div class="comparison-table">
         <table>
@@ -200,17 +200,17 @@
             <span class="window-title">教學性示意：同一個修補任務的典型路徑</span>
         </div>
         <div class="window-body">
-<pre><code>1. read_file("crates/gcd-core/src/app.rs")
-2. search_files("providers_doctor", "crates/gcd-core/src")
-3. read_file("crates/gcd-core/src/providers.rs")
+<pre><code>1. read_file("crates/aixlarity-core/src/app.rs")
+2. search_files("providers_doctor", "crates/aixlarity-core/src")
+3. read_file("crates/aixlarity-core/src/providers.rs")
 4. apply_patch(...)
-5. 建議：!{cargo test -p gcd-core providers::tests}
+5. 建議：!{cargo test -p aixlarity-core providers::tests}
 6. 等待 shell 批准
 7. 根據測試結果再決定是否補第二次 patch</code></pre>
         </div>
     </div>
 
-    <p>這個案例最有學習價值的地方，在於它看起來像一個單一任務，實際上卻跨了三種不同性質的操作：讀證據、改工作區、驗證結果。GCD 現在能把前兩者加入主要流程，也能把第三者做成 approval step，這代表它已經不是單純的 patch bot，而是具備基本人機協作節奏的 coding 外殼。</p>
+    <p>這個案例最有學習價值的地方，在於它看起來像一個單一任務，實際上卻跨了三種不同性質的操作：讀證據、改工作區、驗證結果。Aixlarity 現在能把前兩者加入主要流程，也能把第三者做成 approval step，這代表它已經不是單純的 patch bot，而是具備基本人機協作節奏的 coding 外殼。</p>
 
     <div class="callout callout-warning revealable">
         <div class="callout-title">常見誤判</div>
@@ -259,14 +259,14 @@
             <span class="window-title">教學性命令示意</span>
         </div>
         <div class="window-body">
-<pre><code>gcd exec \
+<pre><code>aixlarity exec \
   --sandbox read-only \
   --permission suggest \
   "先說明這個 repo 的 build 流程、主要模組與可疑腳本，不要執行任何命令"</code></pre>
         </div>
     </div>
 
-    <p>如果工作區目前是不受信任狀態，GCD 的行為不是「完全不能用」，而是 <strong>提示詞來源 layer 會整體被限縮</strong>。Instructions 不載入，commands catalog 變空，skills catalog 也變空。代理仍能讀檔、列目錄、搜尋，但它會更像一般性的 terminal coding assistant，而不是一個懂這個 repo 私有 workflow 的專案 agent。</p>
+    <p>如果工作區目前是不受信任狀態，Aixlarity 的行為不是「完全不能用」，而是 <strong>提示詞來源 layer 會整體被限縮</strong>。Instructions 不載入，commands catalog 變空，skills catalog 也變空。代理仍能讀檔、列目錄、搜尋，但它會更像一般性的 terminal coding assistant，而不是一個懂這個 repo 私有 workflow 的專案 agent。</p>
 
     <div class="comparison-table">
         <table>
@@ -347,7 +347,7 @@ untrusted 時，組裝結果更接近：
             <div class="roadmap-marker">01</div>
             <div class="roadmap-content">
                 <h3>先用 <code>--plan</code> 看組裝，不急著打 API</h3>
-                <p>GCD 的 規劃模式 會在真正 live execution 前，把 prompt、checkpoint 與預定事件先整理出來。這很適合拿來做離線教學或文件驗證。</p>
+                <p>Aixlarity 的 規劃模式 會在真正 live execution 前，把 prompt、checkpoint 與預定事件先整理出來。這很適合拿來做離線教學或文件驗證。</p>
             </div>
         </article>
         <article class="roadmap-item revealable">
@@ -361,7 +361,7 @@ untrusted 時，組裝結果更接近：
             <div class="roadmap-marker">03</div>
             <div class="roadmap-content">
                 <h3>最後回頭 replay session</h3>
-                <p>透過 <code>gcd sessions list</code> 與 <code>gcd sessions replay &lt;id&gt;</code>，你可以把「我以為 agent 會這樣做」和「它真的這樣做了嗎」放在一起比對。這一步很適合做 外殼 實況檢查。</p>
+                <p>透過 <code>aixlarity sessions list</code> 與 <code>aixlarity sessions replay &lt;id&gt;</code>，你可以把「我以為 agent 會這樣做」和「它真的這樣做了嗎」放在一起比對。這一步很適合做 外殼 實況檢查。</p>
             </div>
         </article>
     </div>

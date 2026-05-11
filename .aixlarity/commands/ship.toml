@@ -1,0 +1,16 @@
+description = "Pre-ship quality gate: parallel code review, test analysis, and security audit"
+prompt = """Use the spawn_agent tool to run these three tasks IN PARALLEL with strategy "parallel":
+
+1. Task named "review" with persona "CodeReviewer": Review all changed files in the workspace for correctness, readability, architecture, security, and performance issues. Use `git diff` to identify changed files. {{args}}
+
+2. Task named "test" with persona "TestEngineer": Analyze test coverage gaps for the changed code. Identify missing tests, weak assertions, and untested edge cases. {{args}}
+
+3. Task named "security" with persona "SecurityAuditor": Audit changed files for OWASP Top 10 vulnerabilities, secrets exposure, injection vectors, and trust model violations. {{args}}
+
+After all three agents complete, aggregate their findings into a unified Ship/No-Ship verdict:
+- If ANY Critical issues exist across any agent → verdict is NO-SHIP
+- If only Important/Suggestion issues → verdict is SHIP WITH NOTES
+- If no issues → verdict is SHIP
+
+Present the aggregated report with sections from each agent clearly labeled.
+"""

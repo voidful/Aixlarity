@@ -33,8 +33,8 @@
         </table>
     </div>
 
-    <h2>拆解 GCD 自己的 AGENTS.md</h2>
-    <p>GCD 的 AGENTS.md 是一份活教材。以下逐段解釋為什麼這樣寫：</p>
+    <h2>拆解 Aixlarity 自己的 AGENTS.md</h2>
+    <p>Aixlarity 的 AGENTS.md 是一份活教材。以下逐段解釋為什麼這樣寫：</p>
 
     <div class="code-window revealable">
         <div class="window-header">
@@ -42,13 +42,13 @@
             <span class="window-title">AGENTS.md（節錄）</span>
         </div>
         <div class="window-body">
-<pre><code class="language-markdown"># GemiClawDex — Development Instructions
+<pre><code class="language-markdown"># Aixlarity — Development Instructions
 
 ## Project Purpose
-GCD is a teaching project for Harness Engineering.
+Aixlarity is a teaching project for Harness Engineering.
 
 ## Coding Conventions
-1. Keep gcd-core free of unnecessary dependencies.
+1. Keep aixlarity-core free of unnecessary dependencies.
 2. Prefer plain-text, testable domain logic.
 3. Make trust and sandbox decisions explicit in the output.
 4. Treat command loading, skill loading, and prompt assembly as separate layers.
@@ -116,7 +116,7 @@ GCD is a teaching project for Harness Engineering.
         <div class="feature-card revealable">
             <div class="feature-num">5</div>
             <h3>分層放置</h3>
-            <p>根目錄放全域規範。子目錄放局部規則。GCD 的 <code>instructions.rs</code> 會自動合併多層 AGENTS.md。</p>
+            <p>根目錄放全域規範。子目錄放局部規則。Aixlarity 的 <code>instructions.rs</code> 會自動合併多層 AGENTS.md。</p>
         </div>
     </div>
 
@@ -203,8 +203,8 @@ python -m src.train --dry-run  # verify pipeline without GPU
 
     <h2>動手練習</h2>
     <div class="callout callout-tip revealable">
-        <div class="callout-title">練習：為 GCD 改寫 AGENTS.md</div>
-        <p>打開 GCD 的 AGENTS.md，用你在這一章學到的五個原則重新評估它。有沒有缺少的資訊？有沒有多餘的內容？試著改寫一版，然後用 <code>gcd exec "解釋這個專案的架構"</code> 比較改寫前後的輸出品質。</p>
+        <div class="callout-title">練習：為 Aixlarity 改寫 AGENTS.md</div>
+        <p>打開 Aixlarity 的 AGENTS.md，用你在這一章學到的五個原則重新評估它。有沒有缺少的資訊？有沒有多餘的內容？試著改寫一版，然後用 <code>aixlarity exec "解釋這個專案的架構"</code> 比較改寫前後的輸出品質。</p>
     </div>
 </div>
 

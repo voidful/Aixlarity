@@ -1,0 +1,9 @@
+description = "Deep security audit of specified files or directories"
+prompt = """Use the spawn_agent tool to run a single task:
+
+Task named "security_audit" with persona "SecurityAuditor": Perform a thorough security audit of {{args}}.
+
+Focus on exploitable vulnerabilities, not theoretical risks. Check OWASP Top 10 as minimum baseline. Review dependencies for known CVEs. Provide proof of concept for Critical/High findings.
+
+Present findings using the Security Audit Report format with severity classification.
+"""

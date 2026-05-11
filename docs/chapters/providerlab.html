@@ -7,7 +7,7 @@
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">先講這一章要解的困惑</div>
-        <p>很多人知道 GCD 支援 Gemini、OpenAI、Anthropic，也知道有 Responses 與 Chat 兩種 OpenAI 路徑，但真正接到原始碼時，還是不知道這些差異到底落在哪裡。這一章的目標，就是把 provider layer 從「名詞列表」變成「可以看到的 請求格式調整 實例」。</p>
+        <p>很多人知道 Aixlarity 支援 Gemini、OpenAI、Anthropic，也知道有 Responses 與 Chat 兩種 OpenAI 路徑，但真正接到原始碼時，還是不知道這些差異到底落在哪裡。這一章的目標，就是把 provider layer 從「名詞列表」變成「可以看到的 請求格式調整 實例」。</p>
     </div>
 
     <h2>先建立一個很重要的觀念</h2>
@@ -202,7 +202,7 @@
 
     <div class="callout callout-tip revealable">
         <div class="callout-title">這裡最值得記住的事</div>
-        <p>光是第一輪的工具宣告，GCD 就要分別處理 <code>parameters</code>、<code>function.parameters</code>、<code>functionDeclarations</code>、<code>input_schema</code> 四種形狀。這還只是送 request，還沒開始處理 streaming 與 tool result。</p>
+        <p>光是第一輪的工具宣告，Aixlarity 就要分別處理 <code>parameters</code>、<code>function.parameters</code>、<code>functionDeclarations</code>、<code>input_schema</code> 四種形狀。這還只是送 request，還沒開始處理 streaming 與 tool result。</p>
     </div>
 
     <h2>案例二：模型先呼叫 <code>read_file</code> 後，第二輪怎麼接回去</h2>
@@ -213,7 +213,7 @@
             <thead>
                 <tr>
                     <th>協定</th>
-                    <th>GCD 目前怎麼回送 tool result</th>
+                    <th>Aixlarity 目前怎麼回送 tool result</th>
                     <th>這代表什麼</th>
                 </tr>
             </thead>
@@ -261,7 +261,7 @@
         </div>
     </div>
 
-    <p>這是 GCD 在 OpenAI Responses 路徑裡最值得觀察的一個決策。如果已拿到 <code>previous_response_id</code>，<code>openai_response_input()</code> 會優先只送 trailing tool outputs，而不是把整段歷史訊息重新展開。這意味著 Responses path 在第二輪之後，理論上可以比 Chat path 更簡化，也更依賴 provider 自己保存前態。</p>
+    <p>這是 Aixlarity 在 OpenAI Responses 路徑裡最值得觀察的一個決策。如果已拿到 <code>previous_response_id</code>，<code>openai_response_input()</code> 會優先只送 trailing tool outputs，而不是把整段歷史訊息重新展開。這意味著 Responses path 在第二輪之後，理論上可以比 Chat path 更簡化，也更依賴 provider 自己保存前態。</p>
 
     <div class="code-window revealable">
         <div class="window-header">
@@ -341,7 +341,7 @@
             <thead>
                 <tr>
                     <th>協定</th>
-                    <th>GCD 目前在等什麼事件</th>
+                    <th>Aixlarity 目前在等什麼事件</th>
                     <th>教學上的重點</th>
                 </tr>
             </thead>
@@ -376,7 +376,7 @@
     </div>
 
     <h2>Fallback 目前實際上怎麼工作</h2>
-    <p>GCD 的 fallback 有兩層值得分開看。第一層是「哪些錯誤算可重試」；第二層是「哪些 provider 會被放進候選清單」。這兩層都已經有主要流程實作，但都還有值得保守描述的地方。</p>
+    <p>Aixlarity 的 fallback 有兩層值得分開看。第一層是「哪些錯誤算可重試」；第二層是「哪些 provider 會被放進候選清單」。這兩層都已經有主要流程實作，但都還有值得保守描述的地方。</p>
 
     <div class="comparison-table">
         <table>
@@ -514,7 +514,7 @@
     <h2>把這一章濃縮成一句話</h2>
     <div class="callout callout-warning revealable">
         <div class="callout-title">多 provider 的難點不是選單，而是變形與收斂</div>
-        <p>同一個任務進入 OpenAI Responses、OpenAI Chat、Gemini、Anthropic 之後，會變成不同 request body、不同工具回送形狀、不同 streaming 事件與不同 fallback 風險。GCD 的 provider layer 正是在收斂這些差異，而不是只替 CLI 多加幾個 `--provider` 選項。</p>
+        <p>同一個任務進入 OpenAI Responses、OpenAI Chat、Gemini、Anthropic 之後，會變成不同 request body、不同工具回送形狀、不同 streaming 事件與不同 fallback 風險。Aixlarity 的 provider layer 正是在收斂這些差異，而不是只替 CLI 多加幾個 `--provider` 選項。</p>
     </div>
 </div>
 

@@ -1,13 +1,13 @@
 <div class="chapter-header">
     <span class="chapter-number">Attachments</span>
     <h1>Binary Attachment、Multimodal 與 Provider 實際做出來斷點</h1>
-    <p class="chapter-desc">這一章專門拆解圖片、PDF 這類二進位附件在 GCD 裡的真實路徑。重點不是「有沒有 multimodal 這個詞」，而是附件到底走到哪一層、在哪裡停下來。</p>
+    <p class="chapter-desc">這一章專門拆解圖片、PDF 這類二進位附件在 Aixlarity 裡的真實路徑。重點不是「有沒有 multimodal 這個詞」，而是附件到底走到哪一層、在哪裡停下來。</p>
 </div>
 
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">先講結論</div>
-        <p>GCD 目前已經能把圖片與 PDF 這類附件辨識成 <code>PromptAttachment::BinaryReference</code>，也會把它們放進 <code>PromptAssembly.attachments</code>、exec JSON 輸出與事件計數裡；但進到 provider adapter 時，主要流程仍是把整份 prompt 當成文字 message 送出。因此這條能力最如實的標記是：。</p>
+        <p>Aixlarity 目前已經能把圖片與 PDF 這類附件辨識成 <code>PromptAttachment::BinaryReference</code>，也會把它們放進 <code>PromptAssembly.attachments</code>、exec JSON 輸出與事件計數裡；但進到 provider adapter 時，主要流程仍是把整份 prompt 當成文字 message 送出。因此這條能力最如實的標記是：。</p>
     </div>
 
     <h2>為什麼附件要單獨成章</h2>
@@ -54,7 +54,7 @@
             <thead>
                 <tr>
                     <th>層次</th>
-                    <th>GCD 目前怎麼做</th>
+                    <th>Aixlarity 目前怎麼做</th>
                 </tr>
             </thead>
             <tbody>
@@ -83,7 +83,7 @@
     </div>
 
     <h2>文字注入和二進位附件，不能當同一件事看</h2>
-    <p>在 <code>expand_file_injections()</code> 這層，GCD 其實已經把兩條路徑分開了。文字檔會被讀成帶行號 preview，直接展開為 <code>&lt;injected-file&gt;</code>；二進位附件則不會直接把內容塞進 prompt，而是只留下 placeholder 與 metadata。這個差別非常重要，因為它代表系統已經知道「附件不是普通文字」。</p>
+    <p>在 <code>expand_file_injections()</code> 這層，Aixlarity 其實已經把兩條路徑分開了。文字檔會被讀成帶行號 preview，直接展開為 <code>&lt;injected-file&gt;</code>；二進位附件則不會直接把內容塞進 prompt，而是只留下 placeholder 與 metadata。這個差別非常重要，因為它代表系統已經知道「附件不是普通文字」。</p>
 
     <div class="comparison-table">
         <table>
@@ -130,7 +130,7 @@
         </div>
     </div>
 
-    <p>這裡值得注意的是：<strong>GCD 並不是完全沒有附件含義</strong>。它已經把二進位檔從文字注入路徑分流了，只是目前還沒一路分流到 provider-native request payload。</p>
+    <p>這裡值得注意的是：<strong>Aixlarity 並不是完全沒有附件含義</strong>。它已經把二進位檔從文字注入路徑分流了，只是目前還沒一路分流到 provider-native request payload。</p>
 
     <h2>副檔名辨識是 Implemented，但仍是保守做法</h2>
     <p>目前附件辨識主要靠 <code>detect_binary_media_type()</code>，已知支援的類型是 <code>png</code>、<code>jpg / jpeg</code>、<code>gif</code>、<code>webp</code>、<code>pdf</code>。這種做法的優點是簡單、可測、離線友善；缺點則是它依賴副檔名，不是完整的 MIME 或檔頭辨識。</p>
@@ -171,7 +171,7 @@
         </table>
     </div>
 
-    <p>這也提醒我們一件事：附件能力不只是 provider 問題，前面還有一層「你要怎麼判斷這個檔案值不值得當附件」。GCD 目前的答案是保守而可測，但還沒有走到完整型別系統。</p>
+    <p>這也提醒我們一件事：附件能力不只是 provider 問題，前面還有一層「你要怎麼判斷這個檔案值不值得當附件」。Aixlarity 目前的答案是保守而可測，但還沒有走到完整型別系統。</p>
 
     <h2>一條完整路徑：從 <code>@{flow.png}</code> 到 exec JSON</h2>
     <p>如果你想真正看懂附件線，最好的方法是把一個具體例子沿著主要流程走一次。假設使用者輸入：</p>
@@ -290,10 +290,10 @@ Exec JSON 片段：
         </table>
     </div>
 
-    <p>換句話說，<strong>GCD 目前已經知道「有附件這回事」，但還沒有把它翻成各家 provider 真正吃得懂的多模態 request</strong>。這是很典型的 外殼 半連接狀態：上游已有含義，下游尚未完全消化。</p>
+    <p>換句話說，<strong>Aixlarity 目前已經知道「有附件這回事」，但還沒有把它翻成各家 provider 真正吃得懂的多模態 request</strong>。這是很典型的 外殼 半連接狀態：上游已有含義，下游尚未完全消化。</p>
 
     <h2>為什麼 <code>supports_multimodal</code> 不等於「真的已可用」</h2>
-    <p>GCD 的 provider profile 確實有 <code>supports_multimodal</code> 這個欄位，而且 Gemini、Anthropic 的 built-in / env profiles 預設會是 <code>true</code>。但這個欄位目前比較像 capability metadata，用來描述 provider 家族的理論能力與使用建議；它本身不會自動幫你把附件轉成正確 payload。</p>
+    <p>Aixlarity 的 provider profile 確實有 <code>supports_multimodal</code> 這個欄位，而且 Gemini、Anthropic 的 built-in / env profiles 預設會是 <code>true</code>。但這個欄位目前比較像 capability metadata，用來描述 provider 家族的理論能力與使用建議；它本身不會自動幫你把附件轉成正確 payload。</p>
 
     <div class="comparison-table">
         <table>
@@ -327,7 +327,7 @@ Exec JSON 片段：
     <p>這就是 教學範例 很值得強調的一課：<strong>能力宣告、prompt metadata、runtime payload 是三件不同的事</strong>。如果把它們混為一談，文件就會比實作更樂觀。</p>
 
     <h2>Replay 與 checkpoint 能看到多少附件證據</h2>
-    <p>這條線還有另一個容易被忽略的點：就算你現在不急著把圖片真的送進模型，至少也要知道事後能追到多少證據。GCD 在這裡已經有一些不錯的基礎，但還沒到完整鑑識等級。</p>
+    <p>這條線還有另一個容易被忽略的點：就算你現在不急著把圖片真的送進模型，至少也要知道事後能追到多少證據。Aixlarity 在這裡已經有一些不錯的基礎，但還沒到完整鑑識等級。</p>
 
     <div class="comparison-table">
         <table>
@@ -368,7 +368,7 @@ Exec JSON 片段：
         </table>
     </div>
 
-    <p>因此，如果你問「今天 GCD 能不能讓我事後知道某輪用了幾個附件？」答案是可以。如果你問「能不能百分之百重建當時實際送到 provider 的圖片 / PDF payload？」那答案還不能講成已完整支援。</p>
+    <p>因此，如果你問「今天 Aixlarity 能不能讓我事後知道某輪用了幾個附件？」答案是可以。如果你問「能不能百分之百重建當時實際送到 provider 的圖片 / PDF payload？」那答案還不能講成已完整支援。</p>
 
     <h2>一個更貼近工程現場的例子</h2>
     <p>想像你要做一個 bug report review，任務裡同時附上 terminal 截圖與 PDF 規格。這是一個很合理的 AI 助手 任務，也是多模態最容易被拿來當賣點的場景。</p>
@@ -378,13 +378,13 @@ Exec JSON 片段：
             <span class="window-title">教學性任務例子</span>
         </div>
         <div class="window-body">
-<pre><code>gcd exec --print-prompt \
+<pre><code>aixlarity exec --print-prompt \
   "請比較 @{artifacts/error-screen.png} 和 @{docs/runtime-spec.pdf}，
    說明為什麼目前的 fallback 行為和規格不一致"</code></pre>
         </div>
     </div>
 
-    <p>今天這條線在 GCD 裡大概會發生的事，是：</p>
+    <p>今天這條線在 Aixlarity 裡大概會發生的事，是：</p>
 
     <div class="checklist revealable">
         <div class="check-item">
@@ -404,7 +404,7 @@ Exec JSON 片段：
     <p>這種落差需要寫進文件，因為它正好示範了 外殼 工程最常見的誤解：<strong>UI 與 prompt 層看起來像支援，不等於 執行時 已經真的支援</strong>。</p>
 
     <h2>如果要把這條線補齊，工程上至少要新增哪些層</h2>
-    <p>這裡我不把它寫成「GCD 已打算這樣做」的承諾，而是用比較保守的技術判斷整理成  /  方向。因為原始碼目前還沒有完整實作這些步驟。</p>
+    <p>這裡我不把它寫成「Aixlarity 已打算這樣做」的承諾，而是用比較保守的技術判斷整理成  /  方向。因為原始碼目前還沒有完整實作這些步驟。</p>
 
     <div class="roadmap">
         <article class="roadmap-item revealable">
@@ -466,8 +466,8 @@ Exec JSON 片段：
 
     <h2>把這一章濃縮成一句話</h2>
     <div class="callout callout-warning revealable">
-        <div class="callout-title">GCD 已經有附件含義，但還沒有完整的多模態 runtime</div>
-        <p>現在的 GCD 已經會辨識圖片與 PDF、會在 prompt 與輸出裡保留附件索引，也會把附件數量記進事件；但 adapter 仍以文字 message 為主。這不是失敗，而是一個很值得被清楚寫清楚的開發中的狀態。看懂這個中間態，本身就是 外殼工程 的核心訓練。</p>
+        <div class="callout-title">Aixlarity 已經有附件含義，但還沒有完整的多模態 runtime</div>
+        <p>現在的 Aixlarity 已經會辨識圖片與 PDF、會在 prompt 與輸出裡保留附件索引，也會把附件數量記進事件；但 adapter 仍以文字 message 為主。這不是失敗，而是一個很值得被清楚寫清楚的開發中的狀態。看懂這個中間態，本身就是 外殼工程 的核心訓練。</p>
     </div>
 </div>
 

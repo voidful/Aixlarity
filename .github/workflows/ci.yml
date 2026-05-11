@@ -48,27 +48,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate manifest.json
-        run: python3 -c "import json; json.load(open('docs/chapters/manifest.json'))"
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-      - name: Check all chapters exist
-        run: |
-          python3 -c "
-          import json, os, sys
-          manifest = json.load(open('docs/chapters/manifest.json'))
-          missing = []
-          for group in manifest['nav']:
-              for item in group['items']:
-                  path = f\"docs/chapters/{item['id']}.html\"
-                  if not os.path.exists(path):
-                      missing.append(path)
-          if missing:
-              print('Missing chapters:')
-              for m in missing:
-                  print(f'  {m}')
-              sys.exit(1)
-          print(f'All chapters exist.')
-          "
+      - name: Validate docs and IDE landing page
+        run: node docs/validate.mjs
 
       - name: Check skill YAML frontmatter
         run: |
@@ -76,7 +62,7 @@ jobs:
           python3 -c "
           import yaml, glob, sys
           errors = []
-          for path in glob.glob('.gcd/skills/*/SKILL.md'):
+          for path in glob.glob('.aixlarity/skills/*/SKILL.md'):
               with open(path) as f:
                   content = f.read()
               if not content.startswith('---'):
@@ -98,3 +84,17 @@ jobs:
               sys.exit(1)
           print(f'All skills valid.')
           "
+
+  ide-product-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run CI-safe Aixlarity IDE product quality gate
+        working-directory: aixlarity-ide
+        run: npm run test-aixlarity-quality

@@ -7,7 +7,7 @@
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">先講結論</div>
-        <p>對 GCD 來說，prompt 不是只有「使用者輸入」而已。至少還有 repo instructions、custom commands、skills、檔案注入、待批准 shell 區塊與 工作接續。把這些來源講清楚，才能真正理解 AI 助手 為什麼不是單純的聊天模型外掛。</p>
+        <p>對 Aixlarity 來說，prompt 不是只有「使用者輸入」而已。至少還有 repo instructions、custom commands、skills、檔案注入、待批准 shell 區塊與 工作接續。把這些來源講清楚，才能真正理解 AI 助手 為什麼不是單純的聊天模型外掛。</p>
     </div>
 
     <h2>為什麼這一層要單獨看</h2>
@@ -58,7 +58,7 @@
     </div>
 
     <h2>Instructions：repo 規範怎麼進 prompt</h2>
-    <p><code>InstructionBundle::load()</code> 目前會在可信工作區中讀取四種固定檔名：<code>AGENTS.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code>、<code>GCD.md</code>。這裡有兩個很重要的訊號。第一，instructions 是顯式檔名約定，不是任意掃描所有 Markdown。第二，它明確受 信任檢查 影響，不可信工作區會直接返回空 bundle。</p>
+    <p><code>InstructionBundle::load()</code> 目前會在可信工作區中讀取四種固定檔名：<code>AGENTS.md</code>、<code>GEMINI.md</code>、<code>CLAUDE.md</code>、<code>AIXLARITY.md</code>。這裡有兩個很重要的訊號。第一，instructions 是顯式檔名約定，不是任意掃描所有 Markdown。第二，它明確受 信任檢查 影響，不可信工作區會直接返回空 bundle。</p>
 
     <div class="code-window slim revealable">
         <div class="window-header">
@@ -71,7 +71,7 @@
 - 修改前先理解現有結構
 - 變更後要跑對應測試
 
-## GCD.md
+## AIXLARITY.md
 - 使用繁體中文撰寫文件
 - 不要把基本架構寫成完整功能</code></pre>
         </div>
@@ -103,7 +103,7 @@
                     <td>可用目錄層次建立命令分類。</td>
                 </tr>
                 <tr>
-                    <td><code>.gcd/commands/refactor/rust.toml</code></td>
+                    <td><code>.aixlarity/commands/refactor/rust.toml</code></td>
                     <td><code>refactor:rust</code></td>
                     <td>工作區內的專案特化命令。</td>
                 </tr>
@@ -121,7 +121,7 @@ prompt = """
 Review the target file carefully.
 Use @{README.md} as project context.
 Task: {{args}}
-Run !{cargo test -p gcd-core}
+Run !{cargo test -p aixlarity-core}
 """</code></pre>
         </div>
     </div>
@@ -129,7 +129,7 @@ Run !{cargo test -p gcd-core}
     <p>命令模板最有價值的地方，不只是省打字，而是把「一類任務應該怎麼展開」變成可以版本化、可以審查、可以重用的文字內容。</p>
 
     <h2><code>{{args}}</code> 與 <code>Raw command</code> 的行為差異</h2>
-    <p><code>render_command_prompt()</code> 會先做 <code>{{args}}</code> 置換。如果模板裡沒有這個 placeholder，且使用者確實帶了參數，GCD 會把整條原始命令追加為 <code>Raw command</code>。這個細節很實用，因為它避免了「模板忘了留 args 位置，結果使用者參數悄悄消失」的問題。</p>
+    <p><code>render_command_prompt()</code> 會先做 <code>{{args}}</code> 置換。如果模板裡沒有這個 placeholder，且使用者確實帶了參數，Aixlarity 會把整條原始命令追加為 <code>Raw command</code>。這個細節很實用，因為它避免了「模板忘了留 args 位置，結果使用者參數悄悄消失」的問題。</p>
 
     <div class="code-window slim revealable">
         <div class="window-header">
@@ -176,7 +176,7 @@ Raw command: /review src/app.rs</code></pre>
         </table>
     </div>
 
-    <p>GCD 目前對 skills 的取態很保守：它們是顯式選用，不是靠看不透的 判斷規則s 自動召回。這個設計選擇非常重要，因為它讓 prompt 來源可追蹤。讀者與使用者都能清楚知道：這一輪為什麼帶了這個 skill，而不是系統偷偷決定。</p>
+    <p>Aixlarity 目前對 skills 的取態很保守：它們是顯式選用，不是靠看不透的 判斷規則s 自動召回。這個設計選擇非常重要，因為它讓 prompt 來源可追蹤。讀者與使用者都能清楚知道：這一輪為什麼帶了這個 skill，而不是系統偷偷決定。</p>
 
     <h2>Attachments 與 file injection：證據怎麼進 prompt</h2>
     <p><code>expand_file_injections()</code> 會處理 <code>@{...}</code> 語法。如果指向文字檔，會把內容做成帶行號預覽；如果指向目錄，會展成 listing；如果是圖片或 PDF 這類已知二進位類型，則保留成 binary reference metadata。這一層的關鍵，不只是把檔案貼進 prompt，而是把「證據如何被壓縮與呈現」做成可控規則。</p>
@@ -237,18 +237,18 @@ as context.</code></pre>
         </div>
         <div class="window-body">
 <pre><code>原始模板：
-Run !{cargo test -p gcd-core}
+Run !{cargo test -p aixlarity-core}
 
 進 最終提示詞 後：
-Run &lt;shell-approval required="true"&gt;cargo test -p gcd-core&lt;/shell-approval&gt;
+Run &lt;shell-approval required="true"&gt;cargo test -p aixlarity-core&lt;/shell-approval&gt;
 
 同時 pending_shell_commands 會記下：
-- cargo test -p gcd-core</code></pre>
+- cargo test -p aixlarity-core</code></pre>
         </div>
     </div>
 
     <h2>一個容易被忽略的 實況檢查：trust 對 commands / skills 的影響比想像大</h2>
-    <p>在 GCD 目前的實作裡，<code>CommandCatalog::load()</code> 和 <code>SkillCatalog::load()</code> 一旦遇到 <code>trust.restricts_project_config()</code>，就會直接回傳空 catalog。這代表在 untrusted workspace 下，不只是 workspace-local 命令與技能受影響，整體 command / skill catalog 都會被縮減。這是一個很重要所以需要寫清楚的行為，因為它直接改變 prompt 來源層。</p>
+    <p>在 Aixlarity 目前的實作裡，<code>CommandCatalog::load()</code> 和 <code>SkillCatalog::load()</code> 一旦遇到 <code>trust.restricts_project_config()</code>，就會直接回傳空 catalog。這代表在 untrusted workspace 下，不只是 workspace-local 命令與技能受影響，整體 command / skill catalog 都會被縮減。這是一個很重要所以需要寫清楚的行為，因為它直接改變 prompt 來源層。</p>
 
     <div class="comparison-table">
         <table>

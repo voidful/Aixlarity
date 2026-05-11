@@ -7,7 +7,7 @@
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">先講結論</div>
-        <p>GCD 已經不只是「模型 + 工具」的直線系統。它另外有三種會改變執行路徑的 執行過程中的管理機制：<code>permission prompt</code> 決定要不要先問人、<code>hooks</code> 允許本地政策在工具前後插入、<code>spawn_agent</code> 則讓一段任務能被委派給有上限的 sub-agent。這三者加總起來，才構成比較接近產品等級的系統 的管理層。</p>
+        <p>Aixlarity 已經不只是「模型 + 工具」的直線系統。它另外有三種會改變執行路徑的 執行過程中的管理機制：<code>permission prompt</code> 決定要不要先問人、<code>hooks</code> 允許本地政策在工具前後插入、<code>spawn_agent</code> 則讓一段任務能被委派給有上限的 sub-agent。這三者加總起來，才構成比較接近產品等級的系統 的管理層。</p>
     </div>
 
     <h2>先把這一章想成「誰可以插手 代理迴圈」</h2>
@@ -72,7 +72,7 @@ run_agent
     </div>
 
     <h2>Hooks：真正的定位是本地政策注入，不只是記錄</h2>
-    <p>很多文件提到 hooks 時，會把它寫成「可接日誌」或「可做整合」。這樣不算錯，但太輕了。從實作來看，GCD 的 hooks 真正價值在於：它允許團隊在不改每個工具實作的情況下，對工具的執行前後加上自己的政策。例如阻擋危險 shell pattern、在 patch 後觸發額外檢查、或把工具結果送到外部稽核流程。</p>
+    <p>很多文件提到 hooks 時，會把它寫成「可接日誌」或「可做整合」。這樣不算錯，但太輕了。從實作來看，Aixlarity 的 hooks 真正價值在於：它允許團隊在不改每個工具實作的情況下，對工具的執行前後加上自己的政策。例如阻擋危險 shell pattern、在 patch 後觸發額外檢查、或把工具結果送到外部稽核流程。</p>
 
     <div class="comparison-table">
         <table>
@@ -102,7 +102,7 @@ run_agent
     </div>
 
     <h2>Hook 載入路徑，有一個非常值得誠實寫出的 實況檢查</h2>
-    <p><code>hooks.rs</code> 裡的註解說的是「從 global config dir 與 workspace <code>.gcd/hooks.json</code> 載入」，檔頭註解甚至還提到舊的 <code>.toml</code> 路徑；但真正的 call site 在 <code>agent.rs</code>，傳進去的「global」路徑其實是 <code>workspace_root/.config/gcd</code>。換句話說，<strong>目前 hooks 的實際載入含義，比較像工作區相對的「類全域 + 工作區本地」兩層合併</strong>，而不是使用者 home 目錄下那種真正的全域設定。</p>
+    <p><code>hooks.rs</code> 裡的註解說的是「從 global config dir 與 workspace <code>.aixlarity/hooks.json</code> 載入」，檔頭註解甚至還提到舊的 <code>.toml</code> 路徑；但真正的 call site 在 <code>agent.rs</code>，傳進去的「global」路徑其實是 <code>workspace_root/.config/aixlarity</code>。換句話說，<strong>目前 hooks 的實際載入含義，比較像工作區相對的「類全域 + 工作區本地」兩層合併</strong>，而不是使用者 home 目錄下那種真正的全域設定。</p>
 
     <div class="comparison-table">
         <table>
@@ -117,18 +117,18 @@ run_agent
             <tbody>
                 <tr>
                     <td>類全域 hooks</td>
-                    <td><code>workspace_root/.config/gcd/hooks.json</code></td>
+                    <td><code>workspace_root/.config/aixlarity/hooks.json</code></td>
                     <td><code>run_agent()</code> 會先讀這裡，再讀 workspace hooks。</td>
                     <td> 的現況，但不是典型使用者全域目錄含義。</td>
                 </tr>
                 <tr>
                     <td>workspace hooks</td>
-                    <td><code>workspace_root/.gcd/hooks.json</code></td>
+                    <td><code>workspace_root/.aixlarity/hooks.json</code></td>
                     <td>如果檔案存在，會 append 在前者之後，兩層都跑。</td>
                 </tr>
                 <tr>
                     <td>真正使用者全域 hooks</td>
-                    <td><code>~/.config/gcd/hooks.json</code> 之類</td>
+                    <td><code>~/.config/aixlarity/hooks.json</code> 之類</td>
                     <td>從目前 call site 看，主要流程沒有明確走到這條路徑。</td>
                     <td> 的命名 / 文件含義。</td>
                 </tr>
@@ -142,7 +142,7 @@ run_agent
     </div>
 
     <h2>PreToolUse 的退出碼，決定它到底是 gate 還是 advisory</h2>
-    <p>只知道「PreToolUse 可以 deny」還不夠。真正影響完整功能的，是各種退出結果怎麼被 執行時 解讀。GCD 目前的行為相當清楚，但也有一個容易被忽略的細節：<strong>只有 <code>exit 2</code> 會真的阻擋工具；其他非零或 timeout 都只會留下 warning，工具仍繼續走</strong>。</p>
+    <p>只知道「PreToolUse 可以 deny」還不夠。真正影響完整功能的，是各種退出結果怎麼被 執行時 解讀。Aixlarity 目前的行為相當清楚，但也有一個容易被忽略的細節：<strong>只有 <code>exit 2</code> 會真的阻擋工具；其他非零或 timeout 都只會留下 warning，工具仍繼續走</strong>。</p>
 
     <div class="comparison-table">
         <table>
@@ -192,7 +192,7 @@ run_agent
 {
   "pre_tool_use": [
     {
-      "command": "echo \"$GCD_TOOL_ARGS\" | grep -q 'rm -rf' && exit 2 || exit 0",
+      "command": "echo \"$AIXLARITY_TOOL_ARGS\" | grep -q 'rm -rf' && exit 2 || exit 0",
       "tools": ["shell"]
     }
   ]
@@ -241,7 +241,7 @@ hook 寫法不只是語法問題，而是直接決定政策是 fail-open 還是 
                 <tr>
                     <td>資料來源</td>
                     <td>schema + command template</td>
-                    <td><code>GCD_TOOL_NAME</code>、<code>GCD_TOOL_ARGS</code>、<code>GCD_TOOL_RESULT</code></td>
+                    <td><code>AIXLARITY_TOOL_NAME</code>、<code>AIXLARITY_TOOL_ARGS</code>、<code>AIXLARITY_TOOL_RESULT</code></td>
                 </tr>
                 <tr>
                     <td>風險程度</td>
@@ -278,7 +278,7 @@ AgentEvent::ToolCallDenied { tool_name: "shell", ... }
     <p>這個盲點不代表 hooks 不可用，而是提醒我們：當一個 agent 開始引入更多 執行時 政策時，事件 schema 也要跟著成長。否則 debugging 會愈來愈倚賴 stderr 或人工推理，而不是結構化證據。</p>
 
     <h2><code>spawn_agent</code>：它是 有限制的委派，不是完整多代理平台</h2>
-    <p>GCD 的 <code>spawn_agent</code> 已經能把子任務交出去，但最誠實的理解方式不是「已經有完整多代理系統」，而是「已有一個帶上限的委派工具」。這個差異很重要，因為它決定你怎麼設計例子、怎麼讀 執行時 evidence，也決定文件能不能保持可信。</p>
+    <p>Aixlarity 的 <code>spawn_agent</code> 已經能把子任務交出去，但最誠實的理解方式不是「已經有完整多代理系統」，而是「已有一個帶上限的委派工具」。這個差異很重要，因為它決定你怎麼設計例子、怎麼讀 執行時 evidence，也決定文件能不能保持可信。</p>
 
     <div class="comparison-table">
         <table>
@@ -370,7 +370,7 @@ AgentEvent::ToolCallDenied { tool_name: "shell", ... }
                 <tr>
                     <td>MCP tools</td>
                     <td>會重新載入</td>
-                    <td><code>run_agent()</code> 會再讀一次 workspace <code>.gcd/mcp.json</code>。</td>
+                    <td><code>run_agent()</code> 會再讀一次 workspace <code>.aixlarity/mcp.json</code>。</td>
                 </tr>
                 <tr>
                     <td>plugin tools</td>
@@ -489,7 +489,7 @@ sub-agent 不會自動得到：
     <h2>把這一章濃縮成一句話</h2>
     <div class="callout callout-info revealable">
         <div class="callout-title">真正的 外殼，不只會做事，也要會管理做事的方式</div>
-        <p>Hooks、permission prompt、sub-agent 這些層的存在，說明 GCD 已經開始從「能呼叫工具的 agent」走向「能管理安全、任務分配和本地規則的完整系統」。但這個部分也還沒走完，尤其是 trust 對齊、拒絕來源與 sub-agent 證據模型，都是下一步最值得持續補強的地方。</p>
+        <p>Hooks、permission prompt、sub-agent 這些層的存在，說明 Aixlarity 已經開始從「能呼叫工具的 agent」走向「能管理安全、任務分配和本地規則的完整系統」。但這個部分也還沒走完，尤其是 trust 對齊、拒絕來源與 sub-agent 證據模型，都是下一步最值得持續補強的地方。</p>
     </div>
 </div>
 

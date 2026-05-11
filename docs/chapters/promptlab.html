@@ -1,7 +1,7 @@
 <div class="chapter-header">
     <span class="chapter-number">Prompt Lab</span>
     <h1>Prompt 解剖室：最終 Prompt 如何一層一層長出來</h1>
-    <p class="chapter-desc">這一章不只講 prompt 來源，還要把真正的組裝順序、插入時機、限制條件與常見誤判分開來看。讀完後，你應該能自己重建 GCD 的 最終提示詞 形狀。</p>
+    <p class="chapter-desc">這一章不只講 prompt 來源，還要把真正的組裝順序、插入時機、限制條件與常見誤判分開來看。讀完後，你應該能自己重建 Aixlarity 的 最終提示詞 形狀。</p>
 </div>
 
 <div class="content-body">
@@ -42,7 +42,7 @@
     </div>
 
     <h2>真正的組裝流程，其實分成兩段</h2>
-    <p>很多文件會把 提示詞組裝 寫成一個單一步驟，但在 GCD 裡，這條線其實分成兩段。第一段是 <code>assemble_prompt()</code> 把 repo instructions、command、skill、attachments、shell approval 與 執行時 metadata 組成一份「基礎 最終提示詞」。第二段則是在 <code>App::exec</code> 裡，如果有 <code>resume</code> 或 <code>fork</code>，再把 <code># Session Continuation</code> 插進 <code># Task</code> 之前。</p>
+    <p>很多文件會把 提示詞組裝 寫成一個單一步驟，但在 Aixlarity 裡，這條線其實分成兩段。第一段是 <code>assemble_prompt()</code> 把 repo instructions、command、skill、attachments、shell approval 與 執行時 metadata 組成一份「基礎 最終提示詞」。第二段則是在 <code>App::exec</code> 裡，如果有 <code>resume</code> 或 <code>fork</code>，再把 <code># Session Continuation</code> 插進 <code># Task</code> 之前。</p>
 
     <div class="roadmap">
         <article class="roadmap-item revealable">
@@ -112,7 +112,7 @@
 prompt = """
 Use @{README.md} as project context.
 Review target: {{args}}
-If needed, run !{cargo test -p gcd-core}
+If needed, run !{cargo test -p aixlarity-core}
 """</code></pre>
         </div>
     </div>
@@ -141,7 +141,7 @@ If needed, run !{cargo test -p gcd-core}
                 </tr>
                 <tr>
                     <td>shell sanitize 後</td>
-                    <td><code>!{cargo test -p gcd-core}</code> 變成 <code>&lt;shell-approval&gt;</code></td>
+                    <td><code>!{cargo test -p aixlarity-core}</code> 變成 <code>&lt;shell-approval&gt;</code></td>
                     <td>把命令意圖和命令執行分開。</td>
                 </tr>
                 <tr>
@@ -195,20 +195,20 @@ Recent turn summaries
 # Custom Command
 Name: review
 Description: Review a file with repo rules
-Source: /workspace/project/.gcd/commands/review.toml
+Source: /workspace/project/.aixlarity/commands/review.toml
 Workspace: /workspace/project
 
 Use <injected-file path="README.md">...</injected-file> as project context.
 Review target: src/app.rs
-If needed, run <shell-approval required="true">cargo test -p gcd-core</shell-approval>
+If needed, run <shell-approval required="true">cargo test -p aixlarity-core</shell-approval>
 
 # 待審核指令
-- cargo test -p gcd-core</code></pre>
+- cargo test -p aixlarity-core</code></pre>
         </div>
     </div>
 
     <h2>Commands 不是直接塞模板，而是先加一層可追蹤 header</h2>
-    <p>這個細節很值得拆出來講，因為許多 agent 只會把 command 模板靜默展開，事後很難知道 prompt 中哪些文字其實是某個命令模板帶進來的。GCD 則會明確插入 <code># Custom Command</code>、名稱、描述、來源路徑與工作區。這讓 prompt 事後可追蹤，也讓 session replay 更容易看懂。</p>
+    <p>這個細節很值得拆出來講，因為許多 agent 只會把 command 模板靜默展開，事後很難知道 prompt 中哪些文字其實是某個命令模板帶進來的。Aixlarity 則會明確插入 <code># Custom Command</code>、名稱、描述、來源路徑與工作區。這讓 prompt 事後可追蹤，也讓 session replay 更容易看懂。</p>
 
     <div class="feature-grid compact">
         <article class="feature-card revealable">
@@ -229,7 +229,7 @@ If needed, run <shell-approval required="true">cargo test -p gcd-core</shell-app
     </div>
 
     <h2><code>@{...}</code> 先展開、<code>!{...}</code> 後改寫，順序不能搞反</h2>
-    <p>GCD 先做 file injection，再做 shell block sanitize。這個順序不是偶然，而是為了避免把注入檔案裡原本存在的 <code>!{...}</code> 內容誤當成 command template 的待執行 shell。換句話說，只有原始 prompt 文字本身的 shell block 會被改寫，注入檔案內容則被當成證據保留。</p>
+    <p>Aixlarity 先做 file injection，再做 shell block sanitize。這個順序不是偶然，而是為了避免把注入檔案裡原本存在的 <code>!{...}</code> 內容誤當成 command template 的待執行 shell。換句話說，只有原始 prompt 文字本身的 shell block 會被改寫，注入檔案內容則被當成證據保留。</p>
 
     <div class="comparison-table">
         <table>
@@ -237,7 +237,7 @@ If needed, run <shell-approval required="true">cargo test -p gcd-core</shell-app
                 <tr>
                     <th>情境</th>
                     <th>如果順序做錯會怎麼樣</th>
-                    <th>GCD 目前怎麼避免</th>
+                    <th>Aixlarity 目前怎麼避免</th>
                 </tr>
             </thead>
             <tbody>
@@ -265,7 +265,7 @@ If needed, run <shell-approval required="true">cargo test -p gcd-core</shell-app
 
 prompt 模板：
 Use @{guide.txt}
-Then run !{cargo test -p gcd-core}
+Then run !{cargo test -p aixlarity-core}
 
 結果：
 - guide.txt 中的字樣保留為注入證據
@@ -306,7 +306,7 @@ Then run !{cargo test -p gcd-core}
     </div>
 
     <h2>大小限制本身就是 prompt 設計的一部分</h2>
-    <p>GCD 對文字注入有 400 行與 32KB 的上限，目錄 listing 則上限 200 個檔案。這些數字看起來只是常數，但其實反映了一個重要判斷：提示詞組裝 不能只追求「把更多東西塞進去」，還要顧及 provider 成本、上下文膨脹與可讀性。這也是為什麼 prompt engineering 和 外殼 工程 不該分開看。</p>
+    <p>Aixlarity 對文字注入有 400 行與 32KB 的上限，目錄 listing 則上限 200 個檔案。這些數字看起來只是常數，但其實反映了一個重要判斷：提示詞組裝 不能只追求「把更多東西塞進去」，還要顧及 provider 成本、上下文膨脹與可讀性。這也是為什麼 prompt engineering 和 外殼 工程 不該分開看。</p>
 
     <div class="feature-grid compact">
         <article class="feature-card revealable">
@@ -331,7 +331,7 @@ Then run !{cargo test -p gcd-core}
 
     <div class="callout callout-tip revealable">
         <div class="callout-title">這是一個刻意的取捨</div>
-        <p>自動召回技能並不是不能做，但一旦做了，就必須額外處理可解釋性、衝突排序與除錯成本。GCD 目前選擇先把 skill 當成顯式輸入，這很符合它作為教學用的範例系統 樣本的定位。</p>
+        <p>自動召回技能並不是不能做，但一旦做了，就必須額外處理可解釋性、衝突排序與除錯成本。Aixlarity 目前選擇先把 skill 當成顯式輸入，這很符合它作為教學用的範例系統 樣本的定位。</p>
     </div>
 
     <h2>Session Continuation 不在 <code>assemble_prompt()</code> 裡，這點很重要</h2>
@@ -421,7 +421,7 @@ Then run !{cargo test -p gcd-core}
     <h2>把這一章濃縮成一句話</h2>
     <div class="callout callout-warning revealable">
         <div class="callout-title">Prompt 不是一個字串，而是一條有順序的編輯管線</div>
-        <p>GCD 的 最終提示詞 不是把資料隨便串起來，而是先經過 command render、file injection、shell sanitize、section 組裝，再由 app 層視情況插入 工作接續。當你能把這條順序重建出來，你就不只是「看過 prompt」，而是真的開始理解 外殼 如何把工作流寫進模型上下文。</p>
+        <p>Aixlarity 的 最終提示詞 不是把資料隨便串起來，而是先經過 command render、file injection、shell sanitize、section 組裝，再由 app 層視情況插入 工作接續。當你能把這條順序重建出來，你就不只是「看過 prompt」，而是真的開始理解 外殼 如何把工作流寫進模型上下文。</p>
     </div>
 </div>
 

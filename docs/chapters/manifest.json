@@ -3,8 +3,9 @@
     {
       "title": "入門",
       "items": [
-        { "id": "home", "icon": "00", "label": "首頁" },
+        { "id": "home", "icon": "00", "label": "Aixlarity IDE 首頁" },
         { "id": "intro", "icon": "01", "label": "AI 助手的外殼是什麼？" },
+        { "id": "harness-lab", "icon": "01a", "label": "用 IDE 學 Harness" },
         { "id": "context-eng", "icon": "01b", "label": "Context Engineering 入門" },
         { "id": "starter", "icon": "02", "label": "第一個小範例" },
         { "id": "faq", "icon": "03", "label": "8 個常見名詞速查" }
@@ -13,8 +14,9 @@
     {
       "title": "架構",
       "items": [
-        { "id": "overview", "icon": "04", "label": "GCD 完整架構一覽" },
-        { "id": "pipeline", "icon": "05", "label": "從輸入到執行的完整流程" }
+        { "id": "overview", "icon": "04", "label": "Aixlarity 完整架構一覽" },
+        { "id": "pipeline", "icon": "05", "label": "從輸入到執行的完整流程" },
+        { "id": "local-history", "icon": "H1", "label": "Local History 與 AI 架構" }
       ]
     },
     {
@@ -31,6 +33,8 @@
         { "id": "container", "icon": "14", "label": "Docker 容器沙盒" },
         { "id": "sources", "icon": "15", "label": "設定檔和提示詞來源" },
         { "id": "workflow", "icon": "16", "label": "專案規範、命令和技能包" },
+        { "id": "personas", "icon": "16b", "label": "Persona 與多智能體協作" },
+        { "id": "ide", "icon": "16c", "label": "Aixlarity IDE Harness 工作台" },
         { "id": "promptlab", "icon": "17", "label": "提示詞怎麼被組裝的" },
         { "id": "attachments", "icon": "18", "label": "圖片和檔案附件處理" },
         { "id": "cases", "icon": "19", "label": "三個實際案例" },
@@ -41,6 +45,7 @@
     {
       "title": "實戰",
       "items": [
+        { "id": "ide-demo-workshop", "icon": "D1", "label": "IDE Demo 工作坊" },
         { "id": "agents-md-workshop", "icon": "W1", "label": "AGENTS.md 撰寫工作坊" },
         { "id": "verification-loops", "icon": "W2", "label": "驗證迴圈與 Ralph Wiggum Loop" },
         { "id": "eval-observability", "icon": "W3", "label": "Agent 評估與可觀測性" }
@@ -49,7 +54,7 @@
     {
       "title": "比較",
       "items": [
-        { "id": "comp", "icon": "22", "label": "和四大來源的比較" },
+        { "id": "comp", "icon": "22", "label": "來源與 IDE 對照" },
         { "id": "strategy", "icon": "23", "label": "設計決策的來源" },
         { "id": "refs", "icon": "24", "label": "參考來源和出處" }
       ]

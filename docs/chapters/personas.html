@@ -1,0 +1,462 @@
+<div class="chapter-header">
+    <span class="chapter-number">Personas</span>
+    <h1>Persona 系統與多智能體協作</h1>
+    <p class="chapter-desc">如何用 Persona 檔案定義角色、限制工具、讓多個 sub-agent 以不同身份並行協作。</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">先講結論</div>
+        <p>Aixlarity 的 persona 系統在 instructions、commands、skills 之上，增加了<strong>第四層：角色身份</strong>。每個 persona 有自己的系統提示詞、工具限制清單和構成規則。coordinator 可以把不同 persona 分配給不同 sub-agent，讓它們在物理隔離下並行工作。這不是靠 prompt 叮嚀「你是 reviewer，不要寫檔案」，而是引擎級工具過濾——tool list 裡根本沒有 <code>write_file</code>。</p>
+    </div>
+
+    <h2>為什麼需要 Persona</h2>
+    <p>在沒有 persona 的架構裡，所有 sub-agent 都是同質的。coordinator 可以拆任務、排 DAG、平行執行，但每個子代理都看到完整的工具清單和通用的系統提示詞。這會造成兩個問題：</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">P1</div>
+            <h3>角色混淆</h3>
+            <p>負責 code review 的 sub-agent 可能忍不住幫你「順手修一下」，反而破壞了 review 的客觀性。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P2</div>
+            <h3>權限失控</h3>
+            <p>安全審計員不該有寫入能力，但如果工具清單沒過濾，模型隨時可能嘗試 <code>write_file</code> 或 <code>apply_patch</code>。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P3</div>
+            <h3>上下文浪費</h3>
+            <p>把所有指引（review 框架、測試策略、安全 checklist）全塞進每個 sub-agent 的 prompt，訊噪比極低。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">P4</div>
+            <h3>可追蹤性模糊</h3>
+            <p>replay 時無法區分「這段 review 是誰做的」，因為每個 sub-agent 長得一模一樣。</p>
+        </article>
+    </div>
+
+    <p>Persona 的設計靈感來自 <a href="https://github.com/addyosmani/agent-skills" target="_blank">Addy Osmani 的 agent-skills 專案</a>。核心原則是：<strong>persona 定義角色身份與能力邊界，但 persona 之間絕不直接互相呼叫</strong>。所有協作都由 coordinator 或 slash command 編排。</p>
+
+    <h2>一個 Persona 檔案的結構</h2>
+    <p>Persona 檔案放在 <code>.aixlarity/personas/</code> 目錄，使用 Markdown + YAML frontmatter 格式，與 skill 檔案的結構一致：</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">.aixlarity/personas/CodeReviewer.md</span>
+        </div>
+        <div class="window-body">
+<pre><code>---
+name: code-reviewer
+description: Senior Staff Engineer conducting five-axis code review.
+version: 1.0.0
+allowed_tools: [read_file, search_files, list_dir, shell]
+composition:
+  invoke_via: ["/review", "/ship"]
+  never_invoke: [Developer, Architect]
+---
+
+# Senior Code Reviewer
+
+You are a Senior Staff Engineer. Your sole function is code review.
+
+## Review Framework
+Evaluate every change across five dimensions:
+1. **Correctness** — Will this code do what it's supposed to?
+2. **Readability** — Can another engineer understand this in 30 seconds?
+3. **Architecture** — Does this respect module boundaries and dependency direction?
+4. **Security** — Are there injection vectors, secrets, or trust violations?
+5. **Performance** — Any O(n²) loops, unnecessary allocations, or blocking calls?
+
+## Rules
+- Categorize findings as Critical / Important / Suggestion
+- Never write or modify code — review only
+- Always include at least one positive observation
+- If unsure, flag as "Needs Discussion" rather than guessing</code></pre>
+        </div>
+    </div>
+
+    <h2>Frontmatter 各欄位的意義</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>欄位</th>
+                    <th>類型</th>
+                    <th>說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>name</code></td>
+                    <td>字串</td>
+                    <td>機器可讀名稱（小寫連字號），用於 coordinator 的 <code>persona</code> 欄位匹配。</td>
+                </tr>
+                <tr>
+                    <td><code>allowed_tools</code></td>
+                    <td>字串陣列</td>
+                    <td>引擎級工具限制。空陣列 <code>[]</code> 代表「全部工具可用」。若有值，sub-agent 的 tool list 在 <code>run_agent()</code> 入口就會被物理過濾。</td>
+                </tr>
+                <tr>
+                    <td><code>composition</code></td>
+                    <td>物件</td>
+                    <td>標註這個 persona 會被哪些 slash commands 使用 (<code>invoke_via</code>)，以及它<strong>永遠不該直接呼叫哪些 persona</strong> (<code>never_invoke</code>)。</td>
+                </tr>
+                <tr>
+                    <td><code>description</code></td>
+                    <td>字串</td>
+                    <td>人類可讀的一句話描述，在 IDE 選單中顯示。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>引擎級工具過濾是怎麼運作的</h2>
+    <p>工具限制不是靠 prompt 說「你不可以用 write_file」。它是在 <code>run_agent()</code> 的最前面，直接從 tool list 裡移除不在 <code>allowed_tools</code> 裡的工具。模型甚至不知道那些工具存在。</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">agent.rs — 工具過濾的實際邏輯</span>
+        </div>
+        <div class="window-body">
+<pre><code>// run_agent() 入口，工具合併之後立刻過濾
+let mut tools = all_tools(plugin_tools, mcp_tools);
+
+if let Some(persona_name) = &options.persona {
+    let allowed = get_persona_allowed_tools(
+        &options.workspace_root, persona_name
+    );
+    if let Some(allowed_names) = allowed {
+        tools.retain(|tool|
+            allowed_names.iter().any(|a| a == tool.name())
+        );
+    }
+}
+// 此時 CodeReviewer 的 tools 只剩 4 個，
+// write_file、apply_patch 等根本不在清單裡</code></pre>
+        </div>
+    </div>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">這和 prompt-based 限制的差異</div>
+        <p>如果你只在 prompt 裡寫「你是 reviewer，不要修改檔案」，模型有可能忽略這條指示。但如果 tool list 裡根本沒有 <code>write_file</code>，模型連嘗試的機會都沒有。這就是物理隔離 vs 語義隔離的差別。Aixlarity 兩者都做：prompt 裡有角色定義（語義層），tool list 有過濾（物理層）。</p>
+    </div>
+
+    <h2>目前內建的 8 個 Persona</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Persona</th>
+                    <th>角色定位</th>
+                    <th>allowed_tools</th>
+                    <th>能寫檔案嗎？</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>📐 Architect</td>
+                    <td>系統設計、ADR、模組邊界</td>
+                    <td><code>read_file, search_files, list_dir, fetch_url, spawn_agent</code></td>
+                    <td>❌ 不能</td>
+                </tr>
+                <tr>
+                    <td>💻 Developer</td>
+                    <td>寫 production code</td>
+                    <td><code>[]</code> 全部可用</td>
+                    <td>✅ 可以</td>
+                </tr>
+                <tr>
+                    <td>🔍 CodeReviewer</td>
+                    <td>五軸 code review</td>
+                    <td><code>read_file, search_files, list_dir, shell</code></td>
+                    <td>❌ 不能</td>
+                </tr>
+                <tr>
+                    <td>🧪 TestEngineer</td>
+                    <td>測試策略、Prove-It 模式</td>
+                    <td><code>[]</code> 全部可用</td>
+                    <td>✅ 可以</td>
+                </tr>
+                <tr>
+                    <td>🛡️ SecurityAuditor</td>
+                    <td>OWASP Top 10、威脅建模</td>
+                    <td><code>read_file, search_files, list_dir, shell, fetch_url</code></td>
+                    <td>❌ 不能</td>
+                </tr>
+                <tr>
+                    <td>🚀 DevOps</td>
+                    <td>CI/CD、容器、部署</td>
+                    <td><code>[]</code> 全部可用</td>
+                    <td>✅ 可以</td>
+                </tr>
+                <tr>
+                    <td>📝 TechWriter</td>
+                    <td>文件、ADR</td>
+                    <td><code>read_file, search_files, list_dir, write_file, apply_patch</code></td>
+                    <td>✅ 可以（限文件）</td>
+                </tr>
+                <tr>
+                    <td>📊 DataEngineer</td>
+                    <td>資料管線、分析</td>
+                    <td><code>[]</code> 全部可用</td>
+                    <td>✅ 可以</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Coordinator 怎麼用 Persona</h2>
+    <p><code>spawn_agent</code> 的 JSON schema 新增了 <code>persona</code> 欄位。當模型呼叫 coordinator 時，可以為每個子任務指定角色：</p>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">spawn_agent 呼叫範例：三個角色並行</span>
+        </div>
+        <div class="window-body">
+<pre><code>spawn_agent({
+  "tasks": [
+    {
+      "name": "review",
+      "task": "Review all changed files",
+      "persona": "CodeReviewer"
+    },
+    {
+      "name": "test",
+      "task": "Analyze test coverage gaps",
+      "persona": "TestEngineer"
+    },
+    {
+      "name": "security",
+      "task": "OWASP Top 10 audit",
+      "persona": "SecurityAuditor"
+    }
+  ],
+  "strategy": "parallel"
+})</code></pre>
+        </div>
+    </div>
+
+    <p>Coordinator 收到後，會：</p>
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>載入 Persona 內容</h3>
+            <p>從 <code>.aixlarity/personas/{name}.md</code> 讀取完整文件，作為 sub-agent 的系統提示詞核心。</p>
+        </div>
+        <div class="check-item">
+            <h3>注入到 sub-agent prompt</h3>
+            <p>persona 文件取代通用的 sub-agent 前言，成為 sub-agent 的身份定義。</p>
+        </div>
+        <div class="check-item">
+            <h3>設定 <code>sub_options.persona</code></h3>
+            <p>讓 <code>run_agent()</code> 入口的工具過濾正確生效。</p>
+        </div>
+    </div>
+
+    <h2>平行協作的隔離與合併：Supervisor + Merge Gate</h2>
+    <p>當 Coordinator 以 <code>strategy: "parallel"</code> 產生多個 sub-agent 時，如果所有 agent 同時對工作區的檔案進行修改，極易產生 <strong>Race Conditions</strong> 與狀態衝突。因此，Aixlarity 實作了「<strong>平行意圖產生，序列化變更</strong> (Parallel intent generation, serialized mutation)」架構：</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">1</div>
+            <h3>Path-Level ACLs (路徑權限控制)</h3>
+            <p>在任務分配時，可以指定 <code>allowed_paths</code> 與 <code>forbidden_paths</code>。引擎層級的 <code>ToolContext</code> 會直接在 <code>write_file</code> 與 <code>apply_patch</code> 工具中攔截越權寫入，確保每個角色只動自己該動的檔案（例如前端專員不能寫後端 DB Migration）。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">2</div>
+            <h3>Git Worktree 獨立沙盒</h3>
+            <p>每個平行執行的 sub-agent 不會直接操作主專案，而是被分配到一個獨立的 <code>git worktree</code> 虛擬目錄。它們可以自由思考、測試與修改，結束後系統會自動提取 <code>git diff</code> 轉為結構化的 <strong>PatchProposal</strong>，隨後銷毀沙盒。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">3</div>
+            <h3>Merge Gate (合併門禁)</h3>
+            <p>當該批次所有 agent 完成後，Coordinator 啟動 <strong>Merge Gate</strong> 模組。它會收集所有的提案，檢查是否有跨 agent 的檔案衝突，並驗證路徑越權。通過檢驗的 patch 才會依照順序以 <code>git apply</code> 的方式合併回主工作區，留下完整審計軌跡 (Audit Trail)。</p>
+        </article>
+    </div>
+
+    <div class="callout callout-info revealable">
+        <div class="callout-title">這解決了什麼問題？</div>
+        <p>這讓 Aixlarity 的多智能體架構具備「向外擴展 (Scale out)」的基礎能力。不管平行開 3 個還是 30 個 agent 分析不同模組，最終狀態的修改都會被 Merge Gate 嚴格序列化，保證專案的檔案系統不會因為並發修改而崩潰。</p>
+    </div>
+
+    <h2>三個 Slash Commands 示範多智能體編排</h2>
+    <p>persona 系統最直觀的應用，是透過 slash commands 自動化多角色協作：</p>
+
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Command</th>
+                    <th>策略</th>
+                    <th>參與的 Personas</th>
+                    <th>用途</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>/ship</code></td>
+                    <td>parallel（三路平行）</td>
+                    <td>CodeReviewer + TestEngineer + SecurityAuditor</td>
+                    <td>提交前品質門禁：匯總三方意見，給出 SHIP / NO-SHIP 判定</td>
+                </tr>
+                <tr>
+                    <td><code>/spec</code></td>
+                    <td>sequential（兩步序列）</td>
+                    <td>Architect → Developer</td>
+                    <td>先設計再實作：確保有技術設計文件後才動手寫 code</td>
+                </tr>
+                <tr>
+                    <td><code>/audit</code></td>
+                    <td>single agent</td>
+                    <td>SecurityAuditor</td>
+                    <td>深度安全審計：OWASP Top 10 + 威脅建模 + CVE 掃描</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-window revealable">
+        <div class="window-header">
+            <span class="window-title">.aixlarity/commands/ship.toml</span>
+        </div>
+        <div class="window-body">
+<pre><code>description = "Pre-ship quality gate: parallel code review, test analysis, and security audit"
+prompt = """Use the spawn_agent tool to run these three tasks IN PARALLEL with strategy "parallel":
+
+1. Task named "review" with persona "CodeReviewer":
+   Review all changed files for correctness, readability, architecture,
+   security, and performance. Use `git diff` to identify changed files. {{args}}
+
+2. Task named "test" with persona "TestEngineer":
+   Analyze test coverage gaps for the changed code.
+   Identify missing tests, weak assertions, and untested edge cases. {{args}}
+
+3. Task named "security" with persona "SecurityAuditor":
+   Audit changed files for OWASP Top 10 vulnerabilities,
+   secrets exposure, injection vectors, and trust model violations. {{args}}
+
+After all three agents complete, aggregate their findings into a unified
+Ship/No-Ship verdict:
+- If ANY Critical issues → verdict is NO-SHIP
+- If only Important/Suggestion → verdict is SHIP WITH NOTES
+- If no issues → verdict is SHIP
+"""</code></pre>
+        </div>
+    </div>
+
+    <h2>Persona 的核心安全原則：絕不互相呼叫</h2>
+    <p>每個 persona 的 <code>composition</code> 區段都明確寫了 <code>never_invoke</code>。這不只是建議，而是架構原則：</p>
+
+    <div class="callout callout-warning revealable">
+        <div class="callout-title">為什麼 Persona 之間不能直接互相呼叫</div>
+        <p>如果 CodeReviewer 可以直接呼叫 Developer 來「幫忙修一下」，那 review 的獨立性就被破壞了。更嚴重的是，如果 persona A 呼叫 persona B，B 又呼叫 A，就會形成無限遞迴。所有跨角色協作都必須經過 coordinator 或 slash command，這樣每一層都有明確的入口、上限和退出條件。</p>
+    </div>
+
+    <h2>Fallback 機制：即使沒有檔案也能運作</h2>
+    <p>如果 <code>.aixlarity/personas/</code> 目錄不存在或缺少某個 persona 檔案，系統會退回到內建的 fallback 定義。每個已知的 persona 名稱都有：</p>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>Fallback 提示詞</h3>
+            <p><code>instructions.rs</code> 裡有 8 個富文本 fallback，每個約 50 字，涵蓋角色定位與工作準則。</p>
+        </div>
+        <div class="check-item">
+            <h3>Fallback 工具限制</h3>
+            <p><code>get_persona_allowed_tools()</code> 為每個已知角色提供硬編碼的 <code>allowed_tools</code>，確保即使檔案不存在，CodeReviewer 仍然無法寫入檔案。</p>
+        </div>
+        <div class="check-item">
+            <h3>別名匹配</h3>
+            <p>支援多種命名變體：<code>codereviewer</code>、<code>code-reviewer</code>、<code>code_reviewer</code>、<code>reviewer</code> 都會匹配到同一個角色。</p>
+        </div>
+    </div>
+
+    <h2>如何新增自訂 Persona</h2>
+    <p>只需要在 <code>.aixlarity/personas/</code> 目錄下新增一個 Markdown 檔案，不需要修改任何 Rust 原始碼：</p>
+
+    <div class="roadmap">
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">01</div>
+            <div class="roadmap-content">
+                <h3>建立檔案</h3>
+                <p>例如 <code>.aixlarity/personas/DatabaseAdmin.md</code>，使用 YAML frontmatter 定義 <code>name</code> 和 <code>allowed_tools</code>。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">02</div>
+            <div class="roadmap-content">
+                <h3>定義工具限制</h3>
+                <p>在 <code>allowed_tools</code> 裡列出這個角色可以使用的工具。留空 <code>[]</code> 代表全部可用。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">03</div>
+            <div class="roadmap-content">
+                <h3>撰寫角色指引</h3>
+                <p>在 Markdown body 裡定義 Review Framework、Output Format、Rules 等。這會成為 sub-agent 的系統提示詞。</p>
+            </div>
+        </article>
+        <article class="roadmap-item revealable">
+            <div class="roadmap-marker">04</div>
+            <div class="roadmap-content">
+                <h3>在 coordinator 或 command 中使用</h3>
+                <p>在 <code>spawn_agent</code> 的 <code>persona</code> 欄位填入檔名（不含 <code>.md</code>），例如 <code>"persona": "DatabaseAdmin"</code>。</p>
+            </div>
+        </article>
+    </div>
+
+    <h2>實況檢查：這一層哪些地方已成熟</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>能力</th>
+                    <th>狀態</th>
+                    <th>說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Persona 檔案載入與 prompt 注入</td>
+                    <td>✅ Implemented</td>
+                    <td><code>instructions.rs</code> 與 <code>coordinator.rs</code> 都能正確讀取 <code>.aixlarity/personas/</code>。</td>
+                </tr>
+                <tr>
+                    <td>引擎級工具過濾</td>
+                    <td>✅ Implemented</td>
+                    <td><code>agent.rs</code> 在 <code>run_agent()</code> 入口進行物理過濾，90 個單元測試通過。</td>
+                </tr>
+                <tr>
+                    <td>Coordinator persona-aware delegation</td>
+                    <td>✅ Implemented</td>
+                    <td><code>CoordinatorTaskSpec</code> 有 <code>persona</code> 欄位，schema 已公開。</td>
+                </tr>
+                <tr>
+                    <td>Fallback 工具限制</td>
+                    <td>✅ Implemented</td>
+                    <td>即使沒有 <code>.aixlarity/personas/</code> 檔案，已知角色仍有硬編碼工具限制。</td>
+                </tr>
+                <tr>
+                    <td>Persona 間通訊協定</td>
+                    <td>⚠️ Partially Wired</td>
+                    <td>依賴結果透過 coordinator 的 <code># Dependency Results</code> 傳遞，但沒有型別化的 message schema。</td>
+                </tr>
+                <tr>
+                    <td>IDE Persona 選單</td>
+                    <td>✅ Implemented</td>
+                    <td><code>aixlarityView.ts</code> 有 9 個角色 + emoji 圖示的下拉選單。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>把這一章濃縮成一句話</h2>
+    <div class="callout callout-info revealable">
+        <div class="callout-title">Persona 讓 sub-agent 從「同質的工人」變成「有專長和權限邊界的專家」</div>
+        <p>透過 <code>.aixlarity/personas/</code> 目錄，你可以用純 Markdown 檔案定義角色身份、工具限制和協作規則，不需要修改 Rust 原始碼。引擎會在物理層強制執行工具過濾，coordinator 會在委派時注入角色提示詞。這就是從「一個 agent 做所有事」到「多個專業 agent 各司其職」的架構轉折點。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('workflow')">← Instructions、Commands、Skills 工作流</button>
+    <button class="btn btn-primary" onclick="navigateTo('promptlab')">Prompt 解剖室 →</button>
+</div>

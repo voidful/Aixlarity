@@ -1,7 +1,7 @@
 <div class="chapter-header">
     <span class="chapter-number">補充章</span>
     <h1>驗證迴圈 — 讓 Agent 自己檢查自己的工作</h1>
-    <p class="chapter-desc">生產級 harness 的核心 pattern：反覆執行直到通過驗證。對照 GCD 的 coordinator 和 Hermes Agent 的 delegate_tool。</p>
+    <p class="chapter-desc">生產級 harness 的核心 pattern：反覆執行直到通過驗證。對照 Aixlarity 的 coordinator 和 Hermes Agent 的 delegate_tool。</p>
 </div>
 
 <div class="content-body">
@@ -15,8 +15,8 @@
 
     <p>OpenAI 把這個 pattern 叫做 <strong>Ralph Wiggum Loop</strong>：一個 bash 腳本反覆啟動 AI agent，每次都給它全新的 context，直到所有任務通過驗證。名字來自辛普森家庭的角色，意思是「即使是不太聰明的 agent，只要有好的迴圈，也能完成工作」。</p>
 
-    <h2>GCD 的 Coordinator 怎麼做</h2>
-    <p>GCD 的 <code>spawn_agent</code> 工具支援帶依賴的任務批次，由 <code>tools/coordinator.rs</code>（932 行）實作。這就是 GCD 版本的驗證迴圈。</p>
+    <h2>Aixlarity 的 Coordinator 怎麼做</h2>
+    <p>Aixlarity 的 <code>spawn_agent</code> 工具支援帶依賴的任務批次，由 <code>tools/coordinator.rs</code>（932 行）實作。這就是 Aixlarity 版本的驗證迴圈。</p>
 
     <div class="code-window revealable">
         <div class="window-header">
@@ -61,7 +61,7 @@
         </div>
     </div>
 
-    <div class="source-ref"><strong>原始碼</strong>：<code>crates/gcd-core/src/tools/coordinator.rs</code></div>
+    <div class="source-ref"><strong>原始碼</strong>：<code>crates/aixlarity-core/src/tools/coordinator.rs</code></div>
 
     <h2>Anthropic 的三層架構</h2>
     <p>Anthropic 在 2026 年公開了一個更精緻的架構，靈感來自 GAN（生成對抗網路）：</p>
@@ -81,7 +81,7 @@
         </div>
     </div>
 
-    <p>GCD 的 coordinator 可以模擬這個架構：scan = Planner，implement = Generator，review = Evaluator。差異在於 GCD 的 review task 目前是單次執行，不會自動觸發 re-implementation。</p>
+    <p>Aixlarity 的 coordinator 可以模擬這個架構：scan = Planner，implement = Generator，review = Evaluator。差異在於 Aixlarity 的 review task 目前是單次執行，不會自動觸發 re-implementation。</p>
 
     <h2>Hermes Agent 的做法</h2>
     <p>Hermes Agent 的 <code>delegate_tool.py</code>（46K 行）和 <code>subagent-driven-development</code> skill 實作了更完整的版本：</p>
@@ -119,7 +119,7 @@
     </div>
 
     <h2>Fowler 的 Guides vs Sensors 四象限</h2>
-    <p>把 GCD 的組件放進 Martin Fowler 的分類，會長這樣：</p>
+    <p>把 Aixlarity 的組件放進 Martin Fowler 的分類，會長這樣：</p>
     <div class="comparison-table">
         <table>
             <thead>

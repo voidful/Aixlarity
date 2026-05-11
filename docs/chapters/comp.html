@@ -1,84 +1,98 @@
 <div class="chapter-header">
     <span class="chapter-number">對照</span>
-    <h1>Claude Code、Gemini CLI、OpenAI Codex、Hermes Agent 對 GCD 的影響</h1>
-    <p class="chapter-desc">這一章不做品牌評比，而是明確回答：學了什麼、沒學什麼、為什麼這樣取捨。</p>
+    <h1>CLI Agents、Hermes、Antigravity-style IDE 對 Aixlarity 的影響</h1>
+    <p class="chapter-desc">這一章不做品牌評比，而是明確回答：學了什麼、沒學什麼、為什麼這樣取捨，最後如何收斂成開源 IDE harness。</p>
 </div>
 
 <div class="content-body">
     <div class="comparison-preamble revealable">
-        <p>GCD 不是三個產品的拼裝版。它更像是一個刻意縮小、用 Rust 重整的 教學範例：保留三大產品最值得學的設計思路，同時避免直接把大型商業系統的歷史複雜度整包搬進來。這一章的重點不是比誰比較強，而是回答一個更實際的問題：<strong>哪一層的觀念值得學，哪一層的歷史負擔應該刻意不借</strong>。</p>
+        <p>Aixlarity 不是把幾個產品的功能名稱拼成清單。它更像是一個刻意縮小、用 Rust runtime 和 VS Code workbench 重整的教學範例：CLI agent 讓你看懂 harness 的執行核心，IDE 讓你看懂任務控制、證據、審核與回放怎麼變成產品體驗。這一章的重點不是比誰比較強，而是回答一個更實際的問題：<strong>哪一層的觀念值得學，哪一層的歷史負擔應該刻意不借</strong>。</p>
     </div>
 
     <h2>先講一個總結論</h2>
-    <p>如果把四個主要參考來源的影響分開來看，Claude Code 對 GCD 的影響主要在 prompt、tool、trust 與 workflow 語言；Gemini CLI 主要影響 terminal-first 心智、workspace config 與 MCP / context file 的擴充方向；OpenAI Codex 則提供了 approval、sandbox、本地 agent 交互節奏的產品風格；Hermes Agent 貢獻了技能學習迴圈、記憶系統和 session 搜尋。GCD 把這些脈絡重新編排成一條 Rust-native 主要流程，而不是把四個來源的功能名稱拼成清單。</p>
+    <p>如果把主要參考來源分層來看，Claude Code 對 Aixlarity 的影響主要在 prompt、tool、trust 與 workflow 語言；Gemini CLI 影響 CLI 心智、workspace config 與 MCP / context file 的擴充方向；OpenAI Codex 提供 approval、sandbox、本地 agent 交互節奏的產品風格；Hermes Agent 貢獻技能學習迴圈、記憶系統和 session 搜尋。新的 IDE 方向則用 Antigravity-style workbench 當產品座標：任務不是只在聊天視窗裡結束，而是要進入 Mission Control、Artifact Review、Browser Evidence、Terminal Replay 與 Editor-native Actions。</p>
 
     <div class="callout callout-info revealable">
         <div class="callout-title">讀法提醒</div>
-        <p>下面會出現一些「如果同一個任務放進不同產品脈絡會怎麼看」的範例。這些例子是為了幫助理解設計方向，不代表三家產品的官方逐字行為，也不會拿來當 GCD 已實際做出來功能的證據。</p>
+        <p>下面會出現一些「如果同一個任務放進不同產品脈絡會怎麼看」的範例。這些例子是為了幫助理解設計方向，不代表三家產品的官方逐字行為，也不會拿來當 Aixlarity 已實際做出來功能的證據。</p>
     </div>
 
-    <h2>三個主要參考來源</h2>
+    <h2>三個 CLI / Agent 參考來源</h2>
     <div class="compare-columns">
         <article class="compare-card revealable">
             <div class="compare-kicker">Claude Code</div>
             <h3>借 prompt / tool / trust 的深度</h3>
-            <p> 主要依據社群社群分析、教學拆解與相關繁中文件。GCD 學的是 <strong>repo instructions、skills、workflow、信任規則</strong> 這些 外殼設計。</p>
+            <p> 主要依據社群社群分析、教學拆解與相關繁中文件。Aixlarity 學的是 <strong>repo instructions、skills、workflow、信任規則</strong> 這些 外殼設計。</p>
             <ul class="bullet-list">
                 <li>學了什麼：AGENTS 類指令檔、技能包、工具導向 workflow、明確 trust 邏輯。</li>
                 <li>沒學什麼：大規模 大型單體系統、內部遙測與成堆 feature flag、產品級 worktree orchestration。</li>
-                <li>為什麼：GCD 要保留可讀性與可以在本地測試，不能為了像 Claude Code 而把複雜度抬回去。</li>
+                <li>為什麼：Aixlarity 要保留可讀性與可以在本地測試，不能為了像 Claude Code 而把複雜度抬回去。</li>
             </ul>
         </article>
 
         <article class="compare-card revealable">
             <div class="compare-kicker">Gemini CLI</div>
             <h3>借 terminal-first 與可擴充性基本概念</h3>
-            <p> 的是 terminal-first、workspace config、MCP awareness、provider profiles； 的是 token caching 與更成熟的 擴充生命週期。</p>
+            <p>Aixlarity 借的是 terminal-first、workspace config、MCP awareness、provider profiles；刻意延後的是更成熟的 token caching 與 extension lifecycle。</p>
             <ul class="bullet-list">
                 <li>學了什麼：trusted folders 心智、context file 思維、headless / JSON output、MCP 生態接點。</li>
                 <li>沒學什麼：完整 token caching、完整多模態工作流、成熟 extension 平台。</li>
-                <li>為什麼：GCD 先穩主要流程，再補 cache 與擴充生命週期，避免把整合成本攤得太早。</li>
+                <li>為什麼：Aixlarity 先穩主要流程，再補 cache 與擴充生命週期，避免把整合成本攤得太早。</li>
             </ul>
         </article>
 
         <article class="compare-card revealable">
             <div class="compare-kicker">OpenAI Codex</div>
             <h3>借 approval / sandbox / local agent UX</h3>
-            <p> 的是本地執行節奏、approval / sandbox / permission 語言； 的是更完整的安全隔離體驗。</p>
+            <p>Aixlarity 借的是本地執行節奏、approval / sandbox / permission 語言；不直接照搬的是封閉產品裡更完整但也更難觀察的安全隔離體驗。</p>
             <ul class="bullet-list">
                 <li>學了什麼：instruction-driven workflow、審核機制、sandbox 分級、本地 AI 助手 手感。</li>
                 <li>沒學什麼：單一供應商假設、完整 app shell / GUI、產品級隔離與雲端整合。</li>
-                <li>為什麼：GCD 想保留 provider 可替換性，並把安全設計寫進原始碼與文件，而不是綁在單一平台。</li>
+                <li>為什麼：Aixlarity 想保留 provider 可替換性，並把安全設計寫進原始碼與文件，而不是綁在單一平台。</li>
             </ul>
         </article>
     </div>
 
-    <h2>第四個主要參考：Hermes Agent</h2>
+    <h2>IDE 產品座標：開源版 Antigravity-style Workbench</h2>
+    <div class="compare-columns">
+        <article class="compare-card revealable">
+            <div class="compare-kicker">Aixlarity IDE</div>
+            <h3>借 Mission Control / artifact evidence 的產品問題</h3>
+            <p>Antigravity-style IDE 對 Aixlarity 的價值，不是複製某個封閉產品的外觀，而是把「agent 做了什麼、憑什麼相信、下一步誰批准」變成第一級工作台問題。</p>
+            <ul class="bullet-list">
+                <li>學了什麼：多任務 Mission Control、結構化 artifact、browser / terminal evidence、editor-native agent actions、diff review。</li>
+                <li>沒學什麼：專有雲端控制面、不可觀察的 telemetry、不能在本地驗證的黑盒任務編排。</li>
+                <li>為什麼：開源版本要讓學生能看到狀態機、審核點、證據鏈與 replay，而不是只相信 agent 的文字總結。</li>
+            </ul>
+        </article>
+    </div>
+
+    <h2>開源參考：Hermes Agent</h2>
     <div class="callout callout-info revealable">
         <div class="callout-title">為什麼單獨列出</div>
-        <p>前面三個是商業產品。Hermes Agent 是開源社群專案（NousResearch），但它對 GCD 的影響不亞於三大產品，尤其在「agent 怎麼從經驗中學習」這個方向上。GCD 的技能學習迴圈、雙重記憶系統、記憶安全掃描、Session 搜尋、Progressive Skill Disclosure 五個特性都來自 Hermes。</p>
+        <p>前三個 CLI / agent 參考多半來自成熟產品脈絡。Hermes Agent 是開源社群專案（NousResearch），但它對 Aixlarity 的影響不亞於大型產品，尤其在「agent 怎麼從經驗中學習」這個方向上。Aixlarity 的技能學習迴圈、雙重記憶系統、記憶安全掃描、Session 搜尋、Progressive Skill Disclosure 五個特性都來自 Hermes。</p>
     </div>
     <div class="compare-columns">
         <article class="compare-card revealable">
             <div class="compare-kicker">Hermes Agent</div>
             <h3>借 skill learning loop / memory / session search</h3>
-            <p>Hermes 是目前最完整的開源 AI agent 之一：205K 行 Python、78 個 skills、26 個類別、支援 6 個通訊平台。GCD 學它的自我改善機制，不學它的平台規模。</p>
+            <p>Hermes 是目前最完整的開源 AI agent 之一：205K 行 Python、78 個 skills、26 個類別、支援 6 個通訊平台。Aixlarity 學它的自我改善機制，不學它的平台規模。</p>
             <ul class="bullet-list">
                 <li>學了什麼：skill_manager 自動建立技能、MEMORY.md + USER.md 雙重記憶、寫入前安全掃描、session_search 回溯、YAML frontmatter + progressive disclosure。</li>
                 <li>沒學什麼：gateway 多平台（Telegram / Discord / Slack）、skin 主題引擎、credential pool、batch trajectory generation、RL 訓練環境。</li>
-                <li>為什麼：GCD 是教學專案，專注在「一個工程師在終端機前怎麼用 agent」這個場景。多平台支援和 RL 訓練超出教學範圍。</li>
+                <li>為什麼：Aixlarity 是教學專案，專注在「一個工程師在終端機前怎麼用 agent」這個場景。多平台支援和 RL 訓練超出教學範圍。</li>
             </ul>
         </article>
     </div>
 
-    <h2>按層來看，GCD 分別向誰學了什麼</h2>
+    <h2>按層來看，Aixlarity 分別向誰學了什麼</h2>
     <div class="comparison-table">
         <table>
             <thead>
                 <tr>
                     <th>系統層</th>
                     <th>主要參考來源</th>
-                    <th>GCD 的轉化方式</th>
+                    <th>Aixlarity 的轉化方式</th>
                     <th>刻意不複製的地方</th>
                 </tr>
             </thead>
@@ -90,10 +104,16 @@
                     <td>不把所有工作規則都藏進單一巨大 提示詞組裝器。</td>
                 </tr>
                 <tr>
-                    <td>Terminal-first 入口與工作節奏</td>
+                    <td>CLI 入口與工作節奏</td>
                     <td>Gemini CLI、OpenAI Codex</td>
-                    <td>以 CLI / REPL 為主，保留 JSON / JSONL 輸出與本地 agent 操作感。</td>
-                    <td>不做厚重 GUI，也不把 CLI 層混成整個產品核心。</td>
+                    <td>以 CLI / REPL 保留 JSON / JSONL 輸出與本地 agent 操作感，作為 IDE 與教學網站可驗證的 runtime 底座。</td>
+                    <td>不把 CLI 層混成整個產品核心，也不讓 IDE 變成無法測試的外殼。</td>
+                </tr>
+                <tr>
+                    <td>IDE Control Surface / Mission Control</td>
+                    <td>Antigravity-style IDE workbench、VS Code workbench patterns</td>
+                    <td>把多 workspace、多 task、多 agent 狀態機做成任務控制台，並把 plan、diff、test、screenshot、browser recording、terminal transcript 都變成 artifact。</td>
+                    <td>不複製專有雲端工作流，也不把 evidence 變成只給模型看的隱藏上下文。</td>
                 </tr>
                 <tr>
                     <td>Permission / approval / sandbox 語言</td>
@@ -115,7 +135,7 @@
                 </tr>
                 <tr>
                     <td>多 provider 與 fallback</td>
-                    <td>GCD 自身取捨 + 社群需求</td>
+                    <td>Aixlarity 自身取捨 + 社群需求</td>
                     <td>把 provider 清單 與 adapter 放進主要流程，支援 OpenAI、Gemini、Anthropic。</td>
                     <td>不採單一供應商世界觀，這也是和 Codex / Gemini CLI 最大差異之一。</td>
                 </tr>
@@ -141,8 +161,8 @@
         </table>
     </div>
 
-    <h2>把同一個任務放進三種產品風格裡看</h2>
-    <p>假設目標都是「在本機工作區 review 一個 Rust 檔案並提出修改建議」，三種脈絡最容易讓人感受到的差異如下：</p>
+    <h2>把同一個任務放進四種產品風格裡看</h2>
+    <p>假設目標都是「在本機工作區 review 一個 Rust 檔案並提出修改建議」，不同脈絡最容易讓人感受到的差異如下：</p>
 
     <div class="comparison-table">
         <table>
@@ -152,7 +172,8 @@
                     <th>Claude Code 系脈絡</th>
                     <th>Gemini CLI 系脈絡</th>
                     <th>OpenAI Codex 系脈絡</th>
-                    <th>GCD 的吸收方式</th>
+                    <th>IDE workbench 脈絡</th>
+                    <th>Aixlarity 的吸收方式</th>
                 </tr>
             </thead>
             <tbody>
@@ -161,21 +182,24 @@
                     <td>repo instructions、skills、workflow 語言很重。</td>
                     <td>terminal-first、context file、trusted folder 與工具擴充感很重。</td>
                     <td>approval、sandbox、本地 agent 節奏很明顯。</td>
-                    <td>把三者分成不同層，避免全部混成同一種「系統 prompt 魔法」。</td>
+                    <td>任務狀態、artifact、browser / terminal evidence 與 diff review 很明顯。</td>
+                    <td>把 runtime、控制台、審核與證據分成不同層，避免全部混成同一種「系統 prompt 魔法」。</td>
                 </tr>
                 <tr>
                     <td>同一個 review 任務會被怎麼定義</td>
                     <td>更像「在既定工作流與規範下完成任務」。</td>
                     <td>更像「在 terminal 中帶著上下文與外部工具完成任務」。</td>
                     <td>更像「在可控批准與隔離下完成本地變更」。</td>
-                    <td>把 workflow、工具上下文與 permission 模型都保留，但用 Rust 主要流程重寫。</td>
+                    <td>更像「在可檢查的任務工作台裡提出、執行、審核、回放變更」。</td>
+                    <td>把 workflow、工具上下文、permission 模型與 IDE artifact workspace 都保留，但用 Rust 主要流程支撐。</td>
                 </tr>
                 <tr>
-                    <td>最值得學給 GCD 的</td>
+                    <td>最值得學給 Aixlarity 的</td>
                     <td>prompt / skill / trust 的深度。</td>
                     <td>產品邊界與擴充心智。</td>
                     <td>人機協作節奏與 approval 語言。</td>
-                    <td>形成 GCD 現在的 提示詞組裝、terminal-first、permission policy。</td>
+                    <td>Mission Control、artifact approval、evidence replay 與 editor-native action。</td>
+                    <td>形成 Aixlarity 現在的 prompt assembly、runtime policy、IDE control surface 與 evidence-first review。</td>
                 </tr>
             </tbody>
         </table>
@@ -187,7 +211,7 @@
             <thead>
                 <tr>
                     <th>維度</th>
-                    <th>GCD</th>
+                    <th>Aixlarity</th>
                     <th>Claude Code</th>
                     <th>Gemini CLI</th>
                     <th>OpenAI Codex</th>
@@ -237,6 +261,20 @@
                     <td>△ 基本支援</td>
                 </tr>
                 <tr>
+                    <td>IDE 任務控制台</td>
+                    <td>✓ Mission Control / Fleet</td>
+                    <td>△ 產品內工作流</td>
+                    <td>△ CLI / extension-oriented</td>
+                    <td>△ 本地任務節奏</td>
+                </tr>
+                <tr>
+                    <td>Artifact / evidence review</td>
+                    <td>✓ plan / diff / test / browser / terminal artifacts</td>
+                    <td>△ 工作記錄</td>
+                    <td>△ 終端輸出</td>
+                    <td>△ 審核與執行紀錄</td>
+                </tr>
+                <tr>
                     <td>Token 快取</td>
                     <td>✓ hash-based cache</td>
                     <td>△ 有快取</td>
@@ -254,34 +292,39 @@
         </table>
     </div>
 
-    <h2>Claude Code 對 GCD 的影響，不只是「像不像」</h2>
-    <p>GCD 從 Claude Code 系脈絡借得最深的，不是介面或品牌語彙，而是 prompt 與工作流的層次感。Repo instructions、skills、commands、tool-first workflow、以及 trust 對 instructions 載入的影響，這些都讓 GCD 比較接近一個真正的 AI 助手，而不是會寫程式的聊天機器人。</p>
+    <h2>Claude Code 對 Aixlarity 的影響，不只是「像不像」</h2>
+    <p>Aixlarity 從 Claude Code 系脈絡借得最深的，不是介面或品牌語彙，而是 prompt 與工作流的層次感。Repo instructions、skills、commands、tool-first workflow、以及 trust 對 instructions 載入的影響，這些都讓 Aixlarity 比較接近一個真正的 AI 助手，而不是會寫程式的聊天機器人。</p>
 
-    <p>但 GCD 沒有複製 Claude Code 的地方也很明確。它沒有打算把大型內部產品多年堆出的歷史結構與維運層的負擔搬進來，也沒有把文件寫成一個巨大的神祕黑盒。對 GCD 來說，<strong>可讀性、可以在本地測試與容易理解</strong> 的優先順序，比「看起來像原版」更高。</p>
+    <p>但 Aixlarity 沒有複製 Claude Code 的地方也很明確。它沒有打算把大型內部產品多年堆出的歷史結構與維運層的負擔搬進來，也沒有把文件寫成一個巨大的神祕黑盒。對 Aixlarity 來說，<strong>可讀性、可以在本地測試與容易理解</strong> 的優先順序，比「看起來像原版」更高。</p>
 
-    <p>舉例來說，如果今天團隊想把「先閱讀 <code>AGENTS.md</code>，再執行 <code>/review</code>，最後必要時跑測試」固定成工作流，Claude Code 系語言會很自然地把這件事理解成 instructions + commands + tools 的組合。GCD 借的正是這種層次感，而不是某個外觀或品牌口吻。</p>
+    <p>舉例來說，如果今天團隊想把「先閱讀 <code>AGENTS.md</code>，再執行 <code>/review</code>，最後必要時跑測試」固定成工作流，Claude Code 系語言會很自然地把這件事理解成 instructions + commands + tools 的組合。Aixlarity 借的正是這種層次感，而不是某個外觀或品牌口吻。</p>
 
-    <h2>Gemini CLI 對 GCD 的影響，主要在產品邊界感</h2>
-    <p>Gemini CLI 值得學的地方，不只是 terminal-first 這個表面風格，而是它把 context file、trusted folders、MCP、headless output、token caching 這些事情都視為產品核心設計。這提醒了 GCD：AI 助手 不只是在 terminal 裡接一個模型，而是要把工作區關係、輸出型態、擴充介面與成本控制一起想進去。</p>
+    <h2>Gemini CLI 對 Aixlarity 的影響，主要在產品邊界感</h2>
+    <p>Gemini CLI 值得學的地方，不只是 terminal-first 這個表面風格，而是它把 context file、trusted folders、MCP、headless output、token caching 這些事情都視為產品核心設計。這提醒了 Aixlarity：AI 助手 不只是在 terminal 裡接一個模型，而是要把工作區關係、輸出型態、擴充介面與成本控制一起想進去。</p>
 
-    <p>GCD 目前已吸收 terminal-first、workspace config、provider profiles、MCP awareness 這條思路，但 token caching 與更成熟的 擴充生命週期 仍屬 。這個差距很重要，因為它提醒我們參考不能只借名詞。如果沒有 快取金鑰、請求簽名、失效條件與 provider-specific 路徑，就不能把「有受到啟發」寫成「已有完整 token caching」。</p>
+    <p>Aixlarity 目前已吸收 terminal-first、workspace config、provider profiles、MCP awareness 與 hash-based token cache 這條思路；更成熟的 provider-specific 快取生命週期與擴充平台仍屬下一階段。這個差距很重要，因為它提醒我們參考不能只借名詞。若沒有把快取金鑰、請求簽名、失效條件與 provider-specific 路徑講清楚，就不能把「有受到啟發」寫成「已有完整商用級 token caching」。</p>
 
-    <p>換個更具體的例子來說，Gemini CLI 脈絡會提醒我們：同一個 <code>/review</code> 任務，不只需要 prompt，還可能需要 context file、trusted folder 決策、headless output 與未來的 MCP 工具擴充。這讓 GCD 在設計時不會只把注意力放在模型回覆文字，而會把「執行環境與外部工具邊界」一起納入。</p>
+    <p>換個更具體的例子來說，Gemini CLI 脈絡會提醒我們：同一個 <code>/review</code> 任務，不只需要 prompt，還可能需要 context file、trusted folder 決策、headless output 與未來的 MCP 工具擴充。這讓 Aixlarity 在設計時不會只把注意力放在模型回覆文字，而會把「執行環境與外部工具邊界」一起納入。</p>
 
-    <h2>OpenAI Codex 對 GCD 的影響，主要在人機協作節奏</h2>
-    <p>Codex 系列最值得學的，是一種很清楚的本地 AI 助手 UX：instructions 驅動、approval 明確、sandbox 分級、terminal 裡就能完成大部分編碼工作。GCD 的 <code>suggest</code> / <code>auto-edit</code> / <code>full-auto</code>、sandbox policy，以及 plan-only / live mode 的切分，都能看出這條影響線。</p>
+    <h2>OpenAI Codex 對 Aixlarity 的影響，主要在人機協作節奏</h2>
+    <p>Codex 系列最值得學的，是一種很清楚的本地 AI 助手 UX：instructions 驅動、approval 明確、sandbox 分級、terminal 裡就能完成大部分編碼工作。Aixlarity 的 <code>suggest</code> / <code>auto-edit</code> / <code>full-auto</code>、sandbox policy，以及 plan-only / live mode 的切分，都能看出這條影響線。</p>
 
-    <p>但 GCD 並不打算把自己做成單一供應商工具。它把 provider 清單、fallback 與 adapter 放在主要流程，這是一個很有意識的取捨：對社群與學習目的來說，供應商可替換性本身就是產品價值，不是最後才補的相容模式。</p>
+    <p>但 Aixlarity 並不打算把自己做成單一供應商工具。它把 provider 清單、fallback 與 adapter 放在主要流程，這是一個很有意識的取捨：對社群與學習目的來說，供應商可替換性本身就是產品價值，不是最後才補的相容模式。</p>
 
-    <p>一個很好理解的例子是：當模型想直接套 patch 時，Codex 式思路會先問「這次修改能不能被批准、要不要隔離、是否該由使用者確認」。GCD 把這套語言保留了下來，所以它不是把工具呼叫當純技術細節，而是當成與使用者建立信任節奏的一部分。</p>
+    <p>一個很好理解的例子是：當模型想直接套 patch 時，Codex 式思路會先問「這次修改能不能被批准、要不要隔離、是否該由使用者確認」。Aixlarity 把這套語言保留了下來，所以它不是把工具呼叫當純技術細節，而是當成與使用者建立信任節奏的一部分。</p>
 
-    <h2>為什麼 GCD 不應該把三家的 功能清單 全部補齊</h2>
+    <h2>Antigravity-style IDE 對 Aixlarity 的影響，主要在可審核工作台</h2>
+    <p>IDE 方向補上的不是「把 CLI 包進一個側邊欄」而已，而是把 agent 的每一輪工作變成可檢查物件：任務有狀態機，改動有 visual diff，瀏覽器操作有 DOM / console / network / screenshot / video evidence，終端命令有 stdout / stderr / exit code / cwd transcript，重要變更可以 approve / reject / regenerate。</p>
+
+    <p>這也是 Aixlarity 作為開源教學專案最適合走的方向。學生不只看到 agent 最後說「我測過了」，而是能沿著 artifact 和 replay 追問：它在哪個工作區做的、跑了哪些命令、哪個測試失敗過、哪個 diff 被使用者批准、哪些 browser evidence 真的支持結論。</p>
+
+    <h2>為什麼 Aixlarity 不應該把三家的 功能清單 全部補齊</h2>
     <div class="callout callout-warning revealable">
         <div class="callout-title">參考不是功能集郵</div>
-        <p>有些能力看起來很吸引人，但如果沒有實際需求、沒有足夠原始碼支撐、沒有清楚的學習價值，就不該因為「別人有」而直接複製。GCD 的定位不是用最少時間變成三家產品的總和，而是做一個可以觀察、可對照、可實際做出來的 外殼 樣本。</p>
+        <p>有些能力看起來很吸引人，但如果沒有實際需求、沒有足夠原始碼支撐、沒有清楚的學習價值，就不該因為「別人有」而直接複製。Aixlarity 的定位不是用最少時間變成三家產品的總和，而是做一個可以觀察、可對照、可實際做出來的 外殼 樣本。</p>
     </div>
 
-    <h2>GCD 想走自己的路的地方</h2>
+    <h2>Aixlarity 想走自己的路的地方</h2>
     <div class="feature-grid compact">
         <article class="feature-card revealable">
             <div class="feature-num">1</div>
@@ -291,12 +334,12 @@
         <article class="feature-card revealable">
             <div class="feature-num">2</div>
             <h3>多供應商不是附加功能</h3>
-            <p>對社群來說，相容性與成本是 adoption 的現實問題。GCD 把 provider 清單 與 fallback 放得很前面，就是這個判斷的體現。</p>
+            <p>對社群來說，相容性與成本是 adoption 的現實問題。Aixlarity 把 provider 清單 與 fallback 放得很前面，就是這個判斷的體現。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">3</div>
-            <h3>文件先於野心</h3>
-            <p>先把主要流程講清楚，再去談 dream memory、worktree isolation、token caching。這一點更接近教學用的範例系統，而不是追逐話題功能。</p>
+            <h3>IDE 作為教學儀表板</h3>
+            <p>先把任務、證據、審核與回放變成可看的工作台，再去談更大的 multi-agent 願景。這讓產品可以教 harness，而不是只展示模型輸出。</p>
         </article>
     </div>
 </div>

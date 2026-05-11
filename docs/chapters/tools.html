@@ -1,13 +1,13 @@
 <div class="chapter-header">
     <span class="chapter-number">Tools</span>
     <h1>工具和權限</h1>
-    <p class="chapter-desc">AI 模型不會自己讀檔案、跑指令。這一章介紹 GCD 的 11 個內建工具，以及系統怎麼控制這些工具能做什麼。</p>
+    <p class="chapter-desc">AI 模型不會自己讀檔案、跑指令。這一章介紹 Aixlarity 的 11 個內建工具，以及系統怎麼控制這些工具能做什麼。</p>
 </div>
 
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">先講結論</div>
-        <p>在 AI 助手 裡，工具層不是模型的附屬配件，而是 操作真的發生的地方。GCD 用 <code>Tool</code> trait、<code>ToolContext</code>、sandbox policy、permission level 與 hooks，把「模型提出的意圖」轉成「系統允許的動作」。如果這一層不夠清楚，agent 很快就會從有用工具變成無法控制腳本。</p>
+        <p>在 AI 助手 裡，工具層不是模型的附屬配件，而是 操作真的發生的地方。Aixlarity 用 <code>Tool</code> trait、<code>ToolContext</code>、sandbox policy、permission level 與 hooks，把「模型提出的意圖」轉成「系統允許的動作」。如果這一層不夠清楚，agent 很快就會從有用工具變成無法控制腳本。</p>
     </div>
 
     <h2>先把工具層想成什麼</h2>
@@ -36,7 +36,7 @@
         </article>
     </div>
 
-    <h2>GCD 目前有哪些 built-in tools</h2>
+    <h2>Aixlarity 目前有哪些 built-in tools</h2>
     <p><code>tools/registry.rs</code> 會先建立 built-in tools，再把 plugin tools 與 MCP tools 併進來。這表示工具目錄不是單一靜態清單，而是一個可擴充的註冊表。</p>
 
     <div class="comparison-table">
@@ -84,13 +84,13 @@
                     <td>記憶</td>
                     <td><code>memory</code></td>
                     <td>讀寫雙重記憶系統（MEMORY.md + USER.md），讓 agent 跨 session 記住環境觀察與使用者偏好。</td>
-                    <td>低，只操作 <code>.gcd/</code> 下的記憶檔案，寫入前執行安全掃描。</td>
+                    <td>低，只操作 <code>.aixlarity/</code> 下的記憶檔案，寫入前執行安全掃描。</td>
                 </tr>
                 <tr>
                     <td>學習</td>
                     <td><code>skill_manager</code></td>
                     <td>runtime 技能 CRUD：agent 成功完成任務後，可自行將做法固化為可重用 skill。</td>
-                    <td>低到中，只操作 <code>~/.gcd/skills/</code>，寫入前執行安全掃描防注入。</td>
+                    <td>低到中，只操作 <code>~/.aixlarity/skills/</code>，寫入前執行安全掃描防注入。</td>
                 </tr>
                 <tr>
                     <td>回溯</td>
@@ -173,7 +173,7 @@ ToolContext 會做：
     <p>這裡最值得注意的 實況檢查 有兩個。第一，<strong>container 模式目前只完整包住 <code>shell</code></strong>，其他讀寫工具還是在主機工作區上操作。第二，<strong><code>fetch_url</code> 目前沒有依 sandbox policy 額外收斂網路存取</strong>。這些都不是要否定設計，而是提醒文件必須忠實反映實作邊界。</p>
 
     <h2>權限不是工具能不能用，而是要不要人工批准</h2>
-    <p><code>PermissionLevel</code> 和 sandbox 常被混在一起，但它們處理的問題不同。sandbox 比較像環境邊界；permission 則在回答「這次動作要不要經過人類點頭」。在 GCD 裡，<code>suggest</code>、<code>auto-edit</code>、<code>full-auto</code> 會對不同工具產生不同要求。</p>
+    <p><code>PermissionLevel</code> 和 sandbox 常被混在一起，但它們處理的問題不同。sandbox 比較像環境邊界；permission 則在回答「這次動作要不要經過人類點頭」。在 Aixlarity 裡，<code>suggest</code>、<code>auto-edit</code>、<code>full-auto</code> 會對不同工具產生不同要求。</p>
 
     <div class="comparison-table">
         <table>
@@ -227,7 +227,7 @@ permission 解的是「誰拍板」，
     </div>
 
     <h2>Hooks 是工具層外掛式政策，不是單純日誌</h2>
-    <p>GCD 的 hooks 系統允許在工具前後執行 shell command。<code>PreToolUse</code> 可以阻擋，<code>PostToolUse</code> 則偏向通知與整合。這個設計的好處，是團隊可以不改每個工具的實作，就插入自定政策，例如禁止某些 shell pattern、把工具結果送到外部監控、或在修改後自動跑額外檢查。</p>
+    <p>Aixlarity 的 hooks 系統允許在工具前後執行 shell command。<code>PreToolUse</code> 可以阻擋，<code>PostToolUse</code> 則偏向通知與整合。這個設計的好處，是團隊可以不改每個工具的實作，就插入自定政策，例如禁止某些 shell pattern、把工具結果送到外部監控、或在修改後自動跑額外檢查。</p>
 
     <div class="feature-grid compact">
         <article class="feature-card revealable">
@@ -238,7 +238,7 @@ permission 解的是「誰拍板」，
         <article class="feature-card revealable">
             <div class="feature-num">H2</div>
             <h3>工具參數會變成環境變數</h3>
-            <p><code>GCD_TOOL_NAME</code>、<code>GCD_TOOL_ARGS</code>、<code>GCD_TOOL_RESULT</code> 讓 hook 能讀到上下文。</p>
+            <p><code>AIXLARITY_TOOL_NAME</code>、<code>AIXLARITY_TOOL_ARGS</code>、<code>AIXLARITY_TOOL_RESULT</code> 讓 hook 能讀到上下文。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">H3</div>
@@ -260,7 +260,7 @@ permission 解的是「誰拍板」，
 <pre><code>{
   "pre_tool_use": [
     {
-      "command": "echo \"$GCD_TOOL_ARGS\" | grep -q 'rm -rf' && exit 2 || exit 0",
+      "command": "echo \"$AIXLARITY_TOOL_ARGS\" | grep -q 'rm -rf' && exit 2 || exit 0",
       "tools": ["shell"],
       "timeout_secs": 5
     }
@@ -272,7 +272,7 @@ permission 解的是「誰拍板」，
     <p>這個例子要表達的不是最佳實踐，而是 hooks 的定位：它們讓團隊可以在工具執行前後加上一層本地政策，而不必每次都回頭改 代理迴圈 核心邏輯。</p>
 
     <h2><code>spawn_agent</code> 代表什麼完成度</h2>
-    <p><code>CoordinatorTool</code> 讓 GCD 可以把子任務交給 sub-agent。這表示 GCD 已經不只是單線工具執行器，而是開始具備協調多輪工作的能力。不過它現在也有很清楚的限制：最大深度 2、sub-agent 不串流輸出、不 auto-git，而且呼叫 <code>run_agent</code> 時沒有沿用父層 plugin tool list。</p>
+    <p><code>CoordinatorTool</code> 讓 Aixlarity 可以把子任務交給 sub-agent。這表示 Aixlarity 已經不只是單線工具執行器，而是開始具備協調多輪工作的能力。不過它現在也有很清楚的限制：最大深度 2、sub-agent 不串流輸出、不 auto-git，而且呼叫 <code>run_agent</code> 時沒有沿用父層 plugin tool list。</p>
 
     <div class="comparison-table">
         <table>
@@ -309,7 +309,7 @@ permission 解的是「誰拍板」，
     </div>
 
     <h2>Hermes-inspired 記憶與學習工具</h2>
-    <p>參考 <a href="https://github.com/NousResearch/hermes-agent">hermes-agent</a> 的設計，GCD 新增了三個讓 agent 從「工具使用者」升級為「自我改進的學習者」的工具。這三者都不操作工作區原始碼，而是操作 <code>~/.gcd/</code> 下的持久知識檔案。</p>
+    <p>參考 <a href="https://github.com/NousResearch/hermes-agent">hermes-agent</a> 的設計，Aixlarity 新增了三個讓 agent 從「工具使用者」升級為「自我改進的學習者」的工具。這三者都不操作工作區原始碼，而是操作 <code>~/.aixlarity/</code> 下的持久知識檔案。</p>
 
     <div class="feature-grid compact">
         <article class="feature-card revealable">
@@ -320,12 +320,12 @@ permission 解的是「誰拍板」，
         <article class="feature-card revealable">
             <div class="feature-num">H2</div>
             <h3><code>skill_manager</code>：技能學習迴圈</h3>
-            <p>支援 <code>create</code>、<code>edit</code>、<code>patch</code>、<code>delete</code>、<code>write_file</code>、<code>remove_file</code> 六個 action。只能修改 user-created skills（<code>~/.gcd/skills/</code>），bundled 與 project-level skills 為唯讀。</p>
+            <p>支援 <code>create</code>、<code>edit</code>、<code>patch</code>、<code>delete</code>、<code>write_file</code>、<code>remove_file</code> 六個 action。只能修改 user-created skills（<code>~/.aixlarity/skills/</code>），bundled 與 project-level skills 為唯讀。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">H3</div>
             <h3><code>session_search</code>：對話回溯</h3>
-            <p>搜尋 <code>~/.gcd/sessions/</code> 中的 JSONL 歷史紀錄，關鍵字全部匹配後回傳 snippet（match position ± 200 chars context），按修改時間排序，預設最多 5 筆結果。</p>
+            <p>搜尋 <code>~/.aixlarity/sessions/</code> 中的 JSONL 歷史紀錄，關鍵字全部匹配後回傳 snippet（match position ± 200 chars context），按修改時間排序，預設最多 5 筆結果。</p>
         </article>
     </div>
 

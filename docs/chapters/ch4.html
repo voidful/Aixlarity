@@ -5,18 +5,18 @@
             </div>
             <div class="content-body">
                 <h2>AppPaths 結構</h2>
-                <p><code>config.rs</code> 定義了 GCD 使用的所有重要路徑：</p>
+                <p><code>config.rs</code> 定義了 Aixlarity 使用的所有重要路徑：</p>
                 <div class="comparison-table">
                     <table>
                         <thead><tr><th>路徑</th><th>說明</th><th>位置</th></tr></thead>
                         <tbody>
-                            <tr><td><code>config_home</code></td><td>全域配置根</td><td><code>~/.gcd/</code></td></tr>
-                            <tr><td><code>sessions_dir</code></td><td>會話儲存</td><td><code>~/.gcd/sessions/</code></td></tr>
-                            <tr><td><code>commands_dir</code></td><td>全域命令</td><td><code>~/.gcd/commands/</code></td></tr>
-                            <tr><td><code>skills_dir</code></td><td>全域技能</td><td><code>~/.gcd/skills/</code></td></tr>
-                            <tr><td><code>plugins_dir</code></td><td>全域插件</td><td><code>~/.gcd/plugins/</code></td></tr>
-                            <tr><td><code>providers_conf</code></td><td>供應商設定</td><td><code>~/.gcd/providers.conf</code></td></tr>
-                            <tr><td><code>trusted_folders</code></td><td>信任清單</td><td><code>~/.gcd/trusted-folders.txt</code></td></tr>
+                            <tr><td><code>config_home</code></td><td>全域配置根</td><td><code>~/.aixlarity/</code></td></tr>
+                            <tr><td><code>sessions_dir</code></td><td>會話儲存</td><td><code>~/.aixlarity/sessions/</code></td></tr>
+                            <tr><td><code>commands_dir</code></td><td>全域命令</td><td><code>~/.aixlarity/commands/</code></td></tr>
+                            <tr><td><code>skills_dir</code></td><td>全域技能</td><td><code>~/.aixlarity/skills/</code></td></tr>
+                            <tr><td><code>plugins_dir</code></td><td>全域插件</td><td><code>~/.aixlarity/plugins/</code></td></tr>
+                            <tr><td><code>providers_conf</code></td><td>供應商設定</td><td><code>~/.aixlarity/providers.conf</code></td></tr>
+                            <tr><td><code>trusted_folders</code></td><td>信任清單</td><td><code>~/.aixlarity/trusted-folders.txt</code></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -42,16 +42,16 @@
                     <table>
                         <thead><tr><th>環境變數</th><th>覆蓋項目</th><th>合法值</th></tr></thead>
                         <tbody>
-                            <tr><td><code>GCD_PROVIDER</code></td><td>預設供應商 ID</td><td>任何已知供應商 ID</td></tr>
-                            <tr><td><code>GCD_SANDBOX</code></td><td>沙箱策略</td><td>off / read-only / workspace-write / container</td></tr>
-                            <tr><td><code>GCD_TRUST</code></td><td>是否啟用 trust 機制</td><td>true / false / on / off / 1 / 0</td></tr>
+                            <tr><td><code>AIXLARITY_PROVIDER</code></td><td>預設供應商 ID</td><td>任何已知供應商 ID</td></tr>
+                            <tr><td><code>AIXLARITY_SANDBOX</code></td><td>沙箱策略</td><td>off / read-only / workspace-write / container</td></tr>
+                            <tr><td><code>AIXLARITY_TRUST</code></td><td>是否啟用 trust 機制</td><td>true / false / on / off / 1 / 0</td></tr>
                         </tbody>
                     </table>
                 </div>
 
                 <div class="callout callout-info">
                     <div class="callout-title">容易誤會的一點</div>
-                    <p><code>GCD_TRUST</code> 不是直接指定 <code>trusted</code> 或 <code>untrusted</code>，而是控制是否啟用 trust 評估。真正的信任狀態來自 <code>trusted-folders.txt</code> 內的規則與目前路徑比對結果。</p>
+                    <p><code>AIXLARITY_TRUST</code> 不是直接指定 <code>trusted</code> 或 <code>untrusted</code>，而是控制是否啟用 trust 評估。真正的信任狀態來自 <code>trusted-folders.txt</code> 內的規則與目前路徑比對結果。</p>
                 </div>
             </div>
             <div class="chapter-nav">

@@ -1,7 +1,7 @@
 <div class="chapter-header">
     <span class="chapter-number">補充章</span>
     <h1>Context Engineering — 你送進去的東西決定了 AI 的表現</h1>
-    <p class="chapter-desc">Prompt Engineering 只是 Context Engineering 的子集。這一章解釋三層演進，以及 GCD 怎麼組裝 context。</p>
+    <p class="chapter-desc">Prompt Engineering 只是 Context Engineering 的子集。這一章解釋三層演進，以及 Aixlarity 怎麼組裝 context。</p>
 </div>
 
 <div class="content-body">
@@ -20,7 +20,7 @@
                     <th>層次</th>
                     <th>你在做什麼</th>
                     <th>範例</th>
-                    <th>GCD 對應</th>
+                    <th>Aixlarity 對應</th>
                 </tr>
             </thead>
             <tbody>
@@ -48,8 +48,8 @@
 
     <p>換個比喻：如果 AI 模型是一個很厲害的廚師，Prompt Engineering 是告訴他「做一道義大利麵」。Context Engineering 是把正確的食材、食譜、廚房工具都準備好放在他面前。Harness Engineering 是設計整個廚房的動線、安全規範、品質檢查流程。</p>
 
-    <h2>GCD 的 Context 從哪裡來</h2>
-    <p>當你在 GCD 輸入一句話，模型實際收到的 context 遠比那句話多。以下是 <code>prompt.rs</code> 組裝的完整結構：</p>
+    <h2>Aixlarity 的 Context 從哪裡來</h2>
+    <p>當你在 Aixlarity 輸入一句話，模型實際收到的 context 遠比那句話多。以下是 <code>prompt.rs</code> 組裝的完整結構：</p>
 
     <div class="pipeline">
         <div class="pipeline-step revealable">
@@ -58,7 +58,7 @@
         </div>
         <div class="pipeline-step revealable">
             <div class="pipeline-num">2</div>
-            <div class="pipeline-content"><strong>AGENTS.md 專案規範</strong> — 從 <code>instructions.rs</code> 載入。也支援 GEMINI.md、CLAUDE.md、GCD.md。告訴模型這個專案的慣例。</div>
+            <div class="pipeline-content"><strong>AGENTS.md 專案規範</strong> — 從 <code>instructions.rs</code> 載入。也支援 GEMINI.md、CLAUDE.md、AIXLARITY.md。告訴模型這個專案的慣例。</div>
         </div>
         <div class="pipeline-step revealable">
             <div class="pipeline-num">3</div>
@@ -82,20 +82,20 @@
         </div>
     </div>
 
-    <div class="source-ref"><strong>原始碼</strong>：<code>crates/gcd-core/src/prompt.rs</code>、<code>crates/gcd-core/src/prompt/expansion.rs</code></div>
+    <div class="source-ref"><strong>原始碼</strong>：<code>crates/aixlarity-core/src/prompt.rs</code>、<code>crates/aixlarity-core/src/prompt/expansion.rs</code></div>
 
     <h2>Context Window 是有限的</h2>
-    <p>所有模型都有 context window 上限（例如 128K tokens）。這意味著上面七層的內容加起來不能超過這個上限。如果超過了，GCD 的 <code>agent.rs</code> 會自動壓縮對話歷史。</p>
+    <p>所有模型都有 context window 上限（例如 128K tokens）。這意味著上面七層的內容加起來不能超過這個上限。如果超過了，Aixlarity 的 <code>agent.rs</code> 會自動壓縮對話歷史。</p>
 
     <p>這就是為什麼 Context Engineering 很重要：你需要決定<strong>什麼資訊值得佔用有限的 context 空間</strong>。Anthropic 把這個概念叫做「Context Anxiety」，意思是模型的注意力是有限的，塞太多東西進去反而會讓它分心。</p>
 
     <div class="callout callout-tip revealable">
         <div class="callout-title">和 Hermes Agent 的對照</div>
-        <p>Hermes Agent 的 <code>context_compressor.py</code>（37K 行）和 <code>context_engine.py</code> 處理同樣的問題，但規模大得多。GCD 的壓縮邏輯在 <code>agent.rs</code> 的 auto-compact 區段，相對簡潔，更適合學習核心概念。</p>
+        <p>Hermes Agent 的 <code>context_compressor.py</code>（37K 行）和 <code>context_engine.py</code> 處理同樣的問題，但規模大得多。Aixlarity 的壓縮邏輯在 <code>agent.rs</code> 的 auto-compact 區段，相對簡潔，更適合學習核心概念。</p>
     </div>
 
     <h2>動手練習</h2>
-    <p>試試看用 GCD 執行同一個任務，但送進去的 context 不同：</p>
+    <p>試試看用 Aixlarity 執行同一個任務，但送進去的 context 不同：</p>
     <div class="comparison-table">
         <table>
             <thead>
@@ -104,12 +104,12 @@
             <tbody>
                 <tr>
                     <td>A：只有 prompt</td>
-                    <td><code>gcd exec "這個專案用了什麼設計模式"</code></td>
+                    <td><code>aixlarity exec "這個專案用了什麼設計模式"</code></td>
                     <td>模型只能猜測，回答很泛</td>
                 </tr>
                 <tr>
                     <td>B：加上檔案注入</td>
-                    <td><code>gcd exec "分析 @{crates/gcd-core/src/agent.rs} 用了什麼設計模式"</code></td>
+                    <td><code>aixlarity exec "分析 @{crates/aixlarity-core/src/agent.rs} 用了什麼設計模式"</code></td>
                     <td>模型能引用具體的程式碼</td>
                 </tr>
                 <tr>

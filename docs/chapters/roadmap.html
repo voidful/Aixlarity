@@ -1,12 +1,12 @@
 <div class="chapter-header">
     <span class="chapter-number">Roadmap</span>
-    <h1>實況檢查 後，GCD 下一步應該補哪裡</h1>
+    <h1>實況檢查 後，Aixlarity 下一步應該補哪裡</h1>
     <p class="chapter-desc">先補會影響主要流程的缺口，再談更大的產品野心。這一章故意把「應該先做什麼」講得比「未來可以做什麼」更清楚。</p>
 </div>
 
 <div class="content-body">
     <h2>優先順序不是由酷炫程度決定</h2>
-    <p>Roadmap 最容易寫成願望清單，但對教學型專案來說，真正重要的是先補那些會讓讀者與使用者誤判系統能力的缺口。GCD 的下一步，不應該先問「哪個功能最帥」，而是先問「哪個缺口最影響主要流程的可信度、可維護性與可教性」。</p>
+    <p>Roadmap 最容易寫成願望清單，但對教學型專案來說，真正重要的是先補那些會讓讀者與使用者誤判系統能力的缺口。Aixlarity 的下一步，不應該先問「哪個功能最帥」，而是先問「哪個缺口最影響主要流程的可信度、可維護性與可教性」。</p>
 
     <div class="roadmap">
         <article class="roadmap-item revealable">
@@ -40,7 +40,7 @@
     </div>
 
     <h2>如果只能做一個兩週衝刺，應該先做什麼</h2>
-    <p>Roadmap 真正難的地方不是列想法，而是有限工期下怎麼排。如果 GCD 只有一個短衝刺可以投入，我會建議先把會直接改變使用者認知與安全意義的項目排進去。</p>
+    <p>Roadmap 真正難的地方不是列想法，而是有限工期下怎麼排。如果 Aixlarity 只有一個短衝刺可以投入，我會建議先把會直接改變使用者認知與安全意義的項目排進去。</p>
 
     <div class="comparison-table">
         <table>
@@ -77,7 +77,7 @@
             <thead>
                 <tr>
                     <th>原則</th>
-                    <th>對 GCD 的意思</th>
+                    <th>對 Aixlarity 的意思</th>
                     <th>如果忽略它，會出現什麼問題</th>
                 </tr>
             </thead>
@@ -115,7 +115,7 @@
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">N2</div>
-            <h3>先補齊三大產品所有 feature 名稱</h3>
+            <h3>先補齊所有參考產品的 feature 名稱</h3>
             <p>這會把 roadmap 變成功能集郵，而不是工程問題排序。</p>
         </article>
         <article class="feature-card revealable">
@@ -143,7 +143,7 @@
                 </tr>
                 <tr>
                     <td>MCP client 穩定度</td>
-                    <td>MCP 是 GCD 向外擴充的重要接口，但目前描述應維持保守。</td>
+                    <td>MCP 是 Aixlarity 向外擴充的重要接口，但目前描述應維持保守。</td>
                     <td>補強 framing、錯誤處理、server capability negotiation，再擴大文件承諾。</td>
                 </tr>
                 <tr>
@@ -191,7 +191,7 @@
 - session turn 也記錄 memory 讀寫事件
 => 這才開始接近真正的 memory integration
 
-GCD 目前較接近版本 A 到 B 之間的過渡態</code></pre>
+Aixlarity 目前較接近版本 A 到 B 之間的過渡態</code></pre>
         </div>
     </div>
 
@@ -203,7 +203,7 @@ GCD 目前較接近版本 A 到 B 之間的過渡態</code></pre>
         </div>
         <div class="check-item">
             <h3>第二，讓多 provider 與整合成本進入核心設計</h3>
-            <p>這會決定 GCD 未來是「每接新模型就重做一遍」還是「真正有一個穩定的 外殼 底座」。</p>
+            <p>這會決定 Aixlarity 未來是「每接新模型就重做一遍」還是「真正有一個穩定的 外殼 底座」。</p>
         </div>
         <div class="check-item">
             <h3>第三，只有在主要流程清楚後，高階能力才有學習價值</h3>
@@ -251,9 +251,24 @@ GCD 目前較接近版本 A 到 B 之間的過渡態</code></pre>
             </thead>
             <tbody>
                 <tr>
+                    <td>IDE-first Harness 文件重整</td>
+                    <td>首頁、IDE Lab、IDE 工作台、README 全面改成「用 IDE 教 Harness Engineering」的敘事</td>
+                    <td>讀者先看到可操作的產品表面，再追到 Rust daemon 與測試驗收</td>
+                </tr>
+                <tr>
+                    <td>P0 / P1 IDE 能力產品化</td>
+                    <td>Mission Control、Artifact Review、Integrated Browser Agent、Terminal Replay、Editor-native Actions、Provider Control Center</td>
+                    <td>Aixlarity 更接近「開源版 Antigravity」的教學與示範目標</td>
+                </tr>
+                <tr>
+                    <td>Submission readiness 驗收</td>
+                    <td>新增 source-level 與 artifact-level readiness 檢查，覆蓋 Electron app identity、URL protocol、release agent binary</td>
+                    <td>文件可以更有信心地宣傳 IDE，因為打包 artifact 不再靠手動猜測</td>
+                </tr>
+                <tr>
                     <td>AGENTS.md 擴展</td>
                     <td>15 行 → 118 行，加入專案結構、依賴鏈、編碼慣例、設計決策</td>
-                    <td>Agent 在 GCD 專案內工作時，行為更符合預期</td>
+                    <td>Agent 在 Aixlarity 專案內工作時，行為更符合預期</td>
                 </tr>
                 <tr>
                     <td>技能庫擴充</td>
@@ -263,7 +278,7 @@ GCD 目前較接近版本 A 到 B 之間的過渡態</code></pre>
                 <tr>
                     <td>新增四個教學章節</td>
                     <td>Context Engineering、AGENTS.md 工作坊、驗證迴圈、Agent 評估</td>
-                    <td>教學網站從「介紹 GCD」升級為「教 Harness Engineering」</td>
+                    <td>教學網站從「介紹 Aixlarity」升級為「教 Harness Engineering」</td>
                 </tr>
                 <tr>
                     <td>新增練習題</td>
@@ -272,7 +287,7 @@ GCD 目前較接近版本 A 到 B 之間的過渡態</code></pre>
                 </tr>
                 <tr>
                     <td>加入 Hermes Agent 對照</td>
-                    <td>比較章節從三大產品擴展為四個來源</td>
+                    <td>比較章節從 CLI 產品擴展為開源 agent、IDE workbench 與來源矩陣</td>
                     <td>涵蓋開源社群最重要的 harness 實踐</td>
                 </tr>
                 <tr>
@@ -286,7 +301,7 @@ GCD 目前較接近版本 A 到 B 之間的過渡態</code></pre>
 
     <div class="callout callout-warning revealable">
         <div class="callout-title">不要把 borrowed features 當 roadmap 自動選單</div>
-        <p>GCD 參考四個主要來源，不代表每個 feature 都應該補齊。真正應該先做的，是那些能讓主要流程更可信、更可教、更不容易被誤解的工程工作。</p>
+        <p>Aixlarity 參考多個主要來源，不代表每個 feature 都應該補齊。真正應該先做的，是那些能讓主要流程更可信、更可教、更不容易被誤解的工程工作。</p>
     </div>
 </div>
 

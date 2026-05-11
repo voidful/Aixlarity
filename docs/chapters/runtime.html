@@ -1,19 +1,19 @@
 <div class="chapter-header">
     <span class="chapter-number">Runtime</span>
     <h1>備援和保護機制</h1>
-    <p class="chapter-desc">這一章專門講 GCD 在真正跑起來之後，怎麼處理上下文膨脹、供應商失敗、token 累計與自動 commit。重點不是功能列表，而是 執行時 如何避免自己失控。</p>
+    <p class="chapter-desc">這一章專門講 Aixlarity 在真正跑起來之後，怎麼處理上下文膨脹、供應商失敗、token 累計與自動 commit。重點不是功能列表，而是 執行時 如何避免自己失控。</p>
 </div>
 
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">先講結論</div>
-        <p>GCD 目前已經有一套很務實的 執行過程中的保護機制：用估算 token budget 觸發 context compaction、用 retryable error 觸發 provider fallback、用結構化 token 用量 做執行摘要、用 auto-git 的 undercover mode 降低 commit message 洩漏風險。這些都不是模型能力，而是 外殼 穩定性設計。</p>
+        <p>Aixlarity 目前已經有一套很務實的 執行過程中的保護機制：用估算 token budget 觸發 context compaction、用 retryable error 觸發 provider fallback、用結構化 token 用量 做執行摘要、用 auto-git 的 undercover mode 降低 commit message 洩漏風險。這些都不是模型能力，而是 外殼 穩定性設計。</p>
     </div>
 
     <h2>為什麼 執行過程中的保護機制 值得單獨成章</h2>
     <p>很多文件會把重點放在 prompt、tools、provider 協定，卻忽略另一個同樣核心的問題：<strong>當 agent 真的持續跑下去時，它怎麼避免自己越跑越肥、越跑越不穩、越跑越難收拾？</strong></p>
 
-    <p>這就是 執行過程中的保護機制 的工作。它不像 提示詞組裝 那麼顯眼，但卻直接決定一個 agent 在真實專案裡能不能穩定工作。對 GCD 來說，這個部分目前最值得看的有四個面向：上下文預算、provider fallback、token accounting、auto-git。</p>
+    <p>這就是 執行過程中的保護機制 的工作。它不像 提示詞組裝 那麼顯眼，但卻直接決定一個 agent 在真實專案裡能不能穩定工作。對 Aixlarity 來說，這個部分目前最值得看的有四個面向：上下文預算、provider fallback、token accounting、auto-git。</p>
 
     <div class="comparison-table">
         <table>
@@ -49,7 +49,7 @@
     </div>
 
     <h2>Context budget 目前是固定上限 + 啟發式估算</h2>
-    <p>GCD 在 <code>runtime_support.rs</code> 裡把 <code>CONTEXT_WINDOW_BUDGET</code> 固定設成 <code>100_000</code>。每輪呼叫 provider 前，會先用 <code>estimate_total_tokens(messages)</code> 做一次近似估算。這個估算不是 provider tokenizer，也不是帳單級精度，而是用來決定「現在是不是該先壓縮上下文」的 執行時 判斷規則。</p>
+    <p>Aixlarity 在 <code>runtime_support.rs</code> 裡把 <code>CONTEXT_WINDOW_BUDGET</code> 固定設成 <code>100_000</code>。每輪呼叫 provider 前，會先用 <code>estimate_total_tokens(messages)</code> 做一次近似估算。這個估算不是 provider tokenizer，也不是帳單級精度，而是用來決定「現在是不是該先壓縮上下文」的 執行時 判斷規則。</p>
 
     <div class="comparison-table">
         <table>
@@ -86,7 +86,7 @@
     </div>
 
     <h2>Compaction 不是縮排歷史，而是有損摘要</h2>
-    <p>一旦估算值超過上限，GCD 會呼叫 <code>compact_messages()</code>。這裡的做法很具體，也很值得文件化：保留第一則訊息、保留最後四則訊息，然後把中間歷史濃縮成一則新的 <code>user</code> message。這表示 compaction 不是無損壓縮，而是明確的說明重寫。</p>
+    <p>一旦估算值超過上限，Aixlarity 會呼叫 <code>compact_messages()</code>。這裡的做法很具體，也很值得文件化：保留第一則訊息、保留最後四則訊息，然後把中間歷史濃縮成一則新的 <code>user</code> message。這表示 compaction 不是無損壓縮，而是明確的說明重寫。</p>
 
     <div class="roadmap">
         <article class="roadmap-item revealable">
@@ -184,14 +184,14 @@ compact 後
     </div>
 
     <h2>Fallback 機制已經能工作，但 policy 還不夠細</h2>
-    <p>當主 provider 失敗時，GCD 會先看錯誤訊息字串是否屬於 retryable error，例如 <code>429</code>、<code>500</code>、<code>502</code>、<code>503</code>、<code>timeout</code>、<code>connection refused</code>。如果符合，就會依序嘗試 fallback providers，並發出 <code>ProviderFallback</code> 事件。</p>
+    <p>當主 provider 失敗時，Aixlarity 會先看錯誤訊息字串是否屬於 retryable error，例如 <code>429</code>、<code>500</code>、<code>502</code>、<code>503</code>、<code>timeout</code>、<code>connection refused</code>。如果符合，就會依序嘗試 fallback providers，並發出 <code>ProviderFallback</code> 事件。</p>
 
     <div class="comparison-table">
         <table>
             <thead>
                 <tr>
                     <th>階段</th>
-                    <th>GCD 目前怎麼做</th>
+                    <th>Aixlarity 目前怎麼做</th>
                 </tr>
             </thead>
             <tbody>
@@ -248,7 +248,7 @@ compact 後
     <p>這個判讀很重要。對很多團隊來說，主 provider 掛掉時能不能先保住任務不中斷，已經很有價值；但如果你的需求是「切換後也要維持近似行為、成本與風格」，那現在的 fallback policy 還不能說已經做滿。</p>
 
     <h2>TokenUsage 是 執行時 事後統計，不是 compaction 判準</h2>
-    <p>GCD 有兩種不同的 token 概念，這一點非常值得分開講。第一種是前面說的 判斷規則 budget estimate，用來決定是否 compact；第二種是 provider 回傳的 usage，被累積進 <code>TokenUsage</code>，用來做 執行時 summary、session 持久化與 JSON 輸出。</p>
+    <p>Aixlarity 有兩種不同的 token 概念，這一點非常值得分開講。第一種是前面說的 判斷規則 budget estimate，用來決定是否 compact；第二種是 provider 回傳的 usage，被累積進 <code>TokenUsage</code>，用來做 執行時 summary、session 持久化與 JSON 輸出。</p>
 
     <div class="comparison-table">
         <table>
@@ -277,7 +277,7 @@ compact 後
     <p>這也意味著：如果某個 provider 沒回 usage，或回法和其他家不同，你的 cost observability 就會受影響；但 compaction 仍會照 判斷規則 照常運作。兩者是互補，不是替代。</p>
 
     <h2>ContextCompacted 與 ProviderFallback 都是重要 執行時 事件</h2>
-    <p>從 observability 角度來看，這條章節和 Evidence 章是互相呼應的。因為 GCD 不只在內部做 compaction 與 fallback，它也把這些事正式寫成事件。這讓你可以在 replay、JSONL 或 session turn 裡看到：「某輪到底是因為 context 太大被壓縮，還是因為 provider 掛掉而改走替代路徑。」</p>
+    <p>從 observability 角度來看，這條章節和 Evidence 章是互相呼應的。因為 Aixlarity 不只在內部做 compaction 與 fallback，它也把這些事正式寫成事件。這讓你可以在 replay、JSONL 或 session turn 裡看到：「某輪到底是因為 context 太大被壓縮，還是因為 provider 掛掉而改走替代路徑。」</p>
 
     <div class="comparison-table">
         <table>
@@ -304,7 +304,7 @@ compact 後
     </div>
 
     <h2>Auto-git 不只是 convenience，也是一條操作影響護欄</h2>
-    <p>如果使用者開了 <code>--git</code>，GCD 在 run 完後會檢查當前路徑是不是 git worktree、是否真的有變更，然後做 <code>git add -A</code> 與 <code>git commit -m</code>。這條線看起來像方便功能，但其實也包含一個很值得教學的「undercover mode」。</p>
+    <p>如果使用者開了 <code>--git</code>，Aixlarity 在 run 完後會檢查當前路徑是不是 git worktree、是否真的有變更，然後做 <code>git add -A</code> 與 <code>git commit -m</code>。這條線看起來像方便功能，但其實也包含一個很值得教學的「undercover mode」。</p>
 
     <div class="roadmap">
         <article class="roadmap-item revealable">
@@ -332,7 +332,7 @@ compact 後
             <div class="roadmap-marker">04</div>
             <div class="roadmap-content">
                 <h3>commit message 會先被 sanitize</h3>
-                <p>敏感字串與絕對路徑會被遮罩或縮寫，再組成 <code>gcd: ...</code> commit message。</p>
+                <p>敏感字串與絕對路徑會被遮罩或縮寫，再組成 <code>aixlarity: ...</code> commit message。</p>
             </div>
         </article>
     </div>
@@ -392,7 +392,7 @@ Modified .../src/app.rs</code></pre>
     <h2>把這一章濃縮成一句話</h2>
     <div class="callout callout-info revealable">
         <div class="callout-title">Runtime 安全機制 的價值，在於讓 agent 在真實世界裡撐得住</div>
-        <p>Prompt、tools、providers 決定 agent 能做什麼；而 context compaction、fallback、token accounting、auto-git 則決定它在長回合、壞網路、多供應商與真實 repo 裡能不能穩定活下去。這一層越清楚，GCD 就越像工程系統，而不是短暫 demo。</p>
+        <p>Prompt、tools、providers 決定 agent 能做什麼；而 context compaction、fallback、token accounting、auto-git 則決定它在長回合、壞網路、多供應商與真實 repo 裡能不能穩定活下去。這一層越清楚，Aixlarity 就越像工程系統，而不是短暫 demo。</p>
     </div>
 </div>
 

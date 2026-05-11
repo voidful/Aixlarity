@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { background: #1e1e1e; padding: 50px; }
+  .box { width: 300px; height: 500px; position: relative; border-radius: 12px; background: #2d2d2d; }
+  
+  .box::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      transparent 30%,
+      rgba(59, 130, 246, 0.4) 40%,
+      rgba(168, 85, 247, 0.9) 48%,
+      #ffffff 50%,
+      rgba(77, 170, 252, 0.9) 52%,
+      rgba(59, 130, 246, 0.4) 60%,
+      transparent 70%,
+      transparent 100%
+    );
+    background-size: 300% 300%;
+    animation: pan 4s infinite linear;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  @keyframes pan {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+  }
+</style>
+</head>
+<body>
+  <div class="box"></div>
+</body>
+</html>

@@ -11,17 +11,17 @@
                         <span class="window-title">專案目錄樹</span>
                     </div>
                     <div class="window-body">
-<pre><code class="language-text">GemiClawDex/
+<pre><code class="language-text">Aixlarity/
 ├── Cargo.toml              ← Workspace 宣告
 ├── Cargo.lock
 ├── README.md
 ├── AGENTS.md               ← 專案指令
-├── .gcd/                   ← 工作區配置
+├── .aixlarity/                   ← 工作區配置
 │   ├── commands/           ← 自訂命令 (.toml)
 │   ├── skills/             ← 技能 (SKILL.md)
 │   └── mcp.json            ← MCP 伺服器配置
 ├── crates/
-│   ├── gcd-core/           ← 核心庫 (library crate)
+│   ├── aixlarity-core/           ← 核心庫 (library crate)
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs          ← 公開 API 入口
@@ -62,7 +62,7 @@
 │   │       ├── plugins.rs      ← 插件載入
 │   │       ├── mcp.rs          ← MCP 客戶端
 │   │       └── output.rs       ← 輸出渲染
-│   └── gcd-cli/            ← CLI 二進位 (binary crate)
+│   └── aixlarity-cli/            ← CLI 二進位 (binary crate)
 │       ├── Cargo.toml
 │       └── src/
 │           └── main.rs         ← Clap + Rustyline
@@ -96,13 +96,13 @@
                 <div class="feature-grid">
                     <div class="feature-card">
                         <div class="feature-num">L</div>
-                        <h3>gcd-core (Library)</h3>
+                        <h3>aixlarity-core (Library)</h3>
                         <p>所有業務邏輯。可被其他 Rust 程式作為函式庫引用。零 CLI 依賴、零 UI 邏輯。純粹的 Agent 引擎。</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-num">B</div>
-                        <h3>gcd-cli (Binary)</h3>
-                        <p>薄殼 CLI。只負責解析命令列參數、啟動 REPL、呼叫 gcd-core。約 500 行。</p>
+                        <h3>aixlarity-cli (Binary)</h3>
+                        <p>薄殼 CLI。只負責解析命令列參數、啟動 REPL、呼叫 aixlarity-core。約 500 行。</p>
                     </div>
                 </div>
             </div>

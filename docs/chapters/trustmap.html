@@ -1,19 +1,19 @@
 <div class="chapter-header">
     <span class="chapter-number">Trust Map</span>
     <h1>信任規則總表</h1>
-    <p class="chapter-desc">這一章專門回答一個常被講得太含糊的問題：GCD 的 trust 到底在擋什麼？它擋的是整個 runtime，還是特定類型的工作區來源？</p>
+    <p class="chapter-desc">這一章專門回答一個常被講得太含糊的問題：Aixlarity 的 trust 到底在擋什麼？它擋的是整個 runtime，還是特定類型的工作區來源？</p>
 </div>
 
 <div class="content-body">
     <div class="callout callout-warning revealable">
         <div class="callout-title">先講最重要的現況</div>
-        <p>GCD 的 trust 目前不是一個包山包海的總開關，而是比較接近「哪些 <strong>repo-owned / workspace-scoped 設定</strong> 可以進入 runtime」的前置 gate。這個功能已經很有用，但還不是完全完全統一的機制，因為像 <code>.gcd/mcp.json</code>、global plugins、session reuse、<code>MEMORY.md</code> 就不完全走同一套規則。</p>
+        <p>Aixlarity 的 trust 目前不是一個包山包海的總開關，而是比較接近「哪些 <strong>repo-owned / workspace-scoped 設定</strong> 可以進入 runtime」的前置 gate。這個功能已經很有用，但還不是完全完全統一的機制，因為像 <code>.aixlarity/mcp.json</code>、global plugins、session reuse、<code>MEMORY.md</code> 就不完全走同一套規則。</p>
     </div>
 
     <h2>為什麼 trust 值得單獨成章</h2>
     <p>很多文件談 trust 時，只會說「有 trusted folders」或「untrusted repo 會被限制」。但對工程師來說，真正重要的是更細的問題：<strong>到底哪些檔案會被相信？哪些設定可以改變 prompt？哪些能力就算在 untrusted workspace 裡還是會繼續存在？</strong></p>
 
-    <p>如果這些問題講不清楚，讀者很容易把 trust 誤解成 sandbox，或者以為所有 workspace 來源都會被全部擋下。GCD 的原始碼剛好很適合拿來教這件事，因為它既有明確的 信任檢查，也有幾個很值得如實標記的不對稱路徑。</p>
+    <p>如果這些問題講不清楚，讀者很容易把 trust 誤解成 sandbox，或者以為所有 workspace 來源都會被全部擋下。Aixlarity 的原始碼剛好很適合拿來教這件事，因為它既有明確的 信任檢查，也有幾個很值得如實標記的不對稱路徑。</p>
 
     <div class="comparison-table">
         <table>
@@ -43,7 +43,7 @@
                 <tr>
                     <td>某些 workspace 設定為什麼沒被 trust 擋下</td>
                     <td>各 loader 的實際連接位置</td>
-                    <td>GCD 目前不是所有來源都共用同一個 gate。</td>
+                    <td>Aixlarity 目前不是所有來源都共用同一個 gate。</td>
                 </tr>
             </tbody>
         </table>
@@ -83,7 +83,7 @@
                 </tr>
                 <tr>
                     <td><code>disabled</code></td>
-                    <td><code>GCD_TRUST</code> 被關閉。</td>
+                    <td><code>AIXLARITY_TRUST</code> 被關閉。</td>
                     <td>整條 信任檢查 失效，所有 loader 都當成未受限制。</td>
                 </tr>
             </tbody>
@@ -124,7 +124,7 @@ workspace = /Users/alice/work/3rd-party/danger-repo
     <p>這種設計很實用，因為它允許你把大範圍開成可用，再對特定高風險子目錄做更嚴格的覆蓋。所以，文件在描述 trust 時不能只說「有沒有 trusted folder」，而要說清楚它其實是一套路徑優先順序。</p>
 
     <h2>真正重要的地方：哪些來源會被 信任檢查 擋下</h2>
-    <p>GCD 最值得教學的，不是它有 trust 這個詞，而是不同來源進 執行時 的方式真的不一樣。下面這張表，就是整站最核心的 trust matrix 之一。</p>
+    <p>Aixlarity 最值得教學的，不是它有 trust 這個詞，而是不同來源進 執行時 的方式真的不一樣。下面這張表，就是整站最核心的 trust matrix 之一。</p>
 
     <div class="comparison-table">
         <table data-compare="trust-matrix">
@@ -132,7 +132,7 @@ workspace = /Users/alice/work/3rd-party/danger-repo
                 <tr>
                     <th>來源</th>
                     <th>是否受 信任檢查 影響</th>
-                    <th>GCD 目前行為</th>
+                    <th>Aixlarity 目前行為</th>
                 </tr>
             </thead>
             <tbody>
@@ -157,7 +157,7 @@ workspace = /Users/alice/work/3rd-party/danger-repo
                     <td>untrusted / unknown workspace 不會讀，也不能用 workspace scope 寫入。</td>
                 </tr>
                 <tr>
-                    <td><code>AGENTS.md</code> / <code>GEMINI.md</code> / <code>CLAUDE.md</code> / <code>GCD.md</code></td>
+                    <td><code>AGENTS.md</code> / <code>GEMINI.md</code> / <code>CLAUDE.md</code> / <code>AIXLARITY.md</code></td>
                     <td>是</td>
                     <td>受限時直接回空 bundle，不進 prompt。</td>
                 </tr>
@@ -184,12 +184,12 @@ workspace = /Users/alice/work/3rd-party/danger-repo
                     <td>只在未受限制時載入。</td>
                 </tr>
                 <tr>
-                    <td>workspace hooks <code>.gcd/hooks.json</code></td>
+                    <td>workspace hooks <code>.aixlarity/hooks.json</code></td>
                     <td>目前看起來不是同一套 gate</td>
                     <td><code>run_agent()</code> 內的 <code>HooksConfig::load()</code> 會直接讀 workspace hooks。</td>
                 </tr>
                 <tr>
-                    <td><code>.gcd/mcp.json</code></td>
+                    <td><code>.aixlarity/mcp.json</code></td>
                     <td>目前看起來不是同一套 gate</td>
                     <td><code>run_agent()</code> 直接對 workspace root 呼叫 <code>load_mcp_tools()</code>。</td>
                 </tr>
@@ -208,7 +208,7 @@ workspace = /Users/alice/work/3rd-party/danger-repo
     </div>
 
     <h2>最容易被忽略的細節：commands / skills 和 plugins 的 trust 行為不一樣</h2>
-    <p>這裡有一個非常值得教學化指出的差異。很多人會直覺以為「untrusted workspace 只是不讀 workspace-local 設定，global 設定仍可用」，但 GCD 對不同來源的做法並不完全相同。</p>
+    <p>這裡有一個非常值得教學化指出的差異。很多人會直覺以為「untrusted workspace 只是不讀 workspace-local 設定，global 設定仍可用」，但 Aixlarity 對不同來源的做法並不完全相同。</p>
 
     <div class="comparison-table">
         <table>
@@ -258,14 +258,14 @@ workspace = /Users/alice/work/3rd-party/danger-repo
             <div class="roadmap-marker">01</div>
             <div class="roadmap-content">
                 <h3>同一個陌生 repo，在 trust 關閉時會突然變得很“完整”</h3>
-                <p>如果 <code>GCD_TRUST=0</code>，<code>status_label()</code> 會變成 <code>disabled</code>。這時 instructions、workspace providers、workspace commands、workspace skills、workspace plugins 都不再被 信任檢查 擋下。這對測試很方便，但對陌生 repo 風險也最高。</p>
+                <p>如果 <code>AIXLARITY_TRUST=0</code>，<code>status_label()</code> 會變成 <code>disabled</code>。這時 instructions、workspace providers、workspace commands、workspace skills、workspace plugins 都不再被 信任檢查 擋下。這對測試很方便，但對陌生 repo 風險也最高。</p>
             </div>
         </article>
         <article class="roadmap-item revealable">
             <div class="roadmap-marker">02</div>
             <div class="roadmap-content">
                 <h3>不可信 repo 下，global plugin 還在，但 global command 反而不見</h3>
-                <p>這是目前 GCD 很值得被文件化的一個行為差異。對讀者來說，這能幫助他們理解 信任檢查 不只是「global vs workspace」，還牽涉各 catalog loader 是在哪裡做 early return。</p>
+                <p>這是目前 Aixlarity 很值得被文件化的一個行為差異。對讀者來說，這能幫助他們理解 信任檢查 不只是「global vs workspace」，還牽涉各 catalog loader 是在哪裡做 early return。</p>
             </div>
         </article>
         <article class="roadmap-item revealable">
@@ -309,11 +309,11 @@ Case C: disabled
     <div class="checklist revealable">
         <div class="check-item">
             <h3>載入位置不同</h3>
-            <p>commands / skills / instructions / plugins 都是在 <code>App::exec</code> 前半段配合 <code>TrustState</code> 載入；MCP 與 hooks 則是在更靠近 執行時 的位置，直接用 workspace root 去找 <code>.gcd/mcp.json</code> 與 <code>.gcd/hooks.json</code>。</p>
+            <p>commands / skills / instructions / plugins 都是在 <code>App::exec</code> 前半段配合 <code>TrustState</code> 載入；MCP 與 hooks 則是在更靠近 執行時 的位置，直接用 workspace root 去找 <code>.aixlarity/mcp.json</code> 與 <code>.aixlarity/hooks.json</code>。</p>
         </div>
         <div class="check-item">
             <h3>設定來源同樣屬於 workspace</h3>
-            <p>從使用者觀點看，<code>.gcd/mcp.json</code> 與 <code>.gcd/hooks.json</code> 顯然也都是 repo-owned config；也正因如此，它們沒有和其他 workspace config 共用同一套 gate，才更值得文件保守描述。</p>
+            <p>從使用者觀點看，<code>.aixlarity/mcp.json</code> 與 <code>.aixlarity/hooks.json</code> 顯然也都是 repo-owned config；也正因如此，它們沒有和其他 workspace config 共用同一套 gate，才更值得文件保守描述。</p>
         </div>
         <div class="check-item">
             <h3>影響層級很高</h3>
@@ -323,7 +323,7 @@ Case C: disabled
 
     <div class="callout callout-warning revealable">
         <div class="callout-title">這裡最誠實的說法是什麼</div>
-        <p>最誠實的描述不是「MCP 與 hooks 完全不受 trust 影響」，而是「目前 <code>.gcd/mcp.json</code> 與 <code>.gcd/hooks.json</code> 沒有明顯走進和 instructions / commands / skills / workspace providers / workspace plugins 完全一致的 信任檢查，因此應保守標成 <code>Implemented</code> 的邊界」。</p>
+        <p>最誠實的描述不是「MCP 與 hooks 完全不受 trust 影響」，而是「目前 <code>.aixlarity/mcp.json</code> 與 <code>.aixlarity/hooks.json</code> 沒有明顯走進和 instructions / commands / skills / workspace providers / workspace plugins 完全一致的 信任檢查，因此應保守標成 <code>Implemented</code> 的邊界」。</p>
     </div>
 
     <h2><code>MEMORY.md</code> 則是另一種不同的問題</h2>
@@ -354,7 +354,7 @@ Case C: disabled
     </div>
 
     <h2>對貢獻者最有用的設計問題</h2>
-    <p>如果你之後要在 GCD 加新的 workspace source，這一章其實提供了一套很好用的檢查表。不要先問「這功能酷不酷」，先問它應不應該進同一套 trust 含義。</p>
+    <p>如果你之後要在 Aixlarity 加新的 workspace source，這一章其實提供了一套很好用的檢查表。不要先問「這功能酷不酷」，先問它應不應該進同一套 trust 含義。</p>
 
     <div class="checklist revealable">
         <div class="check-item">
@@ -377,7 +377,7 @@ Case C: disabled
 
     <h2>把這一章濃縮成一句話</h2>
     <div class="callout callout-info revealable">
-        <div class="callout-title">Trust 在 GCD 裡主要是在管「哪些工作區來源可以改變 agent」</div>
+        <div class="callout-title">Trust 在 Aixlarity 裡主要是在管「哪些工作區來源可以改變 agent」</div>
         <p>它不是 sandbox，也不是 approval；它更像一張 source boundary 地圖。Instructions、workspace providers、workspace plugins 類型已經清楚接上，commands / skills 有更強的整體被限縮行為，MCP 仍是值得保守標記的例外，而 <code>MEMORY.md</code> / <code>USER.md</code> 已透過 <code>memory</code> 工具接入主要流程並含安全掃描。把這些差異講清楚，讀者才會真的懂 trust，而不是只記得一個標籤名。</p>
     </div>
 </div>

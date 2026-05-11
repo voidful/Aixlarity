@@ -160,6 +160,7 @@
 
         visited.add(id);
         currentId = id;
+        document.body.dataset.currentChapter = id;
         currentHeadings = getHeadingsForChapter(target, id);
         updateProgress();
         updateRail(target, id);

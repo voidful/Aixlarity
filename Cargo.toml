@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "crates/gcd-core",
-  "crates/gcd-cli",
+  "crates/aixlarity-core",
+  "crates/aixlarity-cli",
 ]
 resolver = "2"

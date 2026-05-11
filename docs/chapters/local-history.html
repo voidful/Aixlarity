@@ -1,0 +1,90 @@
+<div class="chapter-header">
+    <span class="chapter-number">架構</span>
+    <h1>Local History 與 AI 架構</h1>
+    <p class="chapter-desc">PyCharm（JetBrains 系列）的 Local History 被許多開發者譽為「後悔藥」。在導入 AI Agent 的架構下，這個機制該如何設計與進化？</p>
+</div>
+
+<div class="content-body">
+    <div class="callout callout-info revealable">
+        <div class="callout-title">這是一個非常專業且實用的開發環境與架構設計問題</div>
+        <p>我們可以將問題拆解為三個核心部分來深入解析：<strong>PyCharm 的底層實作原理</strong>、<strong>如何在 VS Code 中達成相同功能</strong>，以及在<strong>導入 AI Agent 的架構下，這個機制該如何設計與進化</strong>。</p>
+    </div>
+
+    <h2>一、 PyCharm 的 Local History 是怎麼實作的？</h2>
+    <p>PyCharm 的 Local History 並不依賴作業系統的定時備份，也不會污染你的專案資料夾。它是由 IDE 內部維護的一套 <strong>高效、事件驅動的狀態追蹤系統</strong>，其實作核心包含四大機制：</p>
+
+    <div class="checklist revealable">
+        <div class="check-item">
+            <h3>1. 整合虛擬檔案系統 (VFS - Virtual File System)</h3>
+            <p>JetBrains 的 IDE 對檔案的讀寫都會經過底層的一層 VFS。Local History 訂閱了 VFS 的變更事件，因此無論你是手動打字、外部程式修改、還是重構檔案，VFS 都會攔截並觸發歷史紀錄。</p>
+        </div>
+        <div class="check-item">
+            <h3>2. 事件驅動的智慧快照 (Event-Driven Checkpoints)</h3>
+            <p>它不會每一秒無腦備份，而是在特定的「重要節點」打上快照：停止打字一段時間後（Debouncing）；或在<strong>重大操作前</strong>（存檔、執行測試、重構、切換 Git 分支前）。IDE 會強制記錄，確保你隨時能完美退回。</p>
+        </div>
+        <div class="check-item">
+            <h3>3. 差異增量儲存 (Delta / Diff Storage)</h3>
+            <p>為了極致的效能與節省硬碟空間，PyCharm <strong>不會每次都複製一份完整的檔案副本</strong>。它計算當下與上一次的「差異 (Diff)」，並將其壓縮為二進位格式，統一儲存在作業系統的全域系統快取目錄中。</p>
+        </div>
+        <div class="check-item">
+            <h3>4. 目錄層級追蹤 (Tree-level Tracking)</h3>
+            <p>這是 PyCharm 最強大的地方。它不僅記錄「檔案內容」，還記錄「資料夾結構變更」。即便你把一個尚未加入 Git 的檔案徹底刪除了，依舊能把檔案撈回來。</p>
+        </div>
+    </div>
+
+    <h2>二、 如何在 VS Code 上做到一樣的功能？</h2>
+    <p>在 <strong>1.66 版（2022 年 3 月）之後，微軟已經將 Local History 功能「原生內建」了</strong>。</p>
+
+    <div class="layer-stack">
+        <article class="layer-card revealable">
+            <h3>1. 原生功能：Timeline (時間軸)</h3>
+            <p>打開任意檔案，在左側「檔案總管」面板的<strong>最下方</strong>展開 <strong>「時間軸 (Timeline)」</strong> 區塊。這裡會混合顯示 Git Commit 和 Local History。對著節點按右鍵選擇「還原內容」即可。</p>
+        </article>
+
+        <article class="layer-card revealable">
+            <h3>2. VS Code 的底層實作與限制</h3>
+            <p>VS Code <strong>不使用</strong>增量壓縮，而是在全域目錄下為每個檔案建立 Hash 資料夾，直接儲存<strong>完整的實體檔案副本</strong>。如果檔案刪除了，可使用命令面板的 <code>Local History: Find Entry to Restore</code> 來還原。</p>
+        </article>
+
+        <article class="layer-card revealable">
+            <h3>3. 客製化設定 (settings.json)</h3>
+            <p>你可以微調歷史紀錄以控制硬碟消耗，例如設定 <code>maxFileSize</code> 忽略大檔案，或透過 <code>mergeWindow</code> 將連續修改合併為單一紀錄。</p>
+        </article>
+    </div>
+
+    <h2>三、 考慮 AI Agent 的架構與設計</h2>
+    <p>當我們引入 AI Agent（如 Cursor, Aixlarity）來幫忙寫程式時，<strong>「Local History」的概念將產生典範轉移：它不再只是人類防手滑的保險，而是 AI 系統運作的「短期記憶」與「防暴走基礎設施」</strong>。</p>
+
+    <div class="feature-grid compact">
+        <article class="feature-card revealable">
+            <div class="feature-num">1</div>
+            <h3>強制打點 (Pre-Action Checkpoints)</h3>
+            <p>在 AI 呼叫 <code>write_file</code> 之前，系統底層必須強制觸發一次快照，並打上標籤。開發者只需一鍵，就能撤銷 AI 的災難。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">2</div>
+            <h3>交易化歷史 (Transactional History)</h3>
+            <p>AI 往往一次修改多個檔案。底層架構應實作 <strong>Transaction 機制</strong>，將 AI 單次任務牽涉的變更綁定同一 ID，實現專案層級的一鍵 Reject。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">3</div>
+            <h3>自我修復 (Autonomous Rollback)</h3>
+            <p>設計 <code>revert_to_checkpoint</code> 工具。當 AI 發現錯誤率飆高，能自我判斷退回 5 分鐘前的快照並重新嘗試，等同賦予 Tree Search 的退回能力。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">4</div>
+            <h3>意圖上下文 (Context Augmentation)</h3>
+            <p>提供 <code>read_recent_history()</code> 給 AI。當 AI 讀取近期的 Diff，理解開發者先前的嘗試，能讓 AI 真正理解開發者的「實作意圖」。</p>
+        </article>
+    </div>
+
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">總結</div>
+        <p>PyCharm 透過底層 VFS 與增量壓縮做到了極致快照；VS Code 則透過內建 Timeline 實現了相似體驗。而在 <strong>AI Agent 時代</strong>，Local History 必須升級為一組 <strong>API 可讀寫的沙盒基礎設施</strong>，以確保人機協作的安全性與信任感。</p>
+    </div>
+</div>
+
+<div class="chapter-nav">
+    <button class="btn btn-outline" onclick="navigateTo('pipeline')">← 從輸入到執行的完整流程</button>
+    <button class="btn btn-primary" onclick="navigateTo('providers')">切換不同 AI 模型 →</button>
+</div>

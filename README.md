@@ -1,52 +1,71 @@
-# GemiClawDex (GCD)
-
-> 用 Rust 從頭建構 AI coding agent，學會 Harness Engineering。
->
-> *Learn Harness Engineering by building an AI coding agent from scratch in Rust.*
->
-> **[English README](README.en.md)**
-
 <p align="center">
-  <a href="http://eric-lam.com/GemiClawDex/"><img src="https://img.shields.io/badge/教學網站-互動式文件-FFD700?style=for-the-badge" alt="Docs"></a>
-  <a href="https://github.com/voidful/GemiClawDex/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-green?style=for-the-badge" alt="License"></a>
+  <img src="docs/assets/aixlarity-icon.svg" width="96" alt="Aixlarity icon">
 </p>
 
-## 這個專案在做什麼
+<h1 align="center">Aixlarity IDE</h1>
 
-你可能用過 Claude Code、Gemini CLI、OpenAI Codex 來寫程式。但你有沒有想過：**它們背後是怎麼運作的？**
+<p align="center">
+  <strong>開源 AI agent IDE。把每一次 AI 修改變成可審核、可回放、可驗證的工程工作流。</strong>
+</p>
 
-GCD 是一個用 Rust 寫的 AI coding agent。它不是要取代上面三個工具，而是把它們的設計精華拆開來，讓你透過閱讀原始碼和互動式文件，理解 AI 助手的「外殼」是怎麼做出來的。
+<p align="center">
+  <a href="README.en.md">English README</a>
+  ·
+  <a href="http://eric-lam.com/Aixlarity/">Product docs</a>
+  ·
+  <a href="#快速開始">Quick start</a>
+</p>
 
-這層外殼叫做 **Harness**。它負責組合提示詞、管理工具、控制權限、記錄工作過程、對接不同的 AI 模型。AI 模型是引擎，Harness 是方向盤、煞車和儀表板。
+<p align="center">
+  <a href="http://eric-lam.com/Aixlarity/"><img src="https://img.shields.io/badge/Website-Aixlarity_IDE-0f766e?style=for-the-badge" alt="Website"></a>
+  <a href="https://github.com/voidful/Aixlarity/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-2f855a?style=for-the-badge" alt="License"></a>
+</p>
 
-> **What is this?** GCD is a Rust-native AI coding agent that combines design patterns from Claude Code, Gemini CLI, and OpenAI Codex. It is a teaching project. Every design decision is traceable to its source, and every module maps to a chapter in the [interactive documentation](http://eric-lam.com/GemiClawDex/).
+<p align="center">
+  <img src="docs/assets/aixlarity-ide-mission-control.png" alt="Aixlarity IDE Mission Control screenshot">
+</p>
 
-## 為什麼在這裡學
+## 產品定位
 
-| 特點 | 說明 |
-|------|------|
-| **不是講解別人的產品** | GCD 本身就是產品，13,000+ 行 Rust 原始碼完全公開可讀 |
-| **不綁定單一廠商** | 同時支援 Gemini / OpenAI / Anthropic / OpenRouter / 本地模型 |
-| **融合三家設計** | 每個設計決策都標註來自哪個產品、為什麼這樣取捨 |
-| **有互動式教學網站** | 25+ 個主題章節，從入門到原始碼對照 |
-| **技能學習迴圈** | 參考 [Hermes Agent](https://github.com/NousResearch/hermes-agent) 的 skill 系統，agent 能從經驗中建立可重用技能 |
-| **雙重記憶系統** | MEMORY.md（環境知識）+ USER.md（使用者偏好），含安全掃描防注入 |
+Aixlarity 是一個開源、可本機執行、可審核的 AI coding agent IDE。它的目標不是再做一個聊天側欄，而是做一個 **Antigravity-style agent workbench**：任務、權限、diff、terminal、browser、provider、memory rules 全部有狀態、有證據、有審核點。
 
-## 教學網站
+如果 AI agent 要真的進入工程流程，它不能只回答「我改好了」。Aixlarity 要讓使用者看到：
 
-🌐 **[eric-lam.com/GemiClawDex](http://eric-lam.com/GemiClawDex/)**
+| 產品賣點 | 使用者得到什麼 |
+|----------|----------------|
+| **Mission Control** | 多 workspace、多 task、多 agent 的長任務控制台，能 pause / resume / cancel / retry |
+| **Artifact Review** | plan、task list、diff、test report、screenshot、browser recording 都變成可批准或退回的 artifact |
+| **Visual Diff Review** | 像 JuxtaCode / Meld 一樣逐檔、逐 hunk、逐輪確認 AI 修改 |
+| **Evidence-first Automation** | Terminal Replay 與 Browser Evidence 保留 command、cwd、stdout/stderr、exit code、DOM、console、network、video |
+| **Provider Freedom** | OpenAI、Anthropic、Gemini、OpenRouter、本地模型可依 user/workspace scope 切換，API key 不進匯出檔 |
+| **Knowledge Ledger** | continuous learning 可審核、可匯出、可關閉，不是黑箱記憶 |
 
-不需要先會 Rust。文件本身就是獨立的 Harness Engineering 學習資源。
+## 為什麼值得關注
 
-### 學習路徑
+Aixlarity 同時是一個產品與一本打開的工程書。IDE 是使用者入口；Rust runtime、provider layer、tool system、trust model、artifact system 是可讀的實作。你可以直接使用它，也可以拆開學會如何打造自己的 AI agent harness。
+
+| 差異化 | 說明 |
+|--------|------|
+| **Open-source Antigravity-style IDE** | 把商業 AI IDE 的核心工作流做成可研究、可驗證、可改造的開源版本 |
+| **Apple-like product discipline** | 介面保持簡潔，只顯示核心決策：任務、證據、審核、模型、權限 |
+| **Submission-ready gates** | `quality`、`contracts`、`ui`、`submission` 測試把產品品質變成門檻 |
+| **Teaching by product** | 文件不是旁觀式教材，而是從真實 IDE 介面一路追到 runtime 原始碼 |
+| **No vendor lock-in** | provider、model、scope、secret hygiene 都有明確 UI 與行為 contract |
+
+## 產品網站
+
+🌐 **[eric-lam.com/Aixlarity](http://eric-lam.com/Aixlarity/)**
+
+首頁就是 Aixlarity IDE 的產品 landing page。它先展示 IDE 的核心賣點，再把 Mission Control、Artifact Review、Browser Evidence、Terminal Replay、Provider Control、Knowledge Ledger 對回 harness engineering 概念。
+
+### 進入路徑
 
 | 時間 | 路徑 | 適合誰 |
 |------|------|--------|
-| 3 分鐘 | 首頁 → 前言 → 入門範例 | 第一次接觸 agent 概念 |
-| 10 分鐘 | + 術語速查 → GCD 全景 | 想搞懂 prompt / context / harness 三者的差異 |
-| 30 分鐘 | + Pipeline → 各細節章節 | 想完整理解從輸入到執行的流程 |
-| 1 小時 | + 對照章 → 原始碼 | 準備動手改 code 或做自己的 agent |
-| 動手做 | AGENTS.md 工作坊 + 練習題 | 想為自己的專案寫 harness |
+| 5 分鐘 | 首頁 → IDE Demo 工作坊 | 想快速看懂產品能做什麼 |
+| 10 分鐘 | IDE Harness Lab → Aixlarity IDE | 想理解 agent workbench 的核心 UX |
+| 30 分鐘 | Evidence → Provider → Trust → Knowledge Ledger | 想評估它是否可靠、可審核、可控 |
+| 1 小時 | 對照章 → 原始碼 | 想 fork、改造或打造自己的 agent IDE |
 
 ## 從哪個產品學了什麼
 
@@ -56,31 +75,32 @@ GCD 是一個用 Rust 寫的 AI coding agent。它不是要取代上面三個工
 | **Gemini CLI** | Terminal-first REPL、MCP 客戶端、Token Caching、Streaming | `main.rs`, `mcp.rs`, `cache.rs`, `output.rs` |
 | **OpenAI Codex** | Sandbox 分級、Permission 三級制、apply-patch | `tools/container.rs`, `agent/permissions.rs`, `tools/apply_patch.rs` |
 | **Hermes Agent** | 技能學習迴圈、雙重記憶、記憶安全掃描、Session 搜尋 | `skills.rs`, `tools/memory_tool.rs`, `tools/skill_manager.rs` |
+| **agent-skills** | Persona 定義、引擎級工具限制、多智能體協作 | `instructions.rs`, `coordinator.rs`, `.aixlarity/personas/` |
 
 ## 快速開始
 
 ```bash
 # 編譯
-git clone https://github.com/voidful/GemiClawDex.git && cd GemiClawDex
+git clone https://github.com/voidful/Aixlarity.git && cd Aixlarity
 cargo build --release
 
 # 設定 API 金鑰（至少一個）
 export GEMINI_API_KEY="AIza..."      # 免費額度最高
 
 # 啟動互動式 REPL
-./target/release/gcd
+./target/release/aixlarity
 
 # 或執行單次任務
-gcd exec "解釋這個 codebase 的架構"
+aixlarity exec "解釋這個 codebase 的架構"
 ```
 
-更多用法請參考教學網站的[安裝指南](http://eric-lam.com/GemiClawDex/)和[互動模式指南](http://eric-lam.com/GemiClawDex/)。
+更多用法請參考教學網站的[安裝指南](http://eric-lam.com/Aixlarity/)和[互動模式指南](http://eric-lam.com/Aixlarity/)。
 
 ## 架構
 
 ```
 crates/
-├── gcd-core/          # 核心邏輯庫（~12,000 行）
+├── aixlarity-core/          # 核心邏輯庫（~12,000 行）
 │   ├── agent.rs       # Agent 執行迴圈 + Permission + Streaming + Memory
 │   ├── tools/         # 11 個內建工具 + coordinator（930 行 DAG 排程）
 │   ├── providers.rs   # 多供應商管理（Gemini / OpenAI / Anthropic）
@@ -88,18 +108,75 @@ crates/
 │   ├── session.rs     # Session 持久化
 │   ├── trust.rs       # 三級信任模型
 │   ├── skills.rs      # 技能系統 + YAML frontmatter + Progressive Disclosure
+│   ├── instructions.rs # 規範檔載入 + Persona 載入 + 工具限制解析
 │   ├── mcp.rs         # MCP 客戶端
 │   └── hooks.rs       # PreToolUse / PostToolUse 生命週期鉤子
-├── gcd-cli/           # CLI 入口
+├── aixlarity-cli/           # CLI 入口
 │   └── main.rs        # clap 4 + rustyline REPL
+aixlarity-ide/               # 圖形化 IDE（VS Code fork）
+├── src/vs/workbench/contrib/aixlarity/browser/
+│   ├── aixlarity.contribution.ts  # 註冊 sidebar view + context tracker
+│   ├── aixlarityView.ts           # Agent workbench shell
+│   └── aixlarity*View.ts          # Artifact / Diff / Provider / Knowledge / Mission 模組
+```
+
+## Aixlarity IDE
+
+基於 VS Code (Code - OSS) 的圖形化 IDE，透過 JSON-RPC over IPC 與 `aixlarity` daemon 通訊。它的目標是做一個開源、簡潔、可驗證的 Antigravity-style harness 工作台：
+
+| 功能 | 說明 |
+|------|------|
+| Mission Control | 多 workspace / task / artifact / approval 控制台，支援 pause / resume / cancel / retry |
+| Artifact Review | Implementation Plan、Task List、Diff、Test Report、Screenshot、Browser Recording、Terminal Transcript 結構化審核 |
+| Visual Diff Review | side-by-side / unified、compare rounds、hunk review、review gate、anchored comments |
+| Integrated Browser Agent | DOM、console、network、screenshot、video、action timeline 都能成為 evidence |
+| Terminal Replay | command ownership、cwd、env 摘要、stdout/stderr、exit code、duration、危險命令 approval |
+| Provider Control Center | user/workspace scope、preset、import/export bundle、API provider model 必填、secret 不進 bundle |
+| Knowledge Ledger | rules / memory / workflow / MCP activation 可審核、可匯出、可關閉 |
+| Editor-native Actions | diagnostic hover、Problems panel、selection、terminal output 都可送給 agent |
+| Local History | 追蹤檔案變動、原生 diff editor、一鍵 revert |
+
+### IDE 驗收指令
+
+```bash
+cd aixlarity-ide
+npm run test-aixlarity-quality     # CI-safe P1/P2/source/docs product gate
+npm run test-aixlarity-contracts   # behavior contracts for extracted IDE models
+npm run test-aixlarity-submission  # release gate: quality + Electron artifact readiness
+npm run test-aixlarity-ui          # 啟動 Electron 做操作煙測
+npm run compile-check-ts-native
+npm run compile
+```
+
+## Persona 系統
+
+`.aixlarity/personas/` 目錄包含 8 個內建角色定義（Markdown + YAML frontmatter 格式）：
+
+| Persona | 角色 | 工具限制 |
+|---------|------|----------|
+| 📐 Architect | 系統設計、ADR | 唯讀 + spawn_agent |
+| 💻 Developer | 寫 production code | 無限制 |
+| 🔍 CodeReviewer | 五軸 code review | 唯讀 + shell |
+| 🧪 TestEngineer | 測試策略 | 無限制 |
+| 🛡️ SecurityAuditor | 安全審計 | 唯讀 + shell + fetch |
+| 🚀 DevOps | CI/CD、部署 | 無限制 |
+| 📝 TechWriter | 文件撰寫 | 唯讀 + write_file |
+| 📊 DataEngineer | 資料管線 | 無限制 |
+
+多智能體協作指令：
+
+```bash
+/ship          # 三路平行：CodeReviewer + TestEngineer + SecurityAuditor → Ship/No-Ship 判定
+/spec          # 兩步序列：Architect 設計 → Developer 實作
+/audit         # 單一：SecurityAuditor 深度安全審計
 ```
 
 ## 內建技能
 
-`.gcd/skills/` 目錄包含可重用的 agent 技能（YAML frontmatter 格式，與 Hermes Agent 相容）：
+`.aixlarity/skills/` 目錄包含可重用的 agent 技能（YAML frontmatter 格式，與 Hermes Agent 相容）：
 
 ```
-.gcd/skills/
+.aixlarity/skills/
 ├── code-review/SKILL.md           # 程式碼審查
 ├── systematic-debugging/SKILL.md  # 系統化除錯（四階段根因分析）
 ├── tdd/SKILL.md                   # 測試驅動開發（RED-GREEN-REFACTOR）
@@ -128,6 +205,7 @@ crates/
 | [OpenAI Codex](https://github.com/openai/codex) | Sandbox 分級、Permission 模型、apply-patch |
 | [Claude Code](https://github.com/roger2ai/Claude-Code-Compiled) | Trust 邊界、Session 分支、Skill 系統 |
 | [Hermes Agent](https://github.com/NousResearch/hermes-agent) | 技能學習迴圈、雙重記憶、記憶安全掃描、Session 搜尋、Progressive Skill Disclosure |
+| [agent-skills](https://github.com/addyosmani/agent-skills) | Persona 定義、引擎級工具限制、多智能體協作 |
 
 ## 參考資源
 
@@ -142,5 +220,5 @@ Apache-2.0
 ---
 
 <p align="center">
-  <sub>Built as a teaching project by <a href="https://github.com/voidful">@voidful</a>. 不是要取代 Claude Code / Gemini CLI / Codex，而是要讓你搞懂它們。</sub>
+  <sub>Built by <a href="https://github.com/voidful">@voidful</a> as an open-source AI agent IDE for reviewable, evidence-first coding workflows.</sub>
 </p>

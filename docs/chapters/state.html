@@ -7,11 +7,11 @@
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">先講結論</div>
-        <p>在 GCD 裡，<strong>session</strong> 是正式的執行記錄與延續基礎；<strong>continuation</strong> 是從既有 session 中抽出的摘要，重新插回下一輪 prompt；<strong>memory</strong> 則是雙重記憶系統（MEMORY.md + USER.md），透過 <code>memory</code> 工具讓 agent 自主讀寫，每次執行時以 fenced block 注入 prompt。另外，<strong>session_search</strong> 工具讓 agent 能搜尋過往 session 紀錄，回溯類似問題的解法。這四者不能互相替代。</p>
+        <p>在 Aixlarity 裡，<strong>session</strong> 是正式的執行記錄與延續基礎；<strong>continuation</strong> 是從既有 session 中抽出的摘要，重新插回下一輪 prompt；<strong>memory</strong> 則是雙重記憶系統（MEMORY.md + USER.md），透過 <code>memory</code> 工具讓 agent 自主讀寫，每次執行時以 fenced block 注入 prompt。另外，<strong>session_search</strong> 工具讓 agent 能搜尋過往 session 紀錄，回溯類似問題的解法。這四者不能互相替代。</p>
     </div>
 
     <h2>為什麼這一層值得單獨分開講</h2>
-    <p>很多文件會把「記憶」「會話」「上下文延續」通通包在同一段描述裡，結果讀者只知道系統似乎有在保存東西，卻不知道保存的是什麼、下一輪到底會不會用到、以及哪些只是未來規劃。對 GCD 來說，這一點特別重要，因為它直接決定系統是不是只會做一次性 prompt，還是能支援 resume、fork、replay 與可回放教學。</p>
+    <p>很多文件會把「記憶」「會話」「上下文延續」通通包在同一段描述裡，結果讀者只知道系統似乎有在保存東西，卻不知道保存的是什麼、下一輪到底會不會用到、以及哪些只是未來規劃。對 Aixlarity 來說，這一點特別重要，因為它直接決定系統是不是只會做一次性 prompt，還是能支援 resume、fork、replay 與可回放教學。</p>
 
     <div class="comparison-table">
         <table>
@@ -19,7 +19,7 @@
                 <tr>
                     <th>概念</th>
                     <th>它回答的問題</th>
-                    <th>在 GCD 的現況</th>
+                    <th>在 Aixlarity 的現況</th>
                 </tr>
             </thead>
             <tbody>
@@ -39,8 +39,8 @@
         </table>
     </div>
 
-    <h2>Session 在 GCD 裡不是「聊天記錄」，而是執行紀錄</h2>
-    <p>GCD 的 session 並不只存使用者輸入與最終回答。每一個 turn 都會保存 provider、sandbox、trust、active command、active skill、完整 prompt、final response、tool 次數、token 用量、API calls 與 events。這個資料量，讓 session 更接近執行紀錄而不是對話紀錄。</p>
+    <h2>Session 在 Aixlarity 裡不是「聊天記錄」，而是執行紀錄</h2>
+    <p>Aixlarity 的 session 並不只存使用者輸入與最終回答。每一個 turn 都會保存 provider、sandbox、trust、active command、active skill、完整 prompt、final response、tool 次數、token 用量、API calls 與 events。這個資料量，讓 session 更接近執行紀錄而不是對話紀錄。</p>
 
     <div class="feature-grid compact">
         <article class="feature-card revealable">
@@ -65,7 +65,7 @@
         </article>
     </div>
 
-    <h2>GCD 的 session 檔案實際上保存了什麼</h2>
+    <h2>Aixlarity 的 session 檔案實際上保存了什麼</h2>
     <p><code>session/storage.rs</code> 會把 session metadata 寫進 <code>session.txt</code>，再把每個 turn 寫成獨立檔案。turn 檔內含 header 與 payload，header 記錄位元組長度，payload 再依序拼在一起 input、prompt、response 與 events JSON。這個設計很樸素，但也很誠實：它明確表示 session 的核心材料是什麼。</p>
 
     <div class="code-window revealable">
@@ -105,7 +105,7 @@ api_calls=2
                 <tr>
                     <th>模式</th>
                     <th>它要解的問題</th>
-                    <th>在 GCD 裡的行為</th>
+                    <th>在 Aixlarity 裡的行為</th>
                 </tr>
             </thead>
             <tbody>
@@ -150,7 +150,7 @@ fork
     </div>
 
     <h2>Continuation 不是全部重灌歷史，而是濃縮回傳</h2>
-    <p>當使用者選擇 resume 或 fork 時，GCD 不會把全部過去訊息生硬地重新塞進 prompt，而是透過 <code>render_session_context()</code> 產生一段 <code># Session Continuation</code> 區塊，摘要 session id、工作區、parent session 與最近三個 turn 的概況。這種設計很務實，因為它在保留脈絡與控制 提示詞變太大之間做了折衷。</p>
+    <p>當使用者選擇 resume 或 fork 時，Aixlarity 不會把全部過去訊息生硬地重新塞進 prompt，而是透過 <code>render_session_context()</code> 產生一段 <code># Session Continuation</code> 區塊，摘要 session id、工作區、parent session 與最近三個 turn 的概況。這種設計很務實，因為它在保留脈絡與控制 提示詞變太大之間做了折衷。</p>
 
     <div class="code-window revealable">
         <div class="window-header">
@@ -173,10 +173,10 @@ Recent turn summaries
     <p>這裡也能看出一個很重要的區分：continuation 是從 session 中抽出來的可用摘要，不是另一套獨立資料系統。如果 session 本身存得不完整，continuation 也不可能憑空變得有用。</p>
 
     <h2>那 memory 呢？為什麼它不能跟 session 混成同一件事</h2>
-    <p>參考 <a href="https://github.com/NousResearch/hermes-agent">hermes-agent</a> 的設計，GCD 已定義雙重記憶系統，並透過 <code>memory</code> 內建工具讓 agent 在執行中自主讀寫：</p>
+    <p>參考 <a href="https://github.com/NousResearch/hermes-agent">hermes-agent</a> 的設計，Aixlarity 已定義雙重記憶系統，並透過 <code>memory</code> 內建工具讓 agent 在執行中自主讀寫：</p>
     <ul>
-        <li><strong><code>agent</code> store（MEMORY.md）</strong>：環境觀察、專案慣例、工具怪癖。存放在工作區 <code>.gcd/MEMORY.md</code>。</li>
-        <li><strong><code>user</code> store（USER.md）</strong>：使用者偏好、溝通風格、工作流習慣。存放在工作區 <code>.gcd/USER.md</code>。</li>
+        <li><strong><code>agent</code> store（MEMORY.md）</strong>：環境觀察、專案慣例、工具怪癖。存放在工作區 <code>.aixlarity/MEMORY.md</code>。</li>
+        <li><strong><code>user</code> store（USER.md）</strong>：使用者偏好、溝通風格、工作流習慣。存放在工作區 <code>.aixlarity/USER.md</code>。</li>
     </ul>
     <p>每個 entry 用 <code>§</code>（section sign）分隔，支援多行內容。<code>App::exec</code> 會先嘗試新的雙重記憶格式，如果不存在則 fallback 到舊的單一 <code>read_memory</code> 格式。注入 prompt 時使用 <code>&lt;memory-context&gt;</code> fenced block，防止模型將回憶內容當成新的使用者指令。</p>
 
@@ -230,7 +230,7 @@ Recent turn summaries
         </div>
         <div class="check-item">
             <h3>Session 搜尋已可用</h3>
-            <p><code>session_search</code> 工具可搜尋 <code>~/.gcd/sessions/</code> 中的 JSONL 歷史紀錄，回溯類似問題的解法。屬於輕量檔案搜尋，不依賴 SQLite FTS5。</p>
+            <p><code>session_search</code> 工具可搜尋 <code>~/.aixlarity/sessions/</code> 中的 JSONL 歷史紀錄，回溯類似問題的解法。屬於輕量檔案搜尋，不依賴 SQLite FTS5。</p>
         </div>
     </div>
 

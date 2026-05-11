@@ -1,13 +1,13 @@
 <div class="chapter-header">
     <span class="chapter-number">Modes</span>
     <h1>Plan、Live、REPL、JSON 與 JSONL：的不同使用方式</h1>
-    <p class="chapter-desc">GCD 有好幾種使用方式：Plan 模式、Live 模式、REPL、JSON 輸出等。每種方式看到的東西不一樣，適合不同的使用情境。</p>
+    <p class="chapter-desc">Aixlarity 有好幾種使用方式：Plan 模式、Live 模式、REPL、JSON 輸出等。每種方式看到的東西不一樣，適合不同的使用情境。</p>
 </div>
 
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">先講最重要的結論</div>
-        <p>GCD 不是為每一種使用方式各寫一套系統，而是盡量讓同一份 <code>AppOutput</code>、同一條 <code>App::exec</code> 主要流程，對應到文字、JSON、JSONL、REPL、plan、live 這幾種讀法。因此，很多看似「只是介面」的選項，其實都在表達你要從 外殼 看見什麼。</p>
+        <p>Aixlarity 不是為每一種使用方式各寫一套系統，而是盡量讓同一份 <code>AppOutput</code>、同一條 <code>App::exec</code> 主要流程，對應到文字、JSON、JSONL、REPL、plan、live 這幾種讀法。因此，很多看似「只是介面」的選項，其實都在表達你要從 外殼 看見什麼。</p>
     </div>
 
     <h2>為什麼模式層值得單獨成章</h2>
@@ -37,7 +37,7 @@
     </div>
 
     <h2>先把模式分成四條軸看</h2>
-    <p>GCD 的「模式」不是只有 plan 與 live。比較精準的看法，是把它分成四條互相交錯的軸：</p>
+    <p>Aixlarity 的「模式」不是只有 plan 與 live。比較精準的看法，是把它分成四條互相交錯的軸：</p>
 
     <div class="comparison-table">
         <table>
@@ -76,22 +76,22 @@
     <p>把這四條軸分開之後，你會比較容易理解：<code>--plan</code>、<code>--jsonl</code>、<code>--no-stream</code> 並不是在切換三個互斥產品，而是在改變同一條 外殼 的觀察方式。</p>
 
     <h2>沒有 subcommand 時，CLI 其實會直加入 REPL</h2>
-    <p><code>gcd</code> 如果沒有帶任何 subcommand，不是報錯，而是直加入互動模式。這個細節很重要，因為它說明 GCD 的預設基本概念更接近「終端裡的工作環境」，而不只是一次性命令。</p>
+    <p><code>aixlarity</code> 如果沒有帶任何 subcommand，不是報錯，而是直加入互動模式。這個細節很重要，因為它說明 Aixlarity 的預設基本概念更接近「終端裡的工作環境」，而不只是一次性命令。</p>
 
     <div class="code-window revealable">
         <div class="window-header">
             <span class="window-title">範例：REPL 會怎麼啟動</span>
         </div>
         <div class="window-body">
-<pre><code>$ gcd
+<pre><code>$ aixlarity
 
 ╔══════════════════════════════════════════════╗
-║       GemiClawDex (GCD) Interactive Mode      ║
+║       Aixlarity Interactive Mode      ║
 ║    Type your task, or /help for commands       ║
 ╚══════════════════════════════════════════════╝
 
 [先顯示 workspace overview]
-gcd></code></pre>
+aixlarity></code></pre>
         </div>
     </div>
 
@@ -99,7 +99,7 @@ gcd></code></pre>
 
     <div class="callout callout-warning revealable">
         <div class="callout-title">對腳本作者的一個提醒</div>
-        <p><code>--json</code> 或 <code>--jsonl</code> 並不會改變「沒有 subcommand 就進 REPL」這件事。換句話說，如果你要做真正穩定的 headless / machine-readable 呼叫，最好明確使用 <code>gcd overview</code>、<code>gcd exec</code>、<code>gcd sessions replay</code> 這類 subcommand，而不是單獨執行 <code>gcd --json</code>。</p>
+        <p><code>--json</code> 或 <code>--jsonl</code> 並不會改變「沒有 subcommand 就進 REPL」這件事。換句話說，如果你要做真正穩定的 headless / machine-readable 呼叫，最好明確使用 <code>aixlarity overview</code>、<code>aixlarity exec</code>、<code>aixlarity sessions replay</code> 這類 subcommand，而不是單獨執行 <code>aixlarity --json</code>。</p>
     </div>
 
     <h2>REPL 不是完整 CLI 的另一個外皮，而是帶預設值的互動工作流</h2>
@@ -146,11 +146,11 @@ gcd></code></pre>
 
     <div class="callout callout-warning revealable">
         <div class="callout-title">這代表什麼</div>
-        <p>如果你需要更精細地控制 <code>--plan</code>、<code>--checkpoint</code>、<code>--permission</code>、<code>--no-stream</code>、<code>--no-session</code>，最清楚的方式仍然是使用 <code>gcd exec</code>。REPL 比較像一條意見明確、方便持續工作的預設路徑。</p>
+        <p>如果你需要更精細地控制 <code>--plan</code>、<code>--checkpoint</code>、<code>--permission</code>、<code>--no-stream</code>、<code>--no-session</code>，最清楚的方式仍然是使用 <code>aixlarity exec</code>。REPL 比較像一條意見明確、方便持續工作的預設路徑。</p>
     </div>
 
     <h2><code>--plan</code> 不是另一個 agent，而是同一條 <code>App::exec</code> 的分支</h2>
-    <p>這是整章最值得講清楚的 實況檢查 之一。很多文件一看到 規劃模式，就會直覺把它寫成「另一套推理 agent」；但 GCD 目前的 <code>plan_only</code> 不是這樣。它會走同樣的 workspace / trust / provider / catalog / prompt 組裝前半段，只是在真正建立 <code>AgentRunOptions</code> 前就分支返回，不會進 <code>run_agent()</code>。</p>
+    <p>這是整章最值得講清楚的 實況檢查 之一。很多文件一看到 規劃模式，就會直覺把它寫成「另一套推理 agent」；但 Aixlarity 目前的 <code>plan_only</code> 不是這樣。它會走同樣的 workspace / trust / provider / catalog / prompt 組裝前半段，只是在真正建立 <code>AgentRunOptions</code> 前就分支返回，不會進 <code>run_agent()</code>。</p>
 
     <div class="roadmap">
         <article class="roadmap-item revealable">
@@ -189,7 +189,7 @@ gcd></code></pre>
         </div>
         <div class="window-body">
 <pre><code># Plan
-gcd exec --plan --checkpoint "review src/app.rs 並列出修補方向"
+aixlarity exec --plan --checkpoint "review src/app.rs 並列出修補方向"
 
 你會得到：
 - Execution plan
@@ -199,7 +199,7 @@ gcd exec --plan --checkpoint "review src/app.rs 並列出修補方向"
 - events 只到 ExecutionPrepared / CheckpointSaved / SessionPersisted
 
 # Live
-gcd exec "review src/app.rs 並列出修補方向"
+aixlarity exec "review src/app.rs 並列出修補方向"
 
 你會得到：
 - Execution result
@@ -212,7 +212,7 @@ gcd exec "review src/app.rs 並列出修補方向"
     </div>
 
     <h2>文字、JSON、JSONL 不是同一份東西換格式而已</h2>
-    <p>GCD 的輸出層雖然都包在同一個 <code>AppOutput</code> 裡，但三種 render 其實在回答不同問題。</p>
+    <p>Aixlarity 的輸出層雖然都包在同一個 <code>AppOutput</code> 裡，但三種 render 其實在回答不同問題。</p>
 
     <div class="comparison-table">
         <table>
@@ -282,7 +282,7 @@ gcd exec "review src/app.rs 並列出修補方向"
             <span class="window-title">範例：<code>--no-prompt</code> 的真正影響範圍</span>
         </div>
         <div class="window-body">
-<pre><code>gcd exec --no-prompt --json "review src/app.rs"
+<pre><code>aixlarity exec --no-prompt --json "review src/app.rs"
 
 文字輸出：
 - 不顯示 Prompt preview
@@ -296,7 +296,7 @@ JSON 輸出：
         </div>
     </div>
 
-    <p>所以如果你的需求是「終端畫面不要太長，但機器還是要拿到完整 prompt」，GCD 目前其實已經可以做到。</p>
+    <p>所以如果你的需求是「終端畫面不要太長，但機器還是要拿到完整 prompt」，Aixlarity 目前其實已經可以做到。</p>
 
     <h2><code>--jsonl</code> 在 exec 與 replay 下的含義也不完全相同</h2>
     <p>這是另一個很適合教學的細節。exec 的 JSONL 比較像單輪執行事件流；<code>sessions replay --jsonl</code> 則會把每個 event 包成帶有 <code>session_id</code>、<code>turn_index</code>、<code>turn_mode</code>、<code>input</code> 的 wrapper 物件。換句話說，兩者都叫 JSONL，但服務的分析任務不同。</p>
@@ -312,12 +312,12 @@ JSON 輸出：
             </thead>
             <tbody>
                 <tr>
-                    <td><code>gcd exec --jsonl ...</code></td>
+                    <td><code>aixlarity exec --jsonl ...</code></td>
                     <td>單個 <code>AgentEvent</code></td>
                     <td>即時或近即時地消費執行事件。</td>
                 </tr>
                 <tr>
-                    <td><code>gcd sessions replay --jsonl ...</code></td>
+                    <td><code>aixlarity sessions replay --jsonl ...</code></td>
                     <td>帶 <code>session_id</code> / <code>turn_index</code> / <code>payload</code> 的事件包裝</td>
                     <td>離線分析既有 session、做 replay pipeline。</td>
                 </tr>
@@ -376,12 +376,12 @@ JSON 輸出：
         <article class="feature-card revealable">
             <div class="feature-num">S1</div>
             <h3>我要先做教學式規劃，再人工確認</h3>
-            <p>用 <code>gcd exec --plan --checkpoint --json</code>。這樣可以同時保存 prompt、checkpoint 與完整結構化規劃輸出。</p>
+            <p>用 <code>aixlarity exec --plan --checkpoint --json</code>。這樣可以同時保存 prompt、checkpoint 與完整結構化規劃輸出。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">S2</div>
             <h3>我要把事件送去別的分析系統</h3>
-            <p>用 <code>gcd exec --jsonl</code> 或 <code>gcd sessions replay --jsonl</code>。前者看 live event，後者看既有 session 事件。</p>
+            <p>用 <code>aixlarity exec --jsonl</code> 或 <code>aixlarity sessions replay --jsonl</code>。前者看 live event，後者看既有 session 事件。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">S3</div>
@@ -417,7 +417,7 @@ JSON 輸出：
     <h2>把這一章濃縮成一句話</h2>
     <div class="callout callout-warning revealable">
         <div class="callout-title">模式層的價值，在於讓同一條 外殼 同時服務人與機器</div>
-        <p>Plan / live 決定你是在看規劃還是在看執行，REPL / CLI 決定你是持續工作還是一次觸發，text / JSON / JSONL 決定你是給人看還是給系統吃，stream / no-stream 則決定終端裡的節奏。把這些層講清楚，你就會知道 GCD 不只是「能跑的 agent」，而是一個開始具備操作面設計的 外殼。</p>
+        <p>Plan / live 決定你是在看規劃還是在看執行，REPL / CLI 決定你是持續工作還是一次觸發，text / JSON / JSONL 決定你是給人看還是給系統吃，stream / no-stream 則決定終端裡的節奏。把這些層講清楚，你就會知道 Aixlarity 不只是「能跑的 agent」，而是一個開始具備操作面設計的 外殼。</p>
     </div>
 </div>
 

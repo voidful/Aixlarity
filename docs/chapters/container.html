@@ -1,19 +1,19 @@
 <div class="chapter-header">
     <span class="chapter-number">Container</span>
     <h1>Docker 容器沙盒</h1>
-    <p class="chapter-desc">GCD 可以用 Docker 容器來隔離 shell 指令的執行。但「用了容器」不等於「完全安全」——這一章講清楚它到底保護了什麼。</p>
+    <p class="chapter-desc">Aixlarity 可以用 Docker 容器來隔離 shell 指令的執行。但「用了容器」不等於「完全安全」——這一章講清楚它到底保護了什麼。</p>
 </div>
 
 <div class="content-body">
     <div class="callout callout-warning revealable">
         <div class="callout-title">先講最重要的一句話</div>
-        <p>GCD 目前的 <code>sandbox=container</code>，應理解成「<strong>shell 工具可改走容器執行</strong>」，而不是「整個 agent 已經在完整容器沙盒中運作」。如果文件沒有把這件事講清楚，讀者很容易高估安全範圍。</p>
+        <p>Aixlarity 目前的 <code>sandbox=container</code>，應理解成「<strong>shell 工具可改走容器執行</strong>」，而不是「整個 agent 已經在完整容器沙盒中運作」。如果文件沒有把這件事講清楚，讀者很容易高估安全範圍。</p>
     </div>
 
     <h2>為什麼 container 值得單獨拆一章</h2>
-    <p>在 AI AI 助手 的世界裡，<code>container</code> 這個詞很容易容易讓人誤以為：好像一旦進了容器，所有操作影響就都被隔離、網路就都被關掉、工作區就不會被污染、外部命令也都變得安全。真實工程通常不是這樣。容器只是一種執行環境策略，真正的效果取決於<strong>哪些工具走進容器、工作區怎麼掛載、網路怎麼設定、以及 host 上還有哪些路徑仍直接可寫</strong>。</p>
+    <p>在 AI coding agent 的世界裡，<code>container</code> 這個詞很容易讓人誤以為：好像一旦進了容器，所有操作影響就都被隔離、網路就都被關掉、工作區就不會被污染、外部命令也都變得安全。真實工程通常不是這樣。容器只是一種執行環境策略，真正的效果取決於<strong>哪些工具走進容器、工作區怎麼掛載、網路怎麼設定、以及 host 上還有哪些路徑仍直接可寫</strong>。</p>
 
-    <p>對 GCD 來說，這一點特別關鍵，因為 <code>config.rs</code> 的摘要會把 container 描述成「強隔離，適合不受信任 repo 或高風險自動化」，但實作層目前只有 <code>shell</code> 真的改走 Docker / Podman。這不是矛盾，而是開發進度的問題：設計目標，比現在已接好的路徑更大。因此文件必須用 <code>Implemented</code> 的口氣來說明。</p>
+    <p>對 Aixlarity 來說，這一點特別關鍵，因為 <code>config.rs</code> 的摘要會把 container 描述成「強隔離，適合不受信任 repo 或高風險自動化」，但實作層目前只有 <code>shell</code> 真的改走 Docker / Podman。這不是矛盾，而是開發進度的問題：設計目標，比現在已接好的路徑更大。因此文件必須用 <code>Implemented</code> 的口氣來說明。</p>
 
     <div class="comparison-table">
         <table>
@@ -86,7 +86,7 @@
         <p>如果你的主要需求是「先不要讓它動手」，首選通常不是 container，而是 <code>read-only</code>。Container 比較適合的情境是「我願意讓它跑 shell，但想把 shell 放在比較收斂的執行環境」。這兩種需求不一樣。</p>
     </div>
 
-    <h2>GCD 的 container 路徑現在到底怎麼走</h2>
+    <h2>Aixlarity 的 container 路徑現在到底怎麼走</h2>
     <p>從原始碼看，<code>shell.rs</code> 會在 <code>ctx.sandbox == Container</code> 時，改呼叫 <code>container::run_in_container()</code>。這表示 container 路徑目前是內建在 <code>shell</code> 工具裡，而不是整個 agent 執行時 被包進容器。換句話說，容器是某個工具的執行後端，不是整體程序宿主。</p>
 
     <div class="roadmap">
@@ -101,7 +101,7 @@
             <div class="roadmap-marker">02</div>
             <div class="roadmap-content">
                 <h3>偵測可用 runtime</h3>
-                <p><code>detect_runtime()</code> 會先找 <code>podman</code>，找不到才退到 <code>docker</code>。換句話說，如果兩者都存在，GCD 目前偏好 Podman。</p>
+                <p><code>detect_runtime()</code> 會先找 <code>podman</code>，找不到才退到 <code>docker</code>。換句話說，如果兩者都存在，Aixlarity 目前偏好 Podman。</p>
             </div>
         </article>
         <article class="roadmap-item revealable">
@@ -132,7 +132,7 @@
   --memory=512m \
   --cpus=1.0 \
   ubuntu:22.04 \
-  timeout 60 sh -c "cargo test -p gcd-core"</code></pre>
+  timeout 60 sh -c "cargo test -p aixlarity-core"</code></pre>
         </div>
     </div>
 
@@ -148,7 +148,7 @@
         <article class="feature-card revealable">
             <div class="feature-num">C2</div>
             <h3>提供預設無網路的 shell 環境</h3>
-            <p>如果沒有設定 <code>GCD_CONTAINER_NETWORK=true</code>，容器會加上 <code>--network=none</code>。對「先不要外連」的 shell 驗證很有幫助。</p>
+            <p>如果沒有設定 <code>AIXLARITY_CONTAINER_NETWORK=true</code>，容器會加上 <code>--network=none</code>。對「先不要外連」的 shell 驗證很有幫助。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">C3</div>
@@ -202,7 +202,7 @@
             <span class="window-title">範例：同一個 shell 在 container 模式下仍會改到 host repo</span>
         </div>
         <div class="window-body">
-<pre><code>gcd exec --sandbox container --permission full-auto \
+<pre><code>aixlarity exec --sandbox container --permission full-auto \
   "執行 cargo fmt 並回報變更"
 
 會發生什麼：
@@ -218,7 +218,7 @@ container 不等於「不會改檔」
     </div>
 
     <h2>真正值得注意的 host / container 分工</h2>
-    <p>如果把目前 GCD 的工具按「在哪裡執行」來分類，你會更容易理解 container 隔離層的設計。</p>
+    <p>如果把目前 Aixlarity 的工具按「在哪裡執行」來分類，你會更容易理解 container 隔離層的設計。</p>
 
     <div class="comparison-table">
         <table>
@@ -273,22 +273,22 @@ container 不等於「不會改檔」
             </thead>
             <tbody>
                 <tr>
-                    <td><code>GCD_SANDBOX=container</code></td>
+                    <td><code>AIXLARITY_SANDBOX=container</code></td>
                     <td>把 container 設成預設 sandbox。</td>
                     <td>這只是預設值，不代表其他工具自然變成容器化。</td>
                 </tr>
                 <tr>
-                    <td><code>GCD_CONTAINER_IMAGE</code></td>
+                    <td><code>AIXLARITY_CONTAINER_IMAGE</code></td>
                     <td>覆寫預設 image，否則為 <code>ubuntu:22.04</code>。</td>
                     <td>你可依 repo 工具鏈調整映像檔，但這不改變 host 掛載邏輯。</td>
                 </tr>
                 <tr>
-                    <td><code>GCD_CONTAINER_TIMEOUT</code></td>
+                    <td><code>AIXLARITY_CONTAINER_TIMEOUT</code></td>
                     <td>覆寫容器內 <code>timeout</code> 秒數，預設 60 秒。</td>
                     <td>這能調 shell 執行時間，但不是一般 執行時 watchdog。</td>
                 </tr>
                 <tr>
-                    <td><code>GCD_CONTAINER_NETWORK</code></td>
+                    <td><code>AIXLARITY_CONTAINER_NETWORK</code></td>
                     <td>如果設為 <code>1</code> 或 <code>true</code>，容器內 shell 可使用網路。</td>
                     <td>這只影響容器內 shell，不等於全域網路政策。</td>
                 </tr>
@@ -374,7 +374,7 @@ container 不等於「不會改檔」
     <h2>把這一章濃縮成一句話</h2>
     <div class="callout callout-info revealable">
         <div class="callout-title">Container 現在保護的是 shell 路徑，不是整個世界</div>
-        <p>GCD 已經有一條可用的 container shell 路徑，這很有價值；但它目前更接近「把 shell 放進較收斂的執行環境」，而不是「所有工具、操作影響與網路都已完全容器化」。把這條邊界講清楚，才是真的對工程師負責。</p>
+        <p>Aixlarity 已經有一條可用的 container shell 路徑，這很有價值；但它目前更接近「把 shell 放進較收斂的執行環境」，而不是「所有工具、操作影響與網路都已完全容器化」。把這條邊界講清楚，才是真的對工程師負責。</p>
     </div>
 </div>
 

@@ -1,0 +1,74 @@
+name: Bug report
+description: Report a reproducible Aixlarity IDE or agent runtime problem.
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping harden Aixlarity. Please include evidence when possible: terminal transcript, browser recording, screenshot, artifact export, or exact command output.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+      placeholder: The IDE hangs when opening Artifact Review after...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Keep this mechanical enough for another contributor to replay.
+      placeholder: |
+        1. Open Aixlarity IDE
+        2. Run ...
+        3. Click ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Paste relevant logs or attach screenshots/artifacts. Do not include API keys or secrets.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Aixlarity version / commit
+      placeholder: commit SHA, release version, or branch
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - IDE / Mission Control
+        - IDE / Artifact Review
+        - IDE / Browser Agent
+        - IDE / Terminal Replay
+        - IDE / Provider Control
+        - Rust core / agent loop
+        - Rust core / tools
+        - CLI / daemon
+        - Docs
+        - Build / packaging
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: OS, architecture, Node version, Rust version, provider family, workspace trust state

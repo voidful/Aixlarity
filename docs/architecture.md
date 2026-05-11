@@ -1,97 +1,149 @@
-# GemiClawDex Architecture
+# Aixlarity Architecture
 
-## Design goal
+## Design Goal
 
-Build a Rust-native coding agent that keeps the best interaction patterns from Gemini CLI, OpenAI Codex, and this repository's existing skill system, without inheriting the full complexity of the current TypeScript runtime.
+Aixlarity is an open-source teaching project for Harness Engineering. Its goal is not to prove that one model is better than another; its goal is to show how an AI coding agent becomes a product when the harness around the model is explicit, inspectable, and testable.
 
-## Core product bets
+The current architecture has two first-class surfaces:
 
-1. Use Rust for the orchestration layer.
-2. Keep the product terminal-first and workspace-aware.
-3. Treat repository instructions, custom commands, and skills as separate but composable layers.
-4. Make trust and sandbox policy first-class, not bolt-ons.
-5. Decouple prompt assembly from provider execution so the system stays testable offline.
-6. Keep headless and scripted use cases first-class through stable JSON output and saved sessions.
+1. **Aixlarity IDE** — a VS Code fork that teaches the human control surface: Mission Control, Artifact Review, Browser Evidence, Terminal Replay, Provider Control Center, and editor-native actions.
+2. **Rust daemon / CLI** — the runtime that owns agent execution, prompt assembly, provider adapters, tool permissions, sessions, local history, mission state, and evidence persistence.
 
-## Crates
+The IDE is the best teaching entry point. The Rust runtime is the source of truth.
 
-### `gcd-core`
+## Core Product Bets
+
+1. **IDE-first teaching, Rust-backed execution.** Use the IDE to make invisible harness concepts visible, then trace each behavior back into Rust code.
+2. **Evidence-first agent work.** Agent claims should become artifacts, transcripts, screenshots, browser recordings, test reports, and review events.
+3. **Human-in-the-loop by design.** Tool approval, hunk review, artifact approval, and provider scope decisions are product surfaces, not afterthoughts.
+4. **Provider neutrality.** Gemini, OpenAI, Anthropic, OpenRouter, external CLIs, and local models should share one provider model where possible.
+5. **Trust and sandbox policy are engine concerns.** Prompt-only restrictions are educational but insufficient; permissions and tool availability must be enforced by the harness.
+6. **Offline inspectability.** Core logic and state formats should remain readable and testable without API keys or network access.
+
+## Control Plane Overview
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ Aixlarity IDE (TypeScript / VS Code fork / Electron)          │
+│                                                              │
+│ Chat / Provider / Persona / Approval                         │
+│ Mission Control / Artifact Review / Visual Diff              │
+│ Browser Control / Terminal Replay / Studio Policy            │
+│ Editor actions: hover, Problems, selection, terminal output   │
+└──────────────────────┬───────────────────────────────────────┘
+                       │ JSON-RPC over Electron IPC
+┌──────────────────────▼───────────────────────────────────────┐
+│ aixlarity daemon / CLI (Rust)                                 │
+│                                                              │
+│ App facade / prompt assembly / provider adapters              │
+│ Agent loop / tools / permission gates / sandbox policy        │
+│ Sessions / Mission Control / Local History / Evidence export  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+## Crates and Product Surfaces
+
+### `aixlarity-core`
 
 Owns the domain logic:
 
-- workspace discovery
-- provider capabilities
-- provider registry and active-profile switching
-- environment-driven provider overlays
-- trust store evaluation
-- custom command loading
-- skill loading (with YAML frontmatter and progressive disclosure)
-- instruction loading
-- prompt assembly (with memory context injection and skill catalog listing)
-- dual-memory system (MEMORY.md + USER.md, with security scanning)
-- skill learning loop (runtime CRUD via skill_manager tool)
-- session search (keyword-based JSONL transcript search)
-- checkpoint persistence
-- saved sessions with resume/fork semantics
-- structured JSON rendering support
+- workspace discovery and trust evaluation
+- provider registry, scoped provider mutation, active-provider resolution
+- prompt assembly with instructions, commands, skills, attachments, memory, and session context
+- provider adapters and streaming normalization
+- tool registry, tool permissions, sandbox policy, hooks, plugins, MCP tools
+- dual-memory system: `MEMORY.md` + `USER.md`
+- skill loading and progressive disclosure
+- persona loading and engine-level tool filtering
+- session persistence, checkpointing, resume, fork, replay
+- Mission Control durable state: tasks, artifacts, audit log, workspace index, studio state
+- evidence artifacts: code diff, terminal transcript, browser recording, screenshots, test reports
 
-### `gcd-cli`
+### `aixlarity-cli`
 
-Owns argument parsing and text rendering:
+Owns command-line interaction and JSON-RPC daemon routing:
 
-- `providers`
-- `commands reload`
-- `trust`
-- `checkpoints list`
-- `sessions list/show/fork`
-- `exec`
+- `exec`, REPL, JSON / JSONL output
+- `providers`, `trust`, `sessions`, `checkpoints`, `history`
+- IDE daemon methods such as `agent_chat`, `mission_control/load`, `artifacts/list`, `artifacts/review`, `studio/save`
+- approval request / response routing for IDE-driven tool permissions
 
-## Configuration model
+### `aixlarity-ide`
 
-`GemiClawDex` uses a blended filesystem layout:
+Owns the graphical harness workbench:
 
-- global home: `~/.gcd/`
-- workspace config: `<repo>/.gcd/`
+- Chat view with streaming Markdown, think folding, attachments, provider/persona controls
+- Mission Control for task state, pending approvals, review queue, audit events, workspace index
+- Artifact System with review comments, approval/rejection, evidence export
+- Visual Diff Review with side-by-side/unified modes, hunk review, compare rounds, review gate
+- Integrated Browser Agent evidence playback: DOM, console, network, screenshot, video
+- Terminal Replay with command ownership, cwd, env summary, stdout/stderr, exit code, duration
+- Provider Control Center with user/workspace scope, presets, import/export bundle, model validation
+- Editor-native agent actions for diagnostics, Problems panel, selection, and terminal output
+- Local History with `aixlarity-history://`, native diff editor, and one-click revert
+
+## Configuration Model
+
+`Aixlarity` uses a blended filesystem layout:
+
+- global home: `~/.aixlarity/`
+- workspace config: `<repo>/.aixlarity/`
 - provider profiles: `providers.conf`
 - active provider pins: `active-provider.txt`
-- saved sessions: `~/.gcd/sessions/<session-id>/`
-- dual memory: `<repo>/.gcd/MEMORY.md` (agent knowledge) + `<repo>/.gcd/USER.md` (user preferences)
-- user skills: `~/.gcd/skills/{name}/SKILL.md`
+- saved sessions: `~/.aixlarity/sessions/<session-id>/`
+- Mission Control state: `<repo>/.aixlarity/state/mission_control.json`
+- artifact mirrors and evidence bundles: `<repo>/.aixlarity/artifacts/`
+- audit log: `<repo>/.aixlarity/state/audit.jsonl`
+- dual memory: `<repo>/.aixlarity/MEMORY.md` + `<repo>/.aixlarity/USER.md`
+- user skills: `~/.aixlarity/skills/{name}/SKILL.md`
 - repo instructions: `<repo>/AGENTS.md`
-- optional persistent context: `<repo>/GEMINI.md`, `<repo>/CLAUDE.md`, `<repo>/GCD.md`
+- optional persistent context: `<repo>/GEMINI.md`, `<repo>/CLAUDE.md`, `<repo>/AIXLARITY.md`
+- agent personas: `<repo>/.aixlarity/personas/{name}.md`
 
-This intentionally mirrors:
+## Execution Pipeline
 
-- Gemini CLI's workspace-level config and command discovery
-- Codex's `AGENTS.md`
-- Claude-style skill packs
-- CC Switch's idea of managing multiple provider profiles without editing live API config by hand
-- SDK-style agents that keep reusable session state instead of treating every prompt as isolated
-- headless-compatible forks that prefer environment variables over hard-wired provider assumptions
+1. IDE or CLI receives a task.
+2. Workspace root is resolved; IDE additionally sends active editor context.
+3. Trust state is evaluated before workspace instructions, commands, skills, and providers are loaded.
+4. Provider profile is resolved from explicit request, conversation state, workspace pin, user pin, or default.
+5. Prompt assembly combines task text, instructions, command expansion, skill context, attachments, memory, and session lineage.
+6. Tool list is filtered by persona, sandbox, trust, and permission policy.
+7. Agent loop calls the selected provider and executes tool calls through the registry.
+8. High-risk actions request approval when policy requires it.
+9. Tool results return to the model and are also recorded as events.
+10. Code diffs, browser evidence, terminal transcripts, screenshots, and reports are mirrored into artifacts.
+11. Session turns, Mission Control state, audit events, and local history are persisted.
+12. IDE refreshes Mission Control and Artifact Review so the user can approve, reject, continue, or export evidence.
 
-## Execution pipeline
+## Validation Model
 
-1. Discover workspace root.
-2. Evaluate folder trust.
-3. Load repo instructions if trust permits.
-4. Load provider profiles and resolve the active provider.
-5. Load commands and skills if trust permits.
-6. Resolve any requested session resume/fork context.
-7. Resolve the requested command or raw task.
-8. Expand `@{...}` file or directory injections.
-9. Substitute command arguments.
-10. Detect `!{...}` shell blocks and convert them into approval requirements.
-11. Assemble the final provider-ready prompt.
-12. Inject dual-memory context (MEMORY.md + USER.md) as fenced `<memory-context>` block.
-13. Inject skill catalog listing (tier 1 progressive disclosure).
-14. Inject active skill body and linked files (tier 2+3 progressive disclosure).
-15. Inject summarized session lineage when resuming or forking.
-16. Optionally checkpoint the assembled session.
-17. Persist the session turn unless the run is explicitly ephemeral.
+The project keeps documentation promises tied to executable checks:
 
-## Planned next steps
+```bash
+cargo test -p aixlarity-core
+cargo test -p aixlarity
 
-- interactive TUI
-- richer session replay and transcript diffing
-- memory auto-summarization and relevance filtering
-- skill auto-suggestion based on task similarity
+cd aixlarity-ide
+npm run test-aixlarity-quality
+npm run test-aixlarity-contracts
+npm run test-aixlarity-p1
+npm run test-aixlarity-p2
+npm run test-aixlarity-submission
+npm run test-aixlarity-ui
+npm run compile-check-ts-native
+npm run compile
+```
+
+`test-aixlarity-quality` is the CI-safe product gate for IDE source readiness, P1/P2 capability coverage, and docs homepage quality. `test-aixlarity-submission` is the release gate: it runs the product gate and then checks generated Electron artifact identity, including macOS bundle ID, URL protocol, icon resources, compiled entrypoints, and release agent binary availability.
+
+## Teaching Path
+
+Use this order when teaching the architecture:
+
+1. Start in **Aixlarity IDE** and show approval, artifact review, terminal transcript, and browser recording.
+2. Open `aixlarityView.ts` to show the control surface and JSON-RPC bridge.
+3. Open `crates/aixlarity-cli/src/main.rs` to show daemon RPC routing.
+4. Open `crates/aixlarity-core/src/app.rs` and `prompt.rs` to show pre-model harness preparation.
+5. Open `agent.rs`, `tools/`, and `mission_control.rs` to show runtime execution and durable evidence.
+
+The learning goal is simple: readers should leave understanding that an AI coding agent is not a model call. It is a product-shaped harness around model calls.

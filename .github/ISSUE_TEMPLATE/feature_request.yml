@@ -1,0 +1,54 @@
+name: Feature request
+description: Propose a product-quality improvement for Aixlarity.
+title: "[Feature]: "
+labels: ["enhancement", "needs-design"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Aixlarity features should either teach a harness engineering concept or make agent work more reliable.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user workflow, teaching gap, or reliability issue does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the product behavior, not only the implementation.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Product surface
+      multiple: true
+      options:
+        - Mission Control
+        - Artifact Review
+        - Visual Diff Review
+        - Browser Agent
+        - Terminal Replay
+        - Provider Control
+        - Editor-native Actions
+        - Rust runtime
+        - CLI / daemon
+        - Docs / teaching site
+        - Release / packaging
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation plan
+      description: What test, artifact evidence, or UI smoke path should prove this works?
+      placeholder: Add a contract test, update test-aixlarity-quality, or extend UI smoke with...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

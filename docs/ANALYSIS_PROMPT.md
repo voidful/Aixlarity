@@ -1,6 +1,6 @@
-# GemiClawDex 文件網站重構與 Harness Engineering 教學強化 Prompt
+# Aixlarity 文件網站重構與 Harness Engineering 教學強化 Prompt
 
-把下面整段直接交給另一個 AI coding agent 使用。這份 prompt 的目標不是只做視覺美化，而是把 GemiClawDex 的 `docs/` 做成一個能讓工程師真正入門 AI Harness 的繁體中文互動教學網站。
+把下面整段直接交給另一個 AI coding agent 使用。這份 prompt 的目標不是只做視覺美化，而是把 Aixlarity 的 `docs/` 做成一個能讓工程師真正入門 AI Harness 的繁體中文互動教學網站。新的主敘事必須是 **IDE-first Harness Education**：先用 Aixlarity IDE 的 Mission Control、Artifact Review、Terminal Replay、Browser Evidence、Provider Control Center 建立直覺，再追到 Rust daemon 和原始碼。
 
 ---
 
@@ -8,8 +8,8 @@
 
 你的任務是重構並升級這個專案的文件網站，核心目標有四個：
 
-1. 讓工程師看懂什麼是 Harness Engineering，以及它在真實 AI Coding Agent 專案裡長什麼樣子。
-2. 以 `GemiClawDex` 這個 Rust-native 專案為主角，展示它如何吸收市面上三大代表性產品的優點，並形成自己的工程取捨。
+1. 讓工程師看懂什麼是 Harness Engineering，以及它在真實 AI Coding Agent IDE 裡長什麼樣子。
+2. 以 `Aixlarity` 這個 Rust-native runtime + VS Code fork IDE 專案為主角，展示它如何吸收代表性 CLI agent、開源 agent 與 Antigravity-style IDE 工作台的優點，並形成自己的工程取捨。
 3. 把文件站從「靜態章節頁」升級成「有細緻動畫、有教學節奏、有對照分析」的現代互動網站。
 4. 全站以繁體中文撰寫，聚焦教學、借鑑來源、對比分析、工程落地，而不是只做功能清單。
 
@@ -19,17 +19,19 @@
 
 - 呈現 Harness Engineering 的工程本質，不只是介紹單一產品。
 - 用一個可觀察、可拆解、可對照的專案，讓工程師理解 AI agent 背後真正重要的不是模型名稱，而是 harness。
-- 這個專案借鑑市面上三大產品的優點來打造：
+- 這個專案借鑑代表性 CLI agent 產品、開源 agent 專案與 IDE workbench 的優點來打造：
   - Claude Code 的 prompt / tool / workflow / trust 邏輯
   - Gemini CLI 的 terminal-first、MCP、context file、trusted folder、token caching、可擴充性
   - OpenAI Codex 的本地 agent、approval / sandbox / instructions workflow、可落地的 coding agent UX
-- 文件站不只是在介紹 GemiClawDex，也是在「透過分析 GemiClawDex，教人入門 AI Harness」。
+  - Hermes Agent 的 skill learning loop、memory safety、session search、progressive disclosure
+  - Antigravity-style IDE workbench 的 Mission Control、artifact review、browser evidence、terminal replay、editor-native action
+- 文件站不只是在介紹 Aixlarity，也是在「透過操作 Aixlarity IDE，教人入門 AI Harness」。
 
 換句話說，網站的最終感受應該是：
 
 - 使用者看完後，知道 Harness Engineering 是什麼。
 - 使用者看完後，知道一個 coding agent 不是只有模型 API，而是由 prompt、tools、sandbox、permissions、sessions、skills、commands、memory、provider adapters、UI 與 workflow 組成。
-- 使用者看完後，知道 GemiClawDex 借鑑了哪些產品、借鑑到什麼程度、哪些地方是自己的取捨、哪些地方還在規劃中。
+- 使用者看完後，知道 Aixlarity 借鑑了哪些產品、借鑑到什麼程度、哪些地方是自己的取捨、哪些地方還在規劃中。
 - 使用者看完後，願意把這個專案當成學習 AI harness 的入口。
 
 ## 二、工作範圍
@@ -43,7 +45,7 @@
 - `docs/script.js`
 - `docs/chapters/*.html`
 - `docs/chapters/manifest.json`
-- 任何與 `gcd-core`、`gcd-cli`、prompt assembly、provider、session、trust、sandbox、tools、skills 有關的 Rust 原始碼
+- 任何與 `aixlarity-core`、`aixlarity-cli`、prompt assembly、provider、session、trust、sandbox、tools、skills 有關的 Rust 原始碼
 
 你的任務不是只寫文案，而是要同時處理：
 
@@ -79,8 +81,8 @@
 請按以下優先順序工作：
 
 1. 先把 Harness Engineering 的說明講清楚。
-2. 再把 GemiClawDex 如何體現 harness 講清楚。
-3. 再做三大產品與其他參考來源的借鑑 / 對比。
+2. 再把 Aixlarity 如何體現 harness 講清楚。
+3. 再做 CLI agent、Hermes、IDE workbench 與其他參考來源的借鑑 / 對比。
 4. 最後才是視覺包裝與動畫精修。
 
 意思是：
@@ -167,7 +169,7 @@
 
 ### C. 社群分支、逆向觀察、在地化與替代實作
 
-請把下列來源視為輔助觀察來源，整理成一個「社群訊號 / 借鑑矩陣」，但不要讓它們壓過三大主產品與核心理論：
+請把下列來源視為輔助觀察來源，整理成一個「社群訊號 / 借鑑矩陣」，但不要讓它們壓過主要產品方向與核心理論：
 
 - [Claude-Code-Compiled](https://github.com/roger2ai/Claude-Code-Compiled)
 - [claw-code](https://github.com/instructkr/claw-code)
@@ -230,7 +232,7 @@
 1. Hero 區塊要更有敘事感
    - 背景層有細緻動態
    - 標題 / 副標 / badge / CTA 有分層進場
-   - 可以暗示「三大產品能力匯流到 GCD」的概念
+   - 可以暗示「agent runtime、IDE control surface、artifact evidence 匯流到 Aixlarity」的概念
 
 2. Agent Loop / Harness Pipeline 要做成更有教學感的動態視覺
    - 可用 stepper、timeline、flow map、sticky scrollytelling 或分段 reveal
@@ -271,15 +273,15 @@
 
 1. 首頁
    - 更明確說出這個網站不是普通 README 展開版
-   - 直接講清楚這是「用 GCD 教會你 Harness Engineering」
-   - 首屏就要點出三大產品借鑑與本專案定位
+   - 直接講清楚這是「用 Aixlarity 教會你 Harness Engineering」
+   - 首屏就要點出代表性來源借鑑、IDE-first 教學定位與本專案取捨
 
 2. 前言 / Harness Engineering
    - 用更教學式、更易懂但不幼稚的方式講清楚 harness 是什麼
    - 強調「LLM 只是引擎，harness 才是工程化產品」
    - 說明從最小 agent loop 到 production harness 的層層增築
 
-3. GCD 的 harness 全景
+3. Aixlarity 的 harness 全景
    - 安全邊界
    - 工具系統
    - prompt assembly
@@ -288,13 +290,13 @@
    - UI / workflow
    - 這些都要明確地成為圖、表、流程或互動區塊，而不只是段落文字
 
-4. 競品分析
-   - 聚焦 Claude Code / Gemini CLI / OpenAI Codex
+4. 競品與產品方向分析
+   - 聚焦 Claude Code / Gemini CLI / OpenAI Codex / Hermes Agent / Antigravity-style IDE workbench
    - 明確寫出：
      - 借鑑了什麼
      - 差異在哪
      - 為什麼不是全盤照抄
-     - 哪些地方是 GCD 想走自己的路
+     - 哪些地方是 Aixlarity 想走自己的路
 
 5. 借鑑來源與對比
    - 一定要把來源、借鑑點、改造方式、差異、風險寫清楚
@@ -340,9 +342,9 @@
 - 必要時新增教學型段落、導引模組、可視化流程區塊
 - 讓整個網站的核心問題變成：
   - Harness 是什麼
-  - GCD 的 harness 怎麼組成
+  - Aixlarity 的 harness 怎麼組成
   - 它借鑑了誰
-  - 它和三大產品差在哪
+  - 它和主要參考來源差在哪
   - 工程師能從中學到什麼
 
 ### Phase 3：視覺與動畫升級
@@ -358,7 +360,7 @@
 - 對每個來源標示：
   - 來源類型
   - 提供的工程訊號
-  - GCD 借鑑點
+  - Aixlarity 借鑑點
   - 差異與取捨
 
 ### Phase 5：驗證
@@ -427,7 +429,7 @@
 如果你做得好，最後的網站應該具備以下效果：
 
 - 第一次接觸的人，能在短時間內理解 Harness Engineering 的核心概念。
-- 有經驗的工程師，能從中看見 GCD 如何吸收 Claude Code / Gemini CLI / OpenAI Codex 的優點。
+- 有經驗的工程師，能從中看見 Aixlarity 如何吸收 Claude Code / Gemini CLI / OpenAI Codex 的優點。
 - 讀者能清楚分辨哪些是原始碼現況、哪些是借鑑、哪些是規劃。
 - 網站的動畫不是裝飾，而是真的在幫助使用者建立 mental model。
 - 全站具有繁體中文的可讀性、現代網站的質感、技術專書的深度，以及研究型文件的可信度。

@@ -10,8 +10,19 @@
         <p>把「看完網站覺得有道理」變成「我知道下一步該去哪裡看原始碼、該問哪些問題、該怎麼練習」。如果前面幾章是在建立架構感，這一章就是把那份架構感變成可操作的學習路徑。</p>
     </div>
 
+    <div class="callout callout-tip revealable">
+        <div class="callout-title">新的主路線：先操作 IDE，再追 Rust</div>
+        <p>如果你想透過 Aixlarity 教學或推廣 harness engineering，建議不要一開始就打開 <code>agent.rs</code>。先用 IDE 跑一個小任務，讓學員看到 approval、diff artifact、terminal transcript、browser evidence，再回到 Rust 原始碼追它們怎麼產生。這樣學到的是產品化的 harness，而不是孤立的 tool calling 範例。</p>
+    </div>
+
     <h2>三條閱讀路徑</h2>
     <div class="reading-paths wide">
+        <article class="path-card revealable">
+            <div class="path-duration">5 分鐘</div>
+            <h3>IDE-first Harness Demo</h3>
+            <p>依序看 <strong>首頁 → IDE Harness Lab → IDE Demo 工作坊 → Aixlarity IDE 工作台</strong>。目標是先知道每個 UI 表面背後代表哪個 harness 責任，並能講給別人聽。</p>
+            <button class="btn btn-outline" onclick="navigateTo('ide-demo-workshop')">看 Demo 工作坊</button>
+        </article>
         <article class="path-card revealable">
             <div class="path-duration">3 分鐘</div>
             <h3>完全新手先上手</h3>
@@ -27,7 +38,7 @@
         <article class="path-card revealable">
             <div class="path-duration">5 分鐘</div>
             <h3>先建立 外殼 基本概念</h3>
-            <p>依序看 <strong>首頁 → 前言 → 入門章 → 術語速查 → GCD 全景</strong>。目標不是記住所有模組，而是先理解「LLM 只是引擎，外殼才是產品」。</p>
+            <p>依序看 <strong>首頁 → 前言 → 入門章 → 術語速查 → Aixlarity 全景</strong>。目標不是記住所有模組，而是先理解「LLM 只是引擎，外殼才是產品」。</p>
             <button class="btn btn-outline" onclick="navigateTo('intro')">先看前言</button>
         </article>
         <article class="path-card revealable">
@@ -57,17 +68,17 @@
             <tbody>
                 <tr>
                     <td>完全沒做過 agent</td>
-                    <td>前言、入門章、術語速查、GCD 全景、Pipeline</td>
+                    <td>前言、入門章、術語速查、Aixlarity 全景、Pipeline</td>
                     <td>不要一開始就執著在 provider API 細節，先把 外殼 六層架起來。</td>
                 </tr>
                 <tr>
                     <td>做過 prompt chaining / tool calling</td>
                     <td>Pipeline、對照章、參考矩陣</td>
-                    <td>不要只把 GCD 看成 prompt template 系統，真正的重點在 trust、permission 與 session。</td>
+                    <td>不要只把 Aixlarity 看成 prompt template 系統，真正的重點在 trust、permission 與 session。</td>
                 </tr>
                 <tr>
                     <td>在做本地 AI 助手 或 CLI</td>
-                    <td>GCD 全景、Pipeline、Roadmap</td>
+                    <td>Aixlarity 全景、Pipeline、Roadmap</td>
                     <td>不要被功能名稱帶走，先確認哪些邊界已加入主要流程。</td>
                 </tr>
                 <tr>
@@ -121,31 +132,36 @@
         </table>
     </div>
 
-    <h2>從網站回到原始碼的五個入口</h2>
+    <h2>從網站回到原始碼的六個入口</h2>
     <div class="feature-grid compact">
         <article class="feature-card revealable">
             <div class="feature-num">1</div>
-            <h3><code>crates/gcd-core/src/app.rs</code></h3>
-            <p>先看 <code>exec()</code>。這裡最能看出一個 外殼 會先做哪些準備工作，哪些層是 執行前的準備。</p>
+            <h3><code>aixlarity-ide/src/vs/workbench/contrib/aixlarity/browser/aixlarityView.ts</code></h3>
+            <p>先看 IDE 如何把 chat、Mission Control、Artifact Review、Browser Control、Terminal Replay、Provider UI 接成同一個 control surface。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">2</div>
-            <h3><code>crates/gcd-core/src/prompt.rs</code></h3>
-            <p>接著看提示詞組裝。理解提示詞怎麼被組合出來，比先看 AI 模型 API 更能讓你理解 AI 助手怎麼運作。</p>
+            <h3><code>crates/aixlarity-core/src/app.rs</code></h3>
+            <p>先看 <code>exec()</code>。這裡最能看出一個 外殼 會先做哪些準備工作，哪些層是 執行前的準備。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">3</div>
-            <h3><code>crates/gcd-core/src/agent.rs</code></h3>
-            <p>再看工具迴圈、權限控制與備援切換。這是 GCD 的執行核心。</p>
+            <h3><code>crates/aixlarity-core/src/prompt.rs</code></h3>
+            <p>接著看提示詞組裝。理解提示詞怎麼被組合出來，比先看 AI 模型 API 更能讓你理解 AI 助手怎麼運作。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">4</div>
-            <h3><code>crates/gcd-core/src/tools/</code></h3>
-            <p>看沙盒怎麼在不同工具上實際生效。可以幫你判斷「宣稱的安全」和「實際的安全」有沒有差距。</p>
+            <h3><code>crates/aixlarity-core/src/agent.rs</code></h3>
+            <p>再看工具迴圈、權限控制與備援切換。這是 Aixlarity 的執行核心。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">5</div>
-            <h3><code>crates/gcd-core/src/session/</code></h3>
+            <h3><code>crates/aixlarity-core/src/tools/</code></h3>
+            <p>看沙盒怎麼在不同工具上實際生效。可以幫你判斷「宣稱的安全」和「實際的安全」有沒有差距。</p>
+        </article>
+        <article class="feature-card revealable">
+            <div class="feature-num">6</div>
+            <h3><code>crates/aixlarity-core/src/session/</code></h3>
             <p>最後看 session 持久化與 replay。這能幫你把 agent 看成持續工作系統，而不是一次性 prompt。</p>
         </article>
     </div>
@@ -214,7 +230,7 @@
         <article class="roadmap-item revealable">
             <div class="roadmap-marker">02</div>
             <div class="roadmap-content">
-                <h3>再對照 GCD 主要流程</h3>
+                <h3>再對照 Aixlarity 主要流程</h3>
                 <p>回到 <code>app.rs</code>、<code>prompt.rs</code>、<code>agent.rs</code>，逐一確認你的猜測是否真的在程式裡出現。這一步能幫你把抽象架構轉成執行順序。</p>
             </div>
         </article>
@@ -272,16 +288,16 @@
         <article class="roadmap-item revealable">
             <div class="roadmap-marker">03</div>
             <div class="roadmap-content">
-                <h3>第三段最後才做三大產品對照</h3>
-                <p>等讀者已經知道 外殼 結構後，再講 Claude Code、Gemini CLI、OpenAI Codex 的差異，吸收速度會快很多，也比較不會變成品牌印象比較。</p>
+                <h3>第三段最後才做來源與 IDE 對照</h3>
+                <p>等讀者已經知道 外殼 結構後，再講 Claude Code、Gemini CLI、OpenAI Codex、Hermes Agent 與 IDE workbench 的差異，吸收速度會快很多，也比較不會變成品牌印象比較。</p>
             </div>
         </article>
     </div>
 
-    <h2>如果你想把 GCD 當成教學樣本</h2>
+    <h2>如果你想把 Aixlarity 當成教學樣本</h2>
     <div class="callout callout-tip revealable">
         <div class="callout-title">教學建議</div>
-        <p>先用 GCD 解釋 外殼 的六個層次，再把 Claude Code、Gemini CLI、OpenAI Codex 放進比較章。這樣讀者會先建立結構，再去理解參考，而不是把三個產品的功能清單背一遍。</p>
+        <p>先用 Aixlarity 解釋 外殼 的六個層次，再把 CLI agents、Hermes Agent 與 IDE workbench 放進比較章。這樣讀者會先建立結構，再去理解參考，而不是把產品功能清單背一遍。</p>
     </div>
 </div>
 
