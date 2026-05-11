@@ -1,0 +1,359 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.monaco-workbench.nosidebar > .part.sidebar {
+	display: none !important;
+	visibility: hidden !important;
+}
+
+@property --gcd-beam-angle {
+	syntax: "<angle>";
+	initial-value: 0deg;
+	inherits: false;
+}
+
+.monaco-workbench .part.sidebar .title-actions .actions-container {
+	justify-content: flex-end;
+}
+
+.monaco-workbench .part.sidebar .title-actions .action-item {
+	margin-right: 4px;
+}
+
+.monaco-workbench .part.sidebar > .title {
+	background-color: var(--liquid-glass-bg-subtle) !important;
+	backdrop-filter: blur(var(--liquid-glass-blur-light));
+	-webkit-backdrop-filter: blur(var(--liquid-glass-blur-light));
+	border-bottom: 1px solid var(--liquid-glass-border-subtle);
+	box-shadow: inset 0 -1px 0 var(--liquid-glass-glow);
+	transition: background-color var(--liquid-glass-transition), border-color var(--liquid-glass-transition);
+}
+
+.monaco-workbench .part.sidebar > .title > .title-label h2 {
+	text-transform: uppercase;
+}
+
+.monaco-workbench .viewlet .collapsible.header .title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.monaco-workbench .viewlet .collapsible.header .actions {
+	width: 0; /* not using display: none for keyboard a11y reasons */
+}
+
+.monaco-workbench .viewlet .split-view-view:hover > .header .actions,
+.monaco-workbench .viewlet .collapsible.header.focused .actions {
+	width: initial;
+	flex: 1;
+}
+
+.monaco-workbench .viewlet .collapsible.header .actions .action-label {
+	width: 28px;
+	background-size: 16px;
+	background-position: center center;
+	background-repeat: no-repeat;
+	margin-right: 0;
+	height: 22px;
+}
+
+.monaco-workbench .viewlet .collapsible.header .actions .action-label .label {
+	display: none;
+}
+
+.monaco-workbench .viewlet .collapsible.header.collapsed .actions {
+	display: none;
+}
+
+.monaco-workbench .viewlet .collapsible.header .action-label {
+	margin-right: 0.2em;
+	background-repeat: no-repeat;
+	width: 16px;
+	height: 16px;
+}
+
+.monaco-workbench .part.sidebar > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item:focus,
+.monaco-workbench .part.sidebar > .header-or-footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item:focus {
+	outline: 0 !important; /* activity bar indicates focus custom */
+}
+
+.monaco-workbench .part.sidebar > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item .action-label,
+.monaco-workbench .part.sidebar > .header-or-footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item .action-label {
+	outline-offset: 2px;
+}
+
+.hc-black .monaco-workbench .part.sidebar > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item .action-label,
+.hc-black .monaco-workbench .part.sidebar > .header-or-footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item .action-label,
+.hc-light .monaco-workbench .part.sidebar > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item .action-label,
+.hc-light .monaco-workbench .part.sidebar > .header-or-footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item .action-label {
+	border-radius: 0px;
+}
+
+.monaco-workbench .part.sidebar > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item .action-label::before,
+.monaco-workbench .part.sidebar > .header-or-footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item .action-label::before {
+	position: absolute;
+	left: 5px; /* place icon in center */
+}
+
+.monaco-workbench .part.sidebar > .header-or-footer.header > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item.checked:not(:focus) .active-item-indicator:before,
+.monaco-workbench .part.sidebar > .header-or-footer.header > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item.checked.clicked:focus .active-item-indicator:before,
+.monaco-workbench .part.sidebar > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item.checked:not(:focus) .active-item-indicator:before,
+.monaco-workbench .part.sidebar > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item.checked.clicked:focus .active-item-indicator:before {
+	border-top-color: var(--vscode-activityBarTop-activeBorder) !important;
+}
+
+.monaco-workbench .part.sidebar > .header-or-footer.footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item.checked:not(:focus) .active-item-indicator:before,
+.monaco-workbench .part.sidebar > .header-or-footer.footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item.checked.clicked:focus .active-item-indicator:before {
+	border-bottom-color: var(--vscode-activityBarTop-activeBorder) !important;
+}
+
+.monaco-workbench .part.sidebar > .header-or-footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item:hover .action-label,
+.monaco-workbench .part.sidebar > .header-or-footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item:focus .action-label,
+.monaco-workbench .part.sidebar > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item:hover .action-label,
+.monaco-workbench .part.sidebar > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item:focus .action-label {
+	color: var(--vscode-activityBarTop-foreground) !important;
+}
+
+.monaco-workbench .part.sidebar > .header-or-footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item:hover .action-label.uri-icon,
+.monaco-workbench .part.sidebar > .header-or-footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item:focus .action-label.uri-icon,
+.monaco-workbench .part.sidebar > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item:hover .action-label.uri-icon,
+.monaco-workbench .part.sidebar > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item:focus .action-label.uri-icon {
+	background-color: var(--vscode-activityBarTop-foreground) !important;
+}
+
+.monaco-workbench .sidebar.pane-composite-part > .title > .composite-bar-container {
+	flex: 1;
+}
+
+.monaco-workbench .sidebar.part.pane-composite-part > .composite.title.has-composite-bar > .title-actions {
+	flex: inherit;
+}
+
+.monaco-workbench .sidebar.pane-composite-part > .title.has-composite-bar > .title-actions .monaco-action-bar .action-item {
+	max-width: 150px;
+}
+
+/* GCD Chat Message Actions */
+.gcd-message {
+	position: relative;
+}
+
+.gcd-action-bar {
+	position: absolute;
+	bottom: 6px;
+	right: 6px;
+	display: flex;
+	gap: 4px;
+	opacity: 0;
+	transition: opacity 0.2s;
+	z-index: 10;
+}
+
+.gcd-message:hover .gcd-action-bar {
+	opacity: 1;
+}
+
+.gcd-action-btn {
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	color: var(--vscode-descriptionForeground);
+	padding: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	transition: background-color 0.2s, color 0.2s;
+}
+
+.gcd-action-btn:hover {
+	background: rgba(255, 255, 255, 0.1);
+	color: var(--vscode-foreground);
+}
+@property --gcd-beam-angle {
+	syntax: "<angle>";
+	initial-value: 0deg;
+	inherits: false;
+}
+
+.gcd-generating-beam {
+	position: relative;
+	background: rgba(77, 170, 252, 0.04) !important;
+	box-shadow: 0 0 20px rgba(77, 170, 252, 0.15);
+}
+
+.gcd-generating-beam::before {
+	content: "";
+	position: absolute;
+	inset: -1px;
+	border-radius: inherit;
+	background: conic-gradient(
+		from var(--gcd-beam-angle) at 50% 50%,
+		transparent 0%,
+		rgba(77, 170, 252, 0.5) 10%,
+		var(--vscode-textLink-foreground, #4daafc) 20%,
+		rgba(77, 170, 252, 0.5) 30%,
+		transparent 40%
+	);
+	filter: blur(4px);
+	opacity: 0.8;
+	animation: gcd-beam-spin 2.5s linear infinite;
+	pointer-events: none;
+	z-index: -1;
+}
+
+.gcd-generating-beam::after {
+	content: "";
+	position: absolute;
+	inset: -1px;
+	border-radius: inherit;
+	padding: 2px; /* 2px width beam */
+	background: conic-gradient(
+		from var(--gcd-beam-angle) at 50% 50%,
+		transparent 0%,
+		rgba(255, 255, 255, 0.3) 15%,
+		var(--vscode-textLink-foreground, #4daafc) 20%,
+		var(--vscode-textLink-foreground, #4daafc) 25%,
+		rgba(255, 255, 255, 0.3) 30%,
+		transparent 45%
+	);
+	-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	animation: gcd-beam-spin 2.5s linear infinite;
+	pointer-events: none;
+	z-index: 100;
+}
+
+@keyframes gcd-beam-spin {
+	0% { --gcd-beam-angle: 0deg; }
+	100% { --gcd-beam-angle: 360deg; }
+}
+
+.gcd-solid-square {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	background-color: #ffffff;
+	border-radius: 2px;
+	margin: auto;
+}
+
+/* Pure CSS Magic Beam (Spin and Mask) */
+.gcd-anim-beam {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	pointer-events: none;
+	overflow: hidden;
+	padding: 2px;
+	-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	z-index: 1000;
+}
+
+.gcd-anim-beam::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 300%;
+	aspect-ratio: 1/1;
+	background: conic-gradient(
+		from 90deg,
+		transparent 0deg,
+		transparent 220deg,
+		rgba(59, 130, 246, 0.4) 270deg,
+		rgba(168, 85, 247, 0.9) 320deg,
+		#ffffff 340deg,
+		#4daafc 360deg
+	);
+	animation: pure-css-spin 4s linear infinite;
+	transform-origin: center center;
+}
+
+@keyframes pure-css-spin {
+	0% { transform: translate(-50%, -50%) rotate(0deg); }
+	100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Remove static borders when generating for pure liquid glass floating light effect */
+.gcd-input-box.is-generating {
+	border-color: transparent !important;
+}
+
+/* Settings & Fleet Dashboard Styles */
+.gcd-fleet-card, .gcd-settings-card {
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 8px;
+	padding: 12px;
+	margin-bottom: 12px;
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+	color: var(--vscode-foreground);
+}
+
+.gcd-fleet-card:hover, .gcd-settings-card:hover {
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.2);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+	transform: translateY(-1px);
+}
+
+.gcd-settings-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	padding: 6px 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gcd-settings-row:last-child {
+	border-bottom: none;
+}
+
+.gcd-settings-label {
+	font-weight: 500;
+	color: var(--vscode-textLink-foreground, #4daafc);
+	opacity: 0.9;
+}
+
+.gcd-settings-value {
+	word-break: break-word;
+	text-align: right;
+	max-width: 65%;
+	opacity: 0.85;
+}
+
+.gcd-action-btn {
+	background: rgba(77, 170, 252, 0.15);
+	color: var(--vscode-textLink-foreground, #4daafc);
+	border: 1px solid rgba(77, 170, 252, 0.3);
+	border-radius: 6px;
+	padding: 8px 12px;
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	text-align: center;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	width: 100%;
+}
+
+.gcd-action-btn:hover {
+	background: rgba(77, 170, 252, 0.25);
+	border-color: rgba(77, 170, 252, 0.5);
+	box-shadow: 0 4px 12px rgba(77, 170, 252, 0.2);
+	transform: translateY(-1px);
+}
+
+.gcd-action-btn:active {
+	transform: translateY(1px);
+	box-shadow: 0 1px 4px rgba(77, 170, 252, 0.1);
+}
