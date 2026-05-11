@@ -11,13 +11,16 @@
 <p align="center">
   <a href="README.md">繁體中文版 README</a>
   ·
-  <a href="http://eric-lam.com/Aixlarity/">Product docs</a>
+  <a href="https://aixlarity.com">Product website</a>
+  ·
+  <a href="https://github.com/voidful/Aixlarity/releases/latest">Download</a>
   ·
   <a href="#quick-start">Quick start</a>
 </p>
 
 <p align="center">
-  <a href="http://eric-lam.com/Aixlarity/"><img src="https://img.shields.io/badge/Website-Aixlarity_IDE-0f766e?style=for-the-badge" alt="Website"></a>
+  <a href="https://aixlarity.com"><img src="https://img.shields.io/badge/Website-aixlarity.com-0f766e?style=for-the-badge" alt="Website"></a>
+  <a href="https://github.com/voidful/Aixlarity/releases/latest"><img src="https://img.shields.io/badge/Download-macOS%20%7C%20Windows%20%7C%20Linux-334155?style=for-the-badge" alt="Download"></a>
   <a href="https://github.com/voidful/Aixlarity/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-2f855a?style=for-the-badge" alt="License"></a>
 </p>
 
@@ -54,7 +57,7 @@ Aixlarity is both a product and an open engineering book. The IDE is the product
 
 ## Product Website
 
-🌐 **[eric-lam.com/Aixlarity](http://eric-lam.com/Aixlarity/)**
+🌐 **[aixlarity.com](https://aixlarity.com)**
 
 The homepage is the Aixlarity IDE product landing page. It presents the workbench first, then maps Mission Control, Artifact Review, Browser Evidence, Terminal Replay, Provider Control, and Knowledge Ledger back to harness engineering concepts.
 
@@ -66,6 +69,21 @@ The homepage is the Aixlarity IDE product landing page. It presents the workbenc
 | 10 min | IDE Harness Lab → Aixlarity IDE | Learn the core UX of an agent workbench |
 | 30 min | Evidence → Provider → Trust → Knowledge Ledger | Evaluate reliability, reviewability, and control |
 | 1 hour | Comparison → Source code | Fork, modify, or build your own agent IDE |
+
+## Download Aixlarity IDE
+
+The release workflow builds native macOS, Windows, and Linux x64/arm64 artifacts and publishes SHA-256 checksums. The latest builds are always available from **[GitHub Releases](https://github.com/voidful/Aixlarity/releases/latest)**.
+
+| System | Download |
+|--------|----------|
+| macOS Apple silicon | [Aixlarity-darwin-arm64.dmg](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-darwin-arm64.dmg) |
+| macOS Intel | [Aixlarity-darwin-x64.dmg](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-darwin-x64.dmg) |
+| Windows x64 | [Aixlarity-win32-x64-user-setup.exe](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-win32-x64-user-setup.exe) |
+| Windows arm64 | [Aixlarity-win32-arm64-user-setup.exe](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-win32-arm64-user-setup.exe) |
+| Linux x64 | [deb](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-x64.deb) · [rpm](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-x64.rpm) · [tar.gz](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-x64.tar.gz) |
+| Linux arm64 | [deb](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-arm64.deb) · [rpm](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-arm64.rpm) · [tar.gz](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-arm64.tar.gz) |
+
+Unsigned preview builds may require manual trust on first launch. Verify downloaded files with [SHASUMS256.txt](https://github.com/voidful/Aixlarity/releases/latest/download/SHASUMS256.txt).
 
 ## What Aixlarity Learned From Each Source
 

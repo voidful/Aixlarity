@@ -11,13 +11,16 @@
 <p align="center">
   <a href="README.en.md">English README</a>
   ·
-  <a href="http://eric-lam.com/Aixlarity/">Product docs</a>
+  <a href="https://aixlarity.com">Product website</a>
+  ·
+  <a href="https://github.com/voidful/Aixlarity/releases/latest">Download</a>
   ·
   <a href="#快速開始">Quick start</a>
 </p>
 
 <p align="center">
-  <a href="http://eric-lam.com/Aixlarity/"><img src="https://img.shields.io/badge/Website-Aixlarity_IDE-0f766e?style=for-the-badge" alt="Website"></a>
+  <a href="https://aixlarity.com"><img src="https://img.shields.io/badge/Website-aixlarity.com-0f766e?style=for-the-badge" alt="Website"></a>
+  <a href="https://github.com/voidful/Aixlarity/releases/latest"><img src="https://img.shields.io/badge/Download-macOS%20%7C%20Windows%20%7C%20Linux-334155?style=for-the-badge" alt="Download"></a>
   <a href="https://github.com/voidful/Aixlarity/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-2f855a?style=for-the-badge" alt="License"></a>
 </p>
 
@@ -54,7 +57,7 @@ Aixlarity 同時是一個產品與一本打開的工程書。IDE 是使用者入
 
 ## 產品網站
 
-🌐 **[eric-lam.com/Aixlarity](http://eric-lam.com/Aixlarity/)**
+🌐 **[aixlarity.com](https://aixlarity.com)**
 
 首頁就是 Aixlarity IDE 的產品 landing page。它先展示 IDE 的核心賣點，再把 Mission Control、Artifact Review、Browser Evidence、Terminal Replay、Provider Control、Knowledge Ledger 對回 harness engineering 概念。
 
@@ -66,6 +69,21 @@ Aixlarity 同時是一個產品與一本打開的工程書。IDE 是使用者入
 | 10 分鐘 | IDE Harness Lab → Aixlarity IDE | 想理解 agent workbench 的核心 UX |
 | 30 分鐘 | Evidence → Provider → Trust → Knowledge Ledger | 想評估它是否可靠、可審核、可控 |
 | 1 小時 | 對照章 → 原始碼 | 想 fork、改造或打造自己的 agent IDE |
+
+## 下載 Aixlarity IDE
+
+Release workflow 會在原生 runner 上產出 macOS、Windows、Linux x64/arm64 版本，並把所有 artifact 附上 SHA-256 checksum。最新版本統一從 **[GitHub Releases](https://github.com/voidful/Aixlarity/releases/latest)** 下載。
+
+| 系統 | 下載 |
+|------|------|
+| macOS Apple silicon | [Aixlarity-darwin-arm64.dmg](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-darwin-arm64.dmg) |
+| macOS Intel | [Aixlarity-darwin-x64.dmg](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-darwin-x64.dmg) |
+| Windows x64 | [Aixlarity-win32-x64-user-setup.exe](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-win32-x64-user-setup.exe) |
+| Windows arm64 | [Aixlarity-win32-arm64-user-setup.exe](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-win32-arm64-user-setup.exe) |
+| Linux x64 | [deb](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-x64.deb) · [rpm](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-x64.rpm) · [tar.gz](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-x64.tar.gz) |
+| Linux arm64 | [deb](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-arm64.deb) · [rpm](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-arm64.rpm) · [tar.gz](https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-arm64.tar.gz) |
+
+第一次開啟 unsigned preview build 時，系統可能需要你手動信任。下載後可用 [SHASUMS256.txt](https://github.com/voidful/Aixlarity/releases/latest/download/SHASUMS256.txt) 驗證檔案。
 
 ## 從哪個產品學了什麼
 
@@ -94,7 +112,7 @@ export GEMINI_API_KEY="AIza..."      # 免費額度最高
 aixlarity exec "解釋這個 codebase 的架構"
 ```
 
-更多用法請參考教學網站的[安裝指南](http://eric-lam.com/Aixlarity/)和[互動模式指南](http://eric-lam.com/Aixlarity/)。
+更多用法請參考教學網站的[安裝指南](https://aixlarity.com)和[互動模式指南](https://aixlarity.com)。
 
 ## 架構
 

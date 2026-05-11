@@ -75,9 +75,9 @@
             瀏覽器與終端證據、多模型切換、Knowledge Ledger 收束成一個安靜、有秩序、可審核的工作台。
         </p>
         <div class="hero-actions">
-            <button class="btn btn-primary" onclick="navigateTo('ide')">看產品能力</button>
+            <a class="btn btn-primary" href="#download-aixlarity">下載 Aixlarity</a>
+            <button class="btn btn-outline" onclick="navigateTo('ide')">看產品能力</button>
             <button class="btn btn-outline" onclick="navigateTo('ide-demo-workshop')">跑一輪 Demo</button>
-            <button class="btn btn-outline" onclick="navigateTo('harness-lab')">理解 Harness</button>
         </div>
     </div>
 
@@ -102,6 +102,64 @@
     <div>
         <strong>給想做開源 AI IDE 的 builders</strong>
         <span>Rust runtime、VS Code fork、provider switch、artifact system 都能讀、能改、能測。</span>
+    </div>
+</section>
+
+<section id="download-aixlarity" class="download-panel revealable" aria-label="下載 Aixlarity IDE">
+    <div class="download-heading">
+        <div>
+            <span>Download</span>
+            <h2>選你的系統，直接開始用 Aixlarity IDE</h2>
+            <p>Release workflow 會在原生 runner 上產出 macOS、Windows、Linux x64/arm64 版本，並附上 SHA-256 checksum。</p>
+        </div>
+        <a class="btn btn-outline" href="https://github.com/voidful/Aixlarity/releases/latest">查看全部 releases</a>
+    </div>
+    <div class="download-grid">
+        <article class="download-card primary">
+            <div class="download-platform">
+                <span class="platform-mark macos-mark"></span>
+                <div>
+                    <strong>macOS</strong>
+                    <small>Apple silicon / Intel</small>
+                </div>
+            </div>
+            <div class="download-actions">
+                <a class="btn btn-primary" href="https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-darwin-arm64.dmg">Apple silicon</a>
+                <a class="btn btn-outline" href="https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-darwin-x64.dmg">Intel</a>
+            </div>
+        </article>
+        <article class="download-card">
+            <div class="download-platform">
+                <span class="platform-mark windows-mark"></span>
+                <div>
+                    <strong>Windows</strong>
+                    <small>x64 / arm64 user setup</small>
+                </div>
+            </div>
+            <div class="download-actions">
+                <a class="btn btn-primary" href="https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-win32-x64-user-setup.exe">x64</a>
+                <a class="btn btn-outline" href="https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-win32-arm64-user-setup.exe">arm64</a>
+            </div>
+        </article>
+        <article class="download-card">
+            <div class="download-platform">
+                <span class="platform-mark linux-mark"></span>
+                <div>
+                    <strong>Linux</strong>
+                    <small>deb / rpm / tar.gz</small>
+                </div>
+            </div>
+            <div class="download-actions compact">
+                <a class="btn btn-primary" href="https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-x64.deb">deb x64</a>
+                <a class="btn btn-outline" href="https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-arm64.deb">deb arm64</a>
+                <a class="btn btn-outline" href="https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-x64.tar.gz">tar x64</a>
+                <a class="btn btn-outline" href="https://github.com/voidful/Aixlarity/releases/latest/download/Aixlarity-linux-arm64.tar.gz">tar arm64</a>
+            </div>
+        </article>
+    </div>
+    <div class="download-footer">
+        <span>Unsigned preview builds：第一次開啟可能需要手動信任。</span>
+        <a href="https://github.com/voidful/Aixlarity/releases/latest/download/SHASUMS256.txt">下載 SHA-256 checksums</a>
     </div>
 </section>
 
@@ -238,7 +296,7 @@
 <section class="ide-start-panel revealable">
     <div>
         <div class="callout-title">從原始碼啟動 IDE</div>
-        <p>這個首頁也會作為 IDE 的入口，所以它保留最短的開發者路徑：先啟動 Rust runtime，再啟動 VS Code fork 的工作台。</p>
+        <p>想從 source build 也可以。Release 由 CI 出包；開發者路徑則保留 Rust runtime 與 VS Code fork 的完整啟動方式。</p>
     </div>
     <pre><code class="language-bash">cargo build --release -p aixlarity
 cd aixlarity-ide

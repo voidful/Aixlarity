@@ -1,0 +1,318 @@
+name: Release builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Attach the finished artifacts to a GitHub Release.
+        required: true
+        type: boolean
+        default: false
+      release_tag:
+        description: Tag to publish when publish_release is true, for example v0.1.0.
+        required: false
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  VSCODE_QUALITY: stable
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+jobs:
+  release-quality:
+    name: Release quality gate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Rust format, lint, and tests
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+
+      - name: Docs and product gate
+        run: node docs/validate.mjs
+
+      - name: IDE CI-safe product gate
+        working-directory: aixlarity-ide
+        run: npm run test-aixlarity-quality
+
+  build-macos:
+    name: macOS ${{ matrix.arch }}
+    needs: release-quality
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: macos-15-intel
+          - arch: arm64
+            runner: macos-15
+    env:
+      VSCODE_ARCH: ${{ matrix.arch }}
+      npm_config_arch: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: aixlarity-ide/.nvmrc
+          cache: npm
+          cache-dependency-path: aixlarity-ide/package-lock.json
+
+      - name: Build Aixlarity CLI
+        run: cargo build --release -p aixlarity
+
+      - name: Install IDE dependencies
+        working-directory: aixlarity-ide
+        run: npm ci
+
+      - name: Download Electron runtime
+        working-directory: aixlarity-ide
+        run: npm run electron -- "$VSCODE_ARCH"
+
+      - name: Package Aixlarity IDE app
+        working-directory: aixlarity-ide
+        run: npm run gulp -- "vscode-darwin-${VSCODE_ARCH}"
+
+      - name: Package macOS archives
+        run: |
+          set -euo pipefail
+          mkdir -p dist/release
+          cp target/release/aixlarity "dist/release/aixlarity-cli-darwin-${VSCODE_ARCH}"
+          ditto -c -k --sequesterRsrc --keepParent "../VSCode-darwin-${VSCODE_ARCH}/Aixlarity.app" "dist/release/Aixlarity-darwin-${VSCODE_ARCH}.zip"
+          mkdir -p aixlarity-ide/.build/darwin
+          node aixlarity-ide/build/darwin/create-dmg.ts "$PWD" "$PWD/aixlarity-ide/.build/darwin"
+          cp "aixlarity-ide/.build/darwin/VSCode-darwin-${VSCODE_ARCH}.dmg" "dist/release/Aixlarity-darwin-${VSCODE_ARCH}.dmg"
+          shasum -a 256 dist/release/* > "dist/release/SHASUMS256-darwin-${VSCODE_ARCH}.txt"
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: aixlarity-darwin-${{ matrix.arch }}
+          path: dist/release/*
+          if-no-files-found: error
+
+  build-windows:
+    name: Windows ${{ matrix.arch }}
+    needs: release-quality
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: windows-2022
+          - arch: arm64
+            runner: windows-11-arm
+    env:
+      VSCODE_ARCH: ${{ matrix.arch }}
+      npm_config_arch: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: aixlarity-ide/.nvmrc
+          cache: npm
+          cache-dependency-path: aixlarity-ide/package-lock.json
+
+      - name: Build Aixlarity CLI
+        run: cargo build --release -p aixlarity
+
+      - name: Install IDE dependencies
+        working-directory: aixlarity-ide
+        run: npm ci
+
+      - name: Download Electron runtime
+        working-directory: aixlarity-ide
+        run: npm run electron -- $env:VSCODE_ARCH
+
+      - name: Package Aixlarity IDE app and installer
+        working-directory: aixlarity-ide
+        run: |
+          npm run gulp -- "vscode-win32-$($env:VSCODE_ARCH)"
+          npm run gulp -- "vscode-win32-$($env:VSCODE_ARCH)-inno-updater"
+          npm run gulp -- "vscode-win32-$($env:VSCODE_ARCH)-user-setup"
+
+      - name: Package Windows archives
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/release | Out-Null
+          Copy-Item target/release/aixlarity.exe "dist/release/aixlarity-cli-win32-$env:VSCODE_ARCH.exe"
+          Compress-Archive -Path "../VSCode-win32-$env:VSCODE_ARCH/*" -DestinationPath "dist/release/Aixlarity-win32-$env:VSCODE_ARCH.zip" -Force
+          $installer = Get-ChildItem "aixlarity-ide/.build/win32-$env:VSCODE_ARCH/user-setup/*.exe" | Select-Object -First 1
+          if (-not $installer) {
+            throw "Windows user installer was not produced."
+          }
+          Copy-Item $installer.FullName "dist/release/Aixlarity-win32-$env:VSCODE_ARCH-user-setup.exe"
+          Get-FileHash dist/release/* -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } |
+            Set-Content "dist/release/SHASUMS256-win32-$env:VSCODE_ARCH.txt"
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: aixlarity-win32-${{ matrix.arch }}
+          path: dist/release/*
+          if-no-files-found: error
+
+  build-linux:
+    name: Linux ${{ matrix.arch }}
+    needs: release-quality
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-24.04
+            deb_arch: amd64
+            rpm_arch: x86_64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            deb_arch: arm64
+            rpm_arch: aarch64
+    env:
+      VSCODE_ARCH: ${{ matrix.arch }}
+      DEB_ARCH: ${{ matrix.deb_arch }}
+      RPM_ARCH: ${{ matrix.rpm_arch }}
+      npm_config_arch: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            fakeroot \
+            libgbm1 \
+            libgtk-3-0 \
+            libkrb5-dev \
+            libsecret-1-dev \
+            libxkbfile-dev \
+            pkg-config \
+            rpm \
+            xvfb
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: aixlarity-ide/.nvmrc
+          cache: npm
+          cache-dependency-path: aixlarity-ide/package-lock.json
+
+      - name: Build Aixlarity CLI
+        run: cargo build --release -p aixlarity
+
+      - name: Install IDE dependencies
+        working-directory: aixlarity-ide
+        run: npm ci
+
+      - name: Download Electron runtime
+        working-directory: aixlarity-ide
+        run: npm run electron -- "$VSCODE_ARCH"
+
+      - name: Package Aixlarity IDE app and Linux packages
+        working-directory: aixlarity-ide
+        run: |
+          npm run gulp -- "vscode-linux-${VSCODE_ARCH}"
+          npm run gulp -- "vscode-linux-${VSCODE_ARCH}-prepare-deb"
+          npm run gulp -- "vscode-linux-${VSCODE_ARCH}-build-deb"
+          npm run gulp -- "vscode-linux-${VSCODE_ARCH}-prepare-rpm"
+          npm run gulp -- "vscode-linux-${VSCODE_ARCH}-build-rpm"
+
+      - name: Package Linux archives
+        run: |
+          set -euo pipefail
+          mkdir -p dist/release
+          cp target/release/aixlarity "dist/release/aixlarity-cli-linux-${VSCODE_ARCH}"
+          tar -czf "dist/release/Aixlarity-linux-${VSCODE_ARCH}.tar.gz" -C .. "VSCode-linux-${VSCODE_ARCH}"
+          cp aixlarity-ide/.build/linux/deb/"${DEB_ARCH}"/deb/*.deb "dist/release/Aixlarity-linux-${VSCODE_ARCH}.deb"
+          cp aixlarity-ide/.build/linux/rpm/"${RPM_ARCH}"/*.rpm "dist/release/Aixlarity-linux-${VSCODE_ARCH}.rpm"
+          sha256sum dist/release/* > "dist/release/SHASUMS256-linux-${VSCODE_ARCH}.txt"
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: aixlarity-linux-${{ matrix.arch }}
+          path: dist/release/*
+          if-no-files-found: error
+
+  release-bundle:
+    name: Release bundle and checksums
+    needs:
+      - build-macos
+      - build-windows
+      - build-linux
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/release
+          merge-multiple: true
+
+      - name: Generate combined checksums
+        working-directory: dist/release
+        run: |
+          rm -f SHASUMS256.txt
+          sha256sum Aixlarity-* aixlarity-cli-* > SHASUMS256.txt
+
+      - name: Upload release bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aixlarity-release-bundle
+          path: dist/release/*
+          if-no-files-found: error
+
+      - name: Validate manual release tag
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_release == true && inputs.release_tag == ''
+        run: |
+          echo "::error::release_tag is required when publishing a manual release."
+          exit 1
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.publish_release == true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag || github.ref_name }}
+          draft: ${{ github.event_name == 'workflow_dispatch' }}
+          generate_release_notes: true
+          files: dist/release/*

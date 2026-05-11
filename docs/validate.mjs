@@ -99,6 +99,7 @@ const styleCss = read('docs/style.css');
 const scriptJs = read('docs/script.js');
 const readmeZh = read('README.md');
 const readmeEn = read('README.en.md');
+const releaseWorkflow = read('.github/workflows/release.yml');
 
 const homepageChecks = [
   ['docs/assets/aixlarity-icon.ai source exists', fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-icon.ai'))],
@@ -115,12 +116,22 @@ const homepageChecks = [
   ['index social preview uses Aixlarity domain icon', indexHtml.includes('https://aixlarity.com/assets/aixlarity-icon-512.png')],
   ['home includes IDE product hero', homeHtml.includes('ide-product-hero')],
   ['home includes brand lockup icon', homeHtml.includes('ide-brand-lockup') && homeHtml.includes('assets/aixlarity-icon.png')],
+  ['home includes release download panel', homeHtml.includes('id="download-aixlarity"') && homeHtml.includes('releases/latest/download/Aixlarity-darwin-arm64.dmg')],
+  ['home exposes macOS, Windows, Linux downloads', homeHtml.includes('Aixlarity-darwin-x64.dmg') && homeHtml.includes('Aixlarity-win32-x64-user-setup.exe') && homeHtml.includes('Aixlarity-linux-x64.deb')],
+  ['home exposes release checksums', homeHtml.includes('SHASUMS256.txt')],
   ['home includes visual capability board', homeHtml.includes('ide-capability-board')],
   ['home includes IDE screenshot showcase', homeHtml.includes('ide-interface-showcase') && homeHtml.includes('aixlarity-ide-mission-control.png')],
   ['home includes animated workflow rail', homeHtml.includes('ide-flow-visual')],
+  ['home styles platform download cards', styleCss.includes('.download-panel') && styleCss.includes('.download-card') && styleCss.includes('.platform-mark')],
   ['home styles screenshot cards', styleCss.includes('ide-screenshot-card')],
+  ['release workflow builds native macOS, Windows, and Linux artifacts', releaseWorkflow.includes('macos-15-intel') && releaseWorkflow.includes('windows-11-arm') && releaseWorkflow.includes('ubuntu-24.04-arm')],
+  ['release workflow publishes exact homepage artifact name templates', releaseWorkflow.includes('Aixlarity-darwin-${VSCODE_ARCH}.dmg') && releaseWorkflow.includes('Aixlarity-win32-$env:VSCODE_ARCH-user-setup.exe') && releaseWorkflow.includes('Aixlarity-linux-${VSCODE_ARCH}.deb')],
+  ['release workflow emits combined SHA-256 checksums', releaseWorkflow.includes('SHASUMS256.txt') && releaseWorkflow.includes('sha256sum Aixlarity-* aixlarity-cli-*')],
+  ['release workflow has tracked IDE build scripts', fs.existsSync(path.join(rootDir, 'aixlarity-ide', 'build', 'gulpfile.vscode.ts')) && fs.existsSync(path.join(rootDir, 'aixlarity-ide', 'build', 'npm', 'preinstall.ts'))],
+  ['release workflow prepares Windows updater before setup', releaseWorkflow.includes('vscode-win32-$($env:VSCODE_ARCH)-inno-updater')],
   ['README zh uses product icon and IDE screenshot', readmeZh.includes('docs/assets/aixlarity-icon.png') && readmeZh.includes('docs/assets/aixlarity-ide-mission-control.png')],
   ['README en uses product icon and IDE screenshot', readmeEn.includes('docs/assets/aixlarity-icon.png') && readmeEn.includes('docs/assets/aixlarity-ide-mission-control.png')],
+  ['README links the public product domain', readmeZh.includes('https://aixlarity.com') && readmeEn.includes('https://aixlarity.com')],
   ['README highlights Knowledge Ledger selling point', readmeZh.includes('Knowledge Ledger') && readmeEn.includes('Knowledge Ledger')],
   ['home removed old text-only audience cards', !/For builders|For reviewers|For learners/.test(homeHtml)],
   ['home hides chapter rail for product landing page', styleCss.includes('body[data-current-chapter="home"] .chapter-rail')],
@@ -142,7 +153,8 @@ console.log(JSON.stringify({
     `${ids.length} manifest chapters exist and have valid navigation targets`,
     'chapter HTML container tags are balanced',
     'legacy project naming and broken text fragments are absent',
-    'IDE landing page icon, screenshot showcase, visual capability board, and workflow rail are wired',
-    'README product hero assets and Knowledge Ledger selling point are wired',
+    'IDE landing page icon, release downloads, screenshot showcase, visual capability board, and workflow rail are wired',
+    'release workflow builds native macOS, Windows, and Linux artifacts with checksums',
+    'README product hero assets, Aixlarity domain, and Knowledge Ledger selling point are wired',
   ],
 }, null, 2));
