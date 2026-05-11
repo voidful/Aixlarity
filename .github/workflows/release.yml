@@ -25,6 +25,7 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   VSCODE_QUALITY: stable
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
 
