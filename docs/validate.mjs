@@ -128,6 +128,7 @@ const homepageChecks = [
   ['release workflow publishes exact homepage artifact name templates', releaseWorkflow.includes('Aixlarity-darwin-${VSCODE_ARCH}.dmg') && releaseWorkflow.includes('Aixlarity-win32-$env:VSCODE_ARCH-user-setup.exe') && releaseWorkflow.includes('Aixlarity-linux-${VSCODE_ARCH}.deb')],
   ['release workflow emits combined SHA-256 checksums', releaseWorkflow.includes('SHASUMS256.txt') && releaseWorkflow.includes('sha256sum Aixlarity-* aixlarity-cli-*')],
   ['release workflow has tracked IDE build scripts', fs.existsSync(path.join(rootDir, 'aixlarity-ide', 'build', 'gulpfile.vscode.ts')) && fs.existsSync(path.join(rootDir, 'aixlarity-ide', 'build', 'npm', 'preinstall.ts'))],
+  ['release workflow has tracked Copilot extension postinstall helpers', fs.existsSync(path.join(rootDir, 'aixlarity-ide', 'extensions', 'copilot', 'script', 'build', 'compressTikToken.ts')) && fs.existsSync(path.join(rootDir, 'aixlarity-ide', 'extensions', 'copilot', 'script', 'build', 'copyStaticAssets.ts'))],
   ['release workflow prepares Windows updater before setup', releaseWorkflow.includes('vscode-win32-$($env:VSCODE_ARCH)-inno-updater')],
   ['README zh uses product icon and IDE screenshot', readmeZh.includes('docs/assets/aixlarity-icon.png') && readmeZh.includes('docs/assets/aixlarity-ide-mission-control.png')],
   ['README en uses product icon and IDE screenshot', readmeEn.includes('docs/assets/aixlarity-icon.png') && readmeEn.includes('docs/assets/aixlarity-ide-mission-control.png')],
