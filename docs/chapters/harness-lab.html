@@ -1,21 +1,21 @@
 <div class="chapter-header">
     <span class="chapter-number">IDE Lab</span>
-    <h1>用 Aixlarity IDE 學 Harness Engineering</h1>
-    <p class="chapter-desc">這一章把 IDE 當成一座教學實驗室：你看到的每個面板、按鈕、卡片和 artifact，都對應一個 AI agent harness 的工程責任。</p>
+    <h1>用 Aixlarity IDE 看懂 Harness</h1>
+    <p class="chapter-desc">這一章把 IDE 當成教學實驗室：你看到的每個面板、按鈕、卡片和工件，都對應一個 AI agent 背後的工程責任。</p>
 </div>
 
 <div class="content-body">
     <div class="callout callout-info revealable">
         <div class="callout-title">Lab 的讀法</div>
-        <p>不要先把 Aixlarity IDE 當成「又一個 AI 編輯器」。請把它看成一個可以拆開觀察的 agent harness：前端負責 human control surface，Rust daemon 負責 agent runtime，artifact/evidence 負責讓每次 AI 行動能被審核。</p>
+        <p>不要先把 Aixlarity IDE 當成「又一個 AI 編輯器」。比較好的看法是：它是一台可以拆開看的 AI 工作機器。前端負責讓人下決定，Rust 背景服務負責執行 agent，工件和證據負責讓每次 AI 行動都能被檢查。</p>
     </div>
 
-    <h2>第一站：Chat 不是聊天，是 Agent Request Builder</h2>
-    <p>你在輸入框送出的文字，進入 daemon 前會被 IDE 加上目前工作區、persona、provider、sandbox、permission、selection、active file 等上下文。這就是 harness 的第一個職責：把「一句話」轉成可執行任務。</p>
+    <h2>第一站：輸入框不是聊天，是任務建立器</h2>
+    <p>你在輸入框送出的文字，進入背景服務前，IDE 會補上目前工作區、角色、模型供應商、沙盒、權限、選取文字、目前檔案等上下文。這就是 harness 的第一個職責：把「一句話」轉成一個真的可以執行的任務。</p>
 
     <div class="code-window slim revealable">
         <div class="window-header">
-            <span class="window-title">從輸入到 JSON-RPC</span>
+            <span class="window-title">從一句話到 JSON-RPC</span>
         </div>
         <div class="window-body">
 <pre><code>使用者輸入
@@ -31,8 +31,8 @@ agent_chat JSON-RPC request → Rust daemon → agent loop</code></pre>
         </div>
     </div>
 
-    <h2>第二站：Permission Cards 讓安全變成互動</h2>
-    <p>Prompt 不能當安全邊界。當 agent 想跑 shell、寫檔、套 patch，IDE 會用 approval card 把風險攤開給人看。這裡要學的是：permission 是 engine-level gate，不是「請模型乖一點」的文字。</p>
+    <h2>第二站：批准卡片把安全變成互動</h2>
+    <p>提示詞不能當安全邊界。當 agent 想跑 shell、寫檔、套 patch，IDE 會用批准卡片把風險攤開給人看。這裡要學的是：權限是引擎層級的門檻，不是「請模型乖一點」的文字。</p>
 
     <div class="comparison-table">
         <table>
@@ -41,17 +41,17 @@ agent_chat JSON-RPC request → Rust daemon → agent loop</code></pre>
             </thead>
             <tbody>
                 <tr>
-                    <td>Allow / Deny / Always</td>
-                    <td>一次性與 session-level permission</td>
-                    <td>同一個工具在不同 permission level 下是否需要人批准。</td>
+                    <td>允許 / 拒絕 / 本輪都允許</td>
+                    <td>一次性與本輪工作階段的權限</td>
+                    <td>同一個工具在不同權限等級下是否需要人批准。</td>
                 </tr>
                 <tr>
-                    <td>Shell command card</td>
+                    <td>Shell 指令卡片</td>
                     <td>危險命令證據化</td>
                     <td>命令、cwd、風險理由、輸出是否都可追蹤。</td>
                 </tr>
                 <tr>
-                    <td>Approval audit</td>
+                    <td>批准紀錄</td>
                     <td>可回放的決策紀錄</td>
                     <td>後續能否知道「誰批准了什麼」。</td>
                 </tr>
@@ -59,67 +59,67 @@ agent_chat JSON-RPC request → Rust daemon → agent loop</code></pre>
         </table>
     </div>
 
-    <h2>第三站：Mission Control 是長任務的狀態機</h2>
-    <p>真正的 agent 產品不能只有一個滾動聊天窗。Mission Control 把 task、approval、artifact、audit、workspace index 集中在一起，讓長任務可以 pause / resume / cancel / retry，也能在 IDE 重啟後恢復。</p>
+    <h2>第三站：Mission Control 管長任務</h2>
+    <p>真正的 agent 產品不能只有一個一直往下捲的聊天窗。Mission Control 把任務、批准、工件、審計、工作區索引集中在一起，讓長任務可以暫停、繼續、取消、重試，也能在 IDE 重啟後恢復。</p>
 
     <div class="feature-grid compact">
         <article class="feature-card revealable">
             <div class="feature-num">Task</div>
-            <h3>任務不是訊息</h3>
-            <p>任務有狀態、進度、timeline、artifact IDs。這是從 chat product 走向 agent product 的關鍵。</p>
+            <h3>任務不是聊天訊息</h3>
+            <p>任務有狀態、進度、時間線、工件 ID。這是從聊天產品走向 agent 產品的關鍵。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">Audit</div>
             <h3>決策要能追</h3>
-            <p>approval、artifact review、thread comment 都應該能被存回 durable state。</p>
+            <p>批准、工件審查、留言討論都應該能被存回可持久化的狀態。</p>
         </article>
         <article class="feature-card revealable">
             <div class="feature-num">Resume</div>
             <h3>重啟後要接得上</h3>
-            <p>Mission Control state 存在 <code>.aixlarity/state/mission_control.json</code>，不是只活在 DOM 裡。</p>
+            <p>Mission Control 狀態存在 <code>.aixlarity/state/mission_control.json</code>，不是只活在畫面裡。</p>
         </article>
     </div>
 
-    <h2>第四站：Artifact Review 把 AI 修改變成可批准工件</h2>
-    <p>AI 每次修改程式碼，都應該變成結構化 artifact：名稱、類型、狀態、summary、body、evidence、attachments、review threads。這讓「我看過了」變成產品流程，而不是口頭承諾。</p>
+    <h2>第四站：工件審查讓 AI 修改看得懂</h2>
+    <p>AI 每次修改程式碼，都應該變成結構化工件：名稱、類型、狀態、摘要、內容、證據、附件、討論串。這讓「我看過了」變成產品流程，而不是口頭承諾。</p>
 
     <div class="comparison-table">
         <table>
             <thead>
-                <tr><th>Artifact 類型</th><th>教學重點</th><th>對應能力</th></tr>
+                <tr><th>工件類型</th><th>教學重點</th><th>對應能力</th></tr>
             </thead>
             <tbody>
                 <tr>
                     <td>Code Diff</td>
-                    <td>逐 hunk 檢查 AI 修改，每輪 edit 都可比較。</td>
+                    <td>逐段檢查 AI 修改，每一輪編輯都可比較。</td>
                     <td>Visual Diff Review、Compare Rounds、Review Gate</td>
                 </tr>
                 <tr>
-                    <td>Terminal Transcript</td>
+                    <td>終端機紀錄</td>
                     <td>測試和命令不能只靠模型說明，要有 stdout/stderr/exit code。</td>
                     <td>Terminal Replay Center</td>
                 </tr>
                 <tr>
-                    <td>Browser Recording</td>
-                    <td>瀏覽器操作要留下 DOM、console、network、screenshot、video。</td>
+                    <td>瀏覽器錄製</td>
+                    <td>瀏覽器操作要留下 DOM、console、network、截圖、影片。</td>
                     <td>Integrated Browser Agent</td>
                 </tr>
                 <tr>
-                    <td>Test Report</td>
-                    <td>驗收結果要能附回任務，不只是 terminal 裡的一段文字。</td>
+                    <td>測試報告</td>
+                    <td>驗收結果要能附回任務，不只是終端機裡的一段文字。</td>
                     <td>Evidence Bundle、Artifact Export</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <h2>第五站：Provider Control Center 教你做多供應商外殼</h2>
-    <p>多模型不是把 API key 塞進設定檔而已。Aixlarity 把 provider 分成 user / workspace scope，API provider 必須填 model，import/export bundle 不能帶 raw secret。這些都是開源 IDE 需要的產品品質。</p>
+    <h2>第五站：模型供應商切換要有秩序</h2>
+    <p>多模型不是把 API key 塞進設定檔而已。Aixlarity 把 provider 分成個人 / 工作區範圍，API provider 必須填 model，匯入匯出包不能帶 raw secret。這些都是開源 IDE 需要的產品品質。</p>
 
     <div class="checklist revealable">
         <div class="check-item">
             <h3>Scope 是團隊協作邊界</h3>
-            <p>Workspace provider 可以跟專案一起分享；user provider 留在個人環境。這能避免把私密 API 設定誤送進 repo。</p>
+            <p>工作區 provider 可以跟專案一起分享；個人 provider 留在自己的環境。這能避免把私密 API 設定誤送進 repo。</p>
         </div>
         <div class="check-item">
             <h3>Model 必填是可重現性</h3>
@@ -127,12 +127,12 @@ agent_chat JSON-RPC request → Rust daemon → agent loop</code></pre>
         </div>
         <div class="check-item">
             <h3>Bundle 不帶 key 是安全設計</h3>
-            <p>匯入匯出應該分享 provider shape，不應該分享 secret。這是開源工具特別重要的底線。</p>
+            <p>匯入匯出應該分享 provider 設定形狀，不應該分享 secret。這是開源工具特別重要的底線。</p>
         </div>
     </div>
 
-    <h2>第六站：Editor-native Actions 讓 agent 進入日常開發</h2>
-    <p>Harness 不該只存在 sidebar。Aixlarity 把 agent 動作放到 diagnostic hover、Problems panel、selection、terminal output，讓使用者可以把具體上下文送給 agent，而不是手動描述一大段。</p>
+    <h2>第六站：讓 agent 進入日常開發位置</h2>
+    <p>Harness 不該只存在側邊欄。Aixlarity 把 agent 動作放到 diagnostic hover、Problems panel、選取文字、終端機輸出，讓使用者可以把具體上下文送給 agent，而不是手動描述一大段。</p>
 
     <div class="code-window slim revealable">
         <div class="window-header">
@@ -160,29 +160,29 @@ agent_chat JSON-RPC request → Rust daemon → agent loop</code></pre>
         <article class="roadmap-item revealable">
             <div class="roadmap-marker">02</div>
             <div class="roadmap-content">
-                <h3>檢查 diff artifact</h3>
-                <p>進 Evidence，打開 code diff，切換 side-by-side / unified，對每個 hunk 做 approve 或 comment。</p>
+                <h3>檢查 diff 工件</h3>
+                <p>進 Evidence，打開 code diff，切換 side-by-side / unified，對每一段修改做批准或留言。</p>
             </div>
         </article>
         <article class="roadmap-item revealable">
             <div class="roadmap-marker">03</div>
             <div class="roadmap-content">
                 <h3>要求 agent 跑測試</h3>
-                <p>觀察 Terminal Transcript 是否留下 command、cwd、exit code、stdout/stderr，並把結果附回 artifact。</p>
+                <p>觀察終端機紀錄是否留下 command、cwd、exit code、stdout/stderr，並把結果附回工件。</p>
             </div>
         </article>
         <article class="roadmap-item revealable">
             <div class="roadmap-marker">04</div>
             <div class="roadmap-content">
                 <h3>重啟後回到 Mission Control</h3>
-                <p>確認 task、artifact、review thread 是否仍在。這一步檢查的是 durable state，不是 UI 動畫。</p>
+                <p>確認任務、工件、審查討論串是否仍在。這一步檢查的是可持久化狀態，不是 UI 動畫。</p>
             </div>
         </article>
     </div>
 
     <div class="callout callout-tip revealable">
         <div class="callout-title">把 Lab 帶回團隊</div>
-        <p>如果要用 Aixlarity 對外教學或內部 workshop，最有效的講法不是「我們有 AI IDE」，而是「我們把 AI agent 的黑盒拆成可驗證的任務、工具、證據、diff、provider 和安全邊界」。</p>
+        <p>如果要用 Aixlarity 對外教學或內部 workshop，最有效的講法不是「我們有 AI IDE」，而是「我們把 AI agent 的黑盒拆成可驗證的任務、工具、證據、diff、模型供應商和安全邊界」。</p>
     </div>
 </div>
 

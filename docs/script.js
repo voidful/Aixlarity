@@ -41,7 +41,7 @@
 
     async function loadManifest() {
         try {
-            const response = await fetch('chapters/manifest.json');
+            const response = await fetch('chapters/manifest.json', { cache: 'no-cache' });
             if (!response.ok) {
                 throw new Error(response.statusText);
             }
@@ -101,7 +101,7 @@
         if (chapterCache[id]) return chapterCache[id];
 
         try {
-            const response = await fetch(`chapters/${id}.html`);
+            const response = await fetch(`chapters/${id}.html`, { cache: 'no-cache' });
             if (!response.ok) {
                 throw new Error(`${response.status} ${response.statusText}`);
             }

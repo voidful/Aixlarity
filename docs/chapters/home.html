@@ -58,6 +58,21 @@
                 </section>
             </div>
         </div>
+        <div class="ide-float-card card-plan">
+            <span>Plan</span>
+            <strong>3 步已就緒</strong>
+        </div>
+        <div class="ide-float-card card-diff">
+            <span>Diff</span>
+            <strong>7 段已審</strong>
+        </div>
+        <div class="ide-float-card card-proof">
+            <span>Evidence</span>
+            <strong>測試 · browser · terminal</strong>
+        </div>
+        <div class="ide-live-rail" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+        </div>
     </div>
 
     <div class="ide-product-copy">
@@ -68,40 +83,62 @@
                 <strong>Open Agent Workbench</strong>
             </div>
         </div>
-        <div class="hero-badge">Open-source AI Agent IDE · Evidence-first Workflow</div>
-        <h1 class="ide-product-title hero-title">Aixlarity IDE</h1>
+        <div class="hero-badge">開源 AI Agent IDE</div>
+        <h1 class="ide-product-title hero-title">
+            <span>AI 幫你改程式，</span>
+            <span>每一步都看得見。</span>
+        </h1>
         <p class="ide-product-subtitle">
-            為需要把 AI coding agent 放進真實工程流程的團隊而生。Aixlarity 把任務編排、每輪 diff、
-            瀏覽器與終端證據、多模型切換、Knowledge Ledger 收束成一個安靜、有秩序、可審核的工作台。
+            Aixlarity 是開源 AI IDE。每一次改動、測試、瀏覽器操作和模型切換，都會整理成你看得懂、查得到的紀錄。
         </p>
         <div class="hero-actions">
-            <a class="btn btn-primary" href="#download-aixlarity">下載 Aixlarity</a>
-            <button class="btn btn-outline" onclick="navigateTo('ide')">看產品能力</button>
-            <button class="btn btn-outline" onclick="navigateTo('ide-demo-workshop')">跑一輪 Demo</button>
+            <a class="btn btn-primary" href="#download-aixlarity">下載 v0.1.0</a>
+            <a class="btn btn-outline" href="https://github.com/voidful/Aixlarity/releases/latest">查看 Release</a>
+            <button class="btn btn-outline" onclick="navigateTo('ide')">探索 IDE</button>
+        </div>
+        <div class="ide-hero-proof" aria-label="Aixlarity release proof points">
+            <div>
+                <strong>6</strong>
+                <span>原生版本</span>
+            </div>
+            <div>
+                <strong>100%</strong>
+                <span>提交檢查通過</span>
+            </div>
+            <div>
+                <strong>Open</strong>
+                <span>外殼可讀可改</span>
+            </div>
+        </div>
+        <div class="ide-status-strip" aria-label="Aixlarity 工作流程">
+            <span><strong>Ask</strong>需求</span>
+            <span><strong>Plan</strong>計畫</span>
+            <span><strong>Review</strong>審核</span>
+            <span><strong>Trace</strong>紀錄</span>
         </div>
     </div>
 
     <div class="ide-hero-tags" aria-label="Aixlarity IDE 核心能力">
         <span>Mission Control</span>
-        <span>Review Gate</span>
-        <span>Evidence Trail</span>
-        <span>Provider Control</span>
-        <span>Open Learning</span>
+        <span>Visual Diff</span>
+        <span>Browser Evidence</span>
+        <span>Terminal Replay</span>
+        <span>Provider Switch</span>
     </div>
 </section>
 
 <section class="ide-product-strip revealable" aria-label="Aixlarity IDE 產品定位">
     <div>
-        <strong>給每天要 review AI 改動的工程師</strong>
-        <span>每輪 code change 都能進 diff、留言、approve 或 reject，不再靠信任聊天紀錄。</span>
+        <strong>先規劃</strong>
+        <span>把 AI 任務放進 Mission Control，而不是散在聊天紀錄裡。</span>
     </div>
     <div>
-        <strong>給正在導入 agent workflow 的團隊</strong>
-        <span>長任務、背景 agent、危險命令、browser evidence 都有狀態與審核軌跡。</span>
+        <strong>再審核</strong>
+        <span>每輪修改都有視覺化 diff、工件和審核門檻。</span>
     </div>
     <div>
-        <strong>給想做開源 AI IDE 的 builders</strong>
-        <span>Rust runtime、VS Code fork、provider switch、artifact system 都能讀、能改、能測。</span>
+        <strong>留紀錄</strong>
+        <span>瀏覽器、終端機、測試報告都留下可回放的紀錄。</span>
     </div>
 </section>
 
@@ -109,8 +146,8 @@
     <div class="download-heading">
         <div>
             <span>Download</span>
-            <h2>選你的系統，直接開始用 Aixlarity IDE</h2>
-            <p>Release workflow 會在原生 runner 上產出 macOS、Windows、Linux x64/arm64 版本，並附上 SHA-256 checksum。</p>
+            <h2>下載 Aixlarity IDE</h2>
+            <p>macOS、Windows、Linux 都有 x64/arm64 版本。每個 release 都附 SHA-256 checksum。</p>
         </div>
         <a class="btn btn-outline" href="https://github.com/voidful/Aixlarity/releases/latest">查看全部 releases</a>
     </div>
@@ -158,31 +195,35 @@
         </article>
     </div>
     <div class="download-footer">
-        <span>Unsigned preview builds：第一次開啟可能需要手動信任。</span>
+        <span>預覽版尚未簽章：第一次開啟可能需要手動信任。</span>
         <a href="https://github.com/voidful/Aixlarity/releases/latest/download/SHASUMS256.txt">下載 SHA-256 checksums</a>
     </div>
 </section>
 
 <section class="ide-capability-board revealable" aria-label="Aixlarity IDE 核心視覺功能">
     <article class="capability-tile tile-mission">
+        <span class="capability-kicker">01</span>
         <div class="capability-icon mission-icon">
             <span></span><span></span><span></span>
         </div>
         <h2>Mission Control</h2>
     </article>
     <article class="capability-tile tile-review">
+        <span class="capability-kicker">02</span>
         <div class="capability-icon review-icon">
             <span></span><span></span><span></span>
         </div>
         <h2>Diff Review</h2>
     </article>
     <article class="capability-tile tile-evidence">
+        <span class="capability-kicker">03</span>
         <div class="capability-icon evidence-icon">
             <span></span><span></span><span></span><span></span>
         </div>
         <h2>Evidence Replay</h2>
     </article>
     <article class="capability-tile tile-provider">
+        <span class="capability-kicker">04</span>
         <div class="capability-icon provider-icon">
             <span></span><span></span><span></span>
         </div>
@@ -193,36 +234,36 @@
 <section class="ide-interface-showcase revealable" aria-label="Aixlarity IDE interface screenshots">
     <div class="section-heading compact-heading">
         <span>Product Surface</span>
-        <h2>不是聊天外掛，是 AI agent 的工作台</h2>
-        <p>任務、審核、證據與模型切換都留在 IDE 介面裡，使用者可以在每一步看見 agent 做了什麼、卡在哪裡、用什麼證據證明。</p>
+        <h2>一個介面，看清 agent 的每一步</h2>
+        <p>任務、審核、證據與模型切換都留在 IDE 裡。你看到的不只是 AI 的回答，而是它真正做過的工作。</p>
     </div>
     <div class="ide-screenshot-grid">
         <figure class="ide-screenshot-card">
             <img src="assets/aixlarity-ide-mission-control.png" alt="Aixlarity IDE Mission Control interface">
             <figcaption>
                 <strong>Mission Control</strong>
-                <span>長任務、approval、artifact readiness 與 verification passport 同屏管理。</span>
+                <span>長任務、批准、工件狀態與驗收紀錄同屏管理。</span>
             </figcaption>
         </figure>
         <figure class="ide-screenshot-card">
             <img src="assets/aixlarity-ide-diff-review.png" alt="Aixlarity IDE visual diff review interface">
             <figcaption>
                 <strong>Visual Diff Review</strong>
-                <span>逐輪比較 AI 修改，讓每個 hunk 都能被確認、留言或退回。</span>
+                <span>逐輪比較 AI 修改，讓每一段改動都能被確認、留言或退回。</span>
             </figcaption>
         </figure>
         <figure class="ide-screenshot-card">
             <img src="assets/aixlarity-ide-knowledge-ledger.png" alt="Aixlarity IDE Knowledge Ledger settings interface">
             <figcaption>
                 <strong>Knowledge Ledger</strong>
-                <span>continuous learning 可審核、可匯出、可關閉，不藏在黑箱記憶裡。</span>
+                <span>學到的規則可審核、可匯出、可關閉，不藏在黑箱記憶裡。</span>
             </figcaption>
         </figure>
     </div>
 </section>
 
 <div class="content-body ide-home-content">
-<h2>Aixlarity IDE 的主工作流</h2>
+<h2>從一句需求到可以合併</h2>
 <div class="ide-flow-visual revealable">
     <div class="flow-track" aria-hidden="true">
         <div class="flow-pulse"></div>
@@ -249,47 +290,37 @@
     </article>
 </div>
 
-<h2>核心工作台</h2>
+<h2>核心能力</h2>
 <div class="feature-grid">
     <article class="feature-card revealable">
         <div class="feature-num">MC</div>
         <h3>Mission Control</h3>
-        <p>多 workspace、多 task、多 agent 的任務控制台，支援 pause、resume、cancel、retry 與背景長任務追蹤。</p>
-    </article>
-    <article class="feature-card revealable">
-        <div class="feature-num">AR</div>
-        <h3>Artifact Review</h3>
-        <p>Implementation Plan、Task List、Diff、Test Report、Screenshot、Browser Recording 都是可留言、可批准、可重生的 artifact。</p>
+        <p>多個工作區、多個任務、多個 AI agent，都有狀態、控制與恢復點。</p>
     </article>
     <article class="feature-card revealable">
         <div class="feature-num">BR</div>
-        <h3>Integrated Browser Agent</h3>
-        <p>Managed browser 不只截圖，也能收 DOM、console、network、screenshot、video，並把 browser state 餵回 prompt。</p>
+        <h3>Browser Evidence</h3>
+        <p>DOM、console、network、截圖、影片都能成為瀏覽器證據。</p>
     </article>
     <article class="feature-card revealable">
         <div class="feature-num">TR</div>
         <h3>Terminal Replay</h3>
-        <p>命令 ownership、stdout、stderr、exit code、cwd、env 摘要都可附到 artifact，避免「測過但沒有證據」。</p>
+        <p>每個命令都保留 stdout、stderr、exit code、執行路徑與負責任務。</p>
     </article>
     <article class="feature-card revealable">
         <div class="feature-num">DF</div>
         <h3>Visual Diff Review</h3>
-        <p>詳細視覺化每次 AI 修改，支援逐檔、逐 hunk、逐輪確認，讓 code review 成為 agent workflow 的核心。</p>
+        <p>逐檔、逐段、逐輪確認 AI 修改，審完再合併。</p>
     </article>
     <article class="feature-card revealable">
         <div class="feature-num">PV</div>
-        <h3>Provider Control Center</h3>
-        <p>OpenAI、Anthropic、Gemini 與相容端點可依 user/workspace scope 切換；provider 必須自己填模型，API key 不進匯出檔。</p>
+        <h3>Provider Control</h3>
+        <p>OpenAI、Anthropic、Gemini 與相容端點可依工作區切換。</p>
     </article>
     <article class="feature-card revealable">
         <div class="feature-num">KL</div>
         <h3>Knowledge Ledger</h3>
-        <p>把 continuous learning 做成可審核規則表：rules、memory、workflow、MCP activation 都能匯出與關閉。</p>
-    </article>
-    <article class="feature-card revealable">
-        <div class="feature-num">EA</div>
-        <h3>Editor-native Actions</h3>
-        <p>diagnostic hover、Problems panel、selection、terminal output 都能直接送給 agent，不需要離開當前工作上下文。</p>
+        <p>學到的規則、記憶、工作流程都可審核、匯出、關閉。</p>
     </article>
 </div>
 
@@ -304,18 +335,18 @@ npm run electron
 npm run test-aixlarity-submission</code></pre>
 </section>
 
-<h2>它同時也是 Harness 教學網站</h2>
+<h2>它也是一本可以操作的 Harness 入門課</h2>
 <div class="reading-paths">
     <article class="path-card revealable">
         <div class="path-duration">5 分鐘</div>
         <h3>先看 IDE Demo</h3>
-        <p>用一個任務看懂 approval、terminal transcript、diff artifact、browser evidence 如何串成 harness。</p>
+        <p>用一個小任務看懂批准、終端機紀錄、diff 工件、瀏覽器證據怎麼串成 harness。</p>
         <button class="btn btn-outline" onclick="navigateTo('ide-demo-workshop')">看 Demo 腳本</button>
     </article>
     <article class="path-card revealable">
         <div class="path-duration">10 分鐘</div>
         <h3>理解 IDE 工作台</h3>
-        <p>把 Mission Control、Artifact System、Browser Agent、Terminal Replay 對到實際 UI。</p>
+        <p>把 Mission Control、工件系統、瀏覽器 agent、終端機回放對到實際 UI。</p>
         <button class="btn btn-outline" onclick="navigateTo('ide')">看 IDE 工作台</button>
     </article>
     <article class="path-card revealable">
@@ -328,7 +359,7 @@ npm run test-aixlarity-submission</code></pre>
 
 <div class="callout callout-tip revealable">
     <div class="callout-title">一句話定位</div>
-    <p><strong>Aixlarity IDE 是開源版 Antigravity-style AI agent workbench。</strong>它把模型、工具、權限、證據、diff、provider 和教學都放在同一個可觀察的產品介面裡。</p>
+    <p><strong>Aixlarity IDE 是開源 AI agent 工作台。</strong>它把模型、工具、權限、證據、diff、模型供應商和教學都放在同一個可觀察的產品介面裡。</p>
 </div>
 </div>
 
