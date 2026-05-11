@@ -117,19 +117,19 @@ async fn call_openai_responses_streaming(
                     current_fn_args.push_str(delta);
                 }
             }
-            Some("response.function_call_arguments.done") | Some("response.output_item.done") => {
-                if !current_fn_name.is_empty() {
-                    let arguments: Value = serde_json::from_str(&current_fn_args)
-                        .unwrap_or(Value::Object(Default::default()));
-                    tool_calls.push(ToolCall {
-                        id: current_call_id.clone(),
-                        name: current_fn_name.clone(),
-                        arguments,
-                    });
-                    current_call_id.clear();
-                    current_fn_name.clear();
-                    current_fn_args.clear();
-                }
+            Some("response.function_call_arguments.done") | Some("response.output_item.done")
+                if !current_fn_name.is_empty() =>
+            {
+                let arguments: Value = serde_json::from_str(&current_fn_args)
+                    .unwrap_or(Value::Object(Default::default()));
+                tool_calls.push(ToolCall {
+                    id: current_call_id.clone(),
+                    name: current_fn_name.clone(),
+                    arguments,
+                });
+                current_call_id.clear();
+                current_fn_name.clear();
+                current_fn_args.clear();
             }
             Some("response.completed") => {
                 if let Some(usage) = event["response"]["usage"].as_object() {

@@ -159,19 +159,17 @@ async fn call_anthropic_streaming(
                     _ => {}
                 }
             }
-            Some("content_block_stop") => {
-                if !current_tool_name.is_empty() {
-                    let arguments: Value = serde_json::from_str(&current_tool_json)
-                        .unwrap_or(Value::Object(Default::default()));
-                    tool_calls.push(ToolCall {
-                        id: current_tool_id.clone(),
-                        name: current_tool_name.clone(),
-                        arguments,
-                    });
-                    current_tool_id.clear();
-                    current_tool_name.clear();
-                    current_tool_json.clear();
-                }
+            Some("content_block_stop") if !current_tool_name.is_empty() => {
+                let arguments: Value = serde_json::from_str(&current_tool_json)
+                    .unwrap_or(Value::Object(Default::default()));
+                tool_calls.push(ToolCall {
+                    id: current_tool_id.clone(),
+                    name: current_tool_name.clone(),
+                    arguments,
+                });
+                current_tool_id.clear();
+                current_tool_name.clear();
+                current_tool_json.clear();
             }
             Some("message_delta") => {
                 if let Some(usage) = event["usage"].as_object() {
