@@ -607,20 +607,25 @@ export class CodeApplication extends Disposable {
 				const path = await import('path');
 				const os = await import('os');
 				const home = os.homedir();
+				const executableName = process.platform === 'win32' ? 'aixlarity.exe' : 'aixlarity';
+				const resourcesPath = typeof process.resourcesPath === 'string' ? process.resourcesPath : undefined;
 				const aixlarityCandidates = [
-					path.join(process.cwd(), 'target', 'debug', 'aixlarity'),
-					path.join(process.cwd(), 'target', 'release', 'aixlarity'),
-					path.join(home, 'PycharmProjects', 'ClaudeCode', 'target', 'debug', 'aixlarity'),
-					path.join(home, 'PycharmProjects', 'ClaudeCode', 'target', 'release', 'aixlarity'),
-					'/usr/local/bin/aixlarity',
-				];
+					path.join(this.environmentMainService.appRoot, 'bin', executableName),
+					resourcesPath ? path.join(resourcesPath, 'app', 'bin', executableName) : undefined,
+					path.join(process.cwd(), 'target', 'release', executableName),
+					path.join(process.cwd(), 'target', 'debug', executableName),
+					path.join(home, 'PycharmProjects', 'ClaudeCode', 'target', 'release', executableName),
+					path.join(home, 'PycharmProjects', 'ClaudeCode', 'target', 'debug', executableName),
+					process.platform === 'win32' ? undefined : '/opt/homebrew/bin/aixlarity',
+					process.platform === 'win32' ? undefined : '/usr/local/bin/aixlarity',
+				].filter((candidate): candidate is string => typeof candidate === 'string');
 				let aixBin: string | undefined;
 				for (const candidate of aixlarityCandidates) {
 					if (existsSync(candidate)) { aixBin = candidate; break; }
 				}
 
 				if (!aixBin) {
-					const message = 'No Aixlarity binary found. Build with `cargo build -p aixlarity`.';
+					const message = 'No Aixlarity daemon binary found. Reinstall Aixlarity or build with `cargo build --release -p aixlarity`.';
 					this.logService.warn(`[Aixlarity] ${message}`);
 					sendDaemonStatus({ status: 'error', message });
 					return;

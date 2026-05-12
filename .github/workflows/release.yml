@@ -208,6 +208,7 @@ jobs:
           APP_PATH="VSCode-darwin-${VSCODE_ARCH}/Aixlarity.app"
           DMG_PATH="dist/release/Aixlarity-darwin-${VSCODE_ARCH}.dmg"
           ZIP_PATH="dist/release/Aixlarity-darwin-${VSCODE_ARCH}.zip"
+          APP_DAEMON="$APP_PATH/Contents/Resources/app/bin/aixlarity"
           TMP_DIR="$(mktemp -d)"
           MOUNT_POINT=""
           cleanup() {
@@ -219,10 +220,12 @@ jobs:
           trap cleanup EXIT
 
           codesign --verify --deep --strict --verbose=4 "$APP_PATH"
+          test -x "$APP_DAEMON"
 
           mkdir -p "$TMP_DIR/zip"
           ditto -x -k "$ZIP_PATH" "$TMP_DIR/zip"
           codesign --verify --deep --strict --verbose=4 "$TMP_DIR/zip/Aixlarity.app"
+          test -x "$TMP_DIR/zip/Aixlarity.app/Contents/Resources/app/bin/aixlarity"
 
           hdiutil verify "$DMG_PATH"
           ATTACH_OUT="$(hdiutil attach -nobrowse -readonly "$DMG_PATH")"
@@ -234,6 +237,7 @@ jobs:
           fi
 
           codesign --verify --deep --strict --verbose=4 "$MOUNT_POINT/Aixlarity.app"
+          test -x "$MOUNT_POINT/Aixlarity.app/Contents/Resources/app/bin/aixlarity"
           if [[ "${MACOS_NOTARIZED:-0}" == "1" ]]; then
             spctl --assess --type open --verbose=4 "$DMG_PATH"
             spctl --assess --type execute --verbose=4 "$MOUNT_POINT/Aixlarity.app"
@@ -304,6 +308,10 @@ jobs:
       - name: Package Windows archives
         shell: pwsh
         run: |
+          $daemon = "VSCode-win32-$env:VSCODE_ARCH/resources/app/bin/aixlarity.exe"
+          if (-not (Test-Path $daemon)) {
+            throw "Aixlarity daemon binary was not embedded in the Windows app package."
+          }
           New-Item -ItemType Directory -Force -Path dist/release | Out-Null
           Copy-Item target/release/aixlarity.exe "dist/release/aixlarity-cli-win32-$env:VSCODE_ARCH.exe"
           Compress-Archive -Path "VSCode-win32-$env:VSCODE_ARCH/*" -DestinationPath "dist/release/Aixlarity-win32-$env:VSCODE_ARCH.zip" -Force
@@ -395,6 +403,8 @@ jobs:
       - name: Package Linux archives
         run: |
           set -euo pipefail
+          DAEMON_PATH="VSCode-linux-${VSCODE_ARCH}/resources/app/bin/aixlarity"
+          test -x "$DAEMON_PATH"
           mkdir -p dist/release
           cp target/release/aixlarity "dist/release/aixlarity-cli-linux-${VSCODE_ARCH}"
           tar -czf "dist/release/Aixlarity-linux-${VSCODE_ARCH}.tar.gz" -C . "VSCode-linux-${VSCODE_ARCH}"

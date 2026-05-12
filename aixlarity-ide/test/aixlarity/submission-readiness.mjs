@@ -20,6 +20,7 @@ const welcomeContributionPath = path.join(root, 'src/vs/workbench/contrib/welcom
 const releaseWorkflowPath = path.join(repoRoot, '.github/workflows/release.yml');
 const gulpVscodePath = path.join(root, 'build/gulpfile.vscode.ts');
 const gulpExtensionsPath = path.join(root, 'build/gulpfile.extensions.ts');
+const electronMainPath = path.join(root, 'src/vs/code/electron-main/app.ts');
 const cliPath = path.join(repoRoot, 'crates/aixlarity-cli/src/main.rs');
 
 const product = readJson(productPath);
@@ -33,6 +34,7 @@ const welcomeContribution = readText(welcomeContributionPath);
 const releaseWorkflow = readText(releaseWorkflowPath);
 const gulpVscode = readText(gulpVscodePath);
 const gulpExtensions = readText(gulpExtensionsPath);
+const electronMain = readText(electronMainPath);
 const cli = readText(cliPath);
 
 function assertNoLegacyIdentity(value, field) {
@@ -152,6 +154,13 @@ assert(gulpVscode.includes('aixlaritySlimReleaseProfile'), 'Desktop packaging mu
 assert(gulpVscode.includes('stripSourceMapsInPackagingTasks = isCI || aixlaritySlimReleaseProfile'), 'Slim release must strip packaged sourcemaps outside CI too');
 assert(gulpVscode.includes('skipping extension shims'), 'Slim release must skip Copilot extension shims when the extension is not bundled');
 assert(gulpExtensions.includes('Slim release: skipping bundled Copilot Chat extension'), 'Slim release must skip the bundled Copilot Chat extension');
+assert(gulpVscode.includes("file.dirname = 'bin'"), 'Desktop packaging must embed the Aixlarity daemon binary under resources/app/bin');
+assert(gulpVscode.includes('target\', \'release\', aixlarityCliName'), 'Desktop packaging must source the release Aixlarity daemon binary');
+assert(electronMain.includes("this.environmentMainService.appRoot, 'bin', executableName"), 'Daemon resolver must prefer the embedded app binary');
+assert(electronMain.includes('No Aixlarity daemon binary found'), 'Daemon resolver must report missing embedded/PATH binary clearly');
+assert(releaseWorkflow.includes('APP_DAEMON="$APP_PATH/Contents/Resources/app/bin/aixlarity"'), 'macOS release validation must check the embedded daemon binary');
+assert(releaseWorkflow.includes('VSCode-win32-$env:VSCODE_ARCH/resources/app/bin/aixlarity.exe'), 'Windows release validation must check the embedded daemon binary');
+assert(releaseWorkflow.includes('VSCode-linux-${VSCODE_ARCH}/resources/app/bin/aixlarity'), 'Linux release validation must check the embedded daemon binary');
 
 const requiredCorePatterns = [
 	'workspace_registry_path',
@@ -197,6 +206,7 @@ console.log(JSON.stringify({
 		'provider manager keeps scoped preset/import/export affordances',
 		'first-run routes provider setup before any account sign-in flow',
 		'slim release profile uses minified IDE builds and excludes bundled Copilot Chat',
+		'desktop release embeds the Aixlarity daemon binary for first-run startup',
 		'core provider registry persists workspace/user mutations explicitly',
 		'daemon provider RPCs parse scope for use/add/remove',
 	],

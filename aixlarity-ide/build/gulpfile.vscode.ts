@@ -432,11 +432,20 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
 		const api = gulp.src('src/vscode-dts/vscode.d.ts').pipe(rename('out/vscode-dts/vscode.d.ts'));
 
 		const telemetry = gulp.src('.build/telemetry/**', { base: '.build/telemetry', dot: true });
+		const aixlarityCliName = platform === 'win32' ? 'aixlarity.exe' : 'aixlarity';
+		const aixlarityCliPath = path.join(path.dirname(root), 'target', 'release', aixlarityCliName);
+		const aixlarityCli = gulp.src(aixlarityCliPath, { base: path.dirname(aixlarityCliPath) })
+			.pipe(rename(file => {
+				file.dirname = 'bin';
+				file.basename = 'aixlarity';
+				file.extname = platform === 'win32' ? '.exe' : '';
+			}))
+			.pipe(util.setExecutableBit(['**/bin/aixlarity']));
 
 		const jsFilter = util.filter(data => !data.isDirectory() && /\.js$/.test(data.path));
-		const root = path.resolve(path.join(import.meta.dirname, '..'));
-		const productionDependencies = getProductionDependencies(root);
-		const dependenciesSrc = productionDependencies.map(d => path.relative(root, d)).map(d => [`${d}/**`, `!${d}/**/{test,tests}/**`]).flat().concat('!**/*.mk');
+		const repoRoot = path.resolve(path.join(import.meta.dirname, '..'));
+		const productionDependencies = getProductionDependencies(repoRoot);
+		const dependenciesSrc = productionDependencies.map(d => path.relative(repoRoot, d)).map(d => [`${d}/**`, `!${d}/**/{test,tests}/**`]).flat().concat('!**/*.mk');
 
 		const depFilterPattern = ['**', `!**/${config.version}/**`, '!**/bin/darwin-arm64-87/**', '!**/package-lock.json', '!**/yarn.lock'];
 		if (stripSourceMapsInPackagingTasks) {
@@ -474,6 +483,7 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
 			license,
 			api,
 			telemetry,
+			aixlarityCli,
 			sources,
 			deps
 		];
