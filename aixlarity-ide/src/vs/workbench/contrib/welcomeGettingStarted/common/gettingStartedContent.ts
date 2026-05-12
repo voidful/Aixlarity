@@ -112,6 +112,36 @@ type GettingStartedStartEntryContent = BuiltinGettingStartedStartEntry[];
 
 export const startEntries: GettingStartedStartEntryContent = [
 	{
+		id: 'aixlarityChooseProvider',
+		title: localize('gettingStarted.aixlarity.chooseProvider.title', "Choose Provider"),
+		description: localize('gettingStarted.aixlarity.chooseProvider.description', "Pick OpenAI, Anthropic, Gemini, a local CLI, or a custom compatible API before running an agent."),
+		icon: Codicon.server,
+		content: {
+			type: 'startEntry',
+			command: 'command:aixlarity.chooseProvider',
+		}
+	},
+	{
+		id: 'aixlarityAddApiKey',
+		title: localize('gettingStarted.aixlarity.addApiKey.title', "Add API Key"),
+		description: localize('gettingStarted.aixlarity.addApiKey.description', "Save the provider key locally or bind a workspace provider to an environment variable."),
+		icon: Codicon.key,
+		content: {
+			type: 'startEntry',
+			command: 'command:aixlarity.addApiKey',
+		}
+	},
+	{
+		id: 'aixlaritySelectModel',
+		title: localize('gettingStarted.aixlarity.selectModel.title', "Select Model"),
+		description: localize('gettingStarted.aixlarity.selectModel.description', "Enter the exact model ID that Aixlarity should use for planning, editing, and review."),
+		icon: Codicon.vm,
+		content: {
+			type: 'startEntry',
+			command: 'command:aixlarity.selectModel',
+		}
+	},
+	{
 		id: 'welcome.showNewFileEntries',
 		title: localize('gettingStarted.newFile.title', "New File..."),
 		description: localize('gettingStarted.newFile.description', "Open a new untitled text file, notebook, or custom editor."),
@@ -209,62 +239,44 @@ export const startEntries: GettingStartedStartEntryContent = [
 			command: 'command:workbench.action.remote.showWebStartEntryActions',
 		}
 	},
-	{
-		id: 'topLevelNewWorkspaceChat',
-		title: localize('gettingStarted.newWorkspaceChat.title', "Generate New Workspace..."),
-		description: localize('gettingStarted.newWorkspaceChat.description', "Chat to create a new workspace"),
-		icon: Codicon.chatSparkle,
-		when: '!isWeb && !chatSetupHidden && !chatSetupDisabledInWorkspace',
-		content: {
-			type: 'startEntry',
-			command: 'command:welcome.newWorkspaceChat',
-		}
-	},
 ];
 
 const Button = (title: string, href: string) => `[${title}](${href})`;
 
-const CopilotStepTitle = localize('gettingStarted.copilotSetup.title', "Use AI features with Copilot for free");
-const CopilotDescription = localize({ key: 'gettingStarted.copilotSetup.description', comment: ['{Locked="["}', '{Locked="]({0})"}'] }, "You can use [Copilot]({0}) to generate code across multiple files, fix errors, ask questions about your code, and much more using natural language.", defaultChat.documentationUrl ?? '');
-const CopilotTermsString = localize({ key: 'gettingStarted.copilotSetup.terms', comment: ['{Locked="]({2})"}', '{Locked="]({3})"}'] }, "By continuing with {0} Copilot, you agree to {1}'s [Terms]({2}) and [Privacy Statement]({3})", defaultChat.provider.default.name, defaultChat.provider.default.name, defaultChat.termsStatementUrl, defaultChat.privacyStatementUrl);
-const CopilotAnonymousButton = Button(localize('setupCopilotButton.setup', "Use AI Features"), `command:workbench.action.chat.triggerSetupAnonymousWithoutDialog`);
-const CopilotSignedOutButton = Button(localize('setupCopilotButton.setup', "Use AI Features"), `command:workbench.action.chat.triggerSetup`);
-const CopilotSignedInButton = Button(localize('setupCopilotButton.setup', "Use AI Features"), `command:workbench.action.chat.triggerSetup`);
-const CopilotCompleteButton = Button(localize('setupCopilotButton.chatWithCopilot', "Start to Chat"), 'command:workbench.action.chat.open');
-
-function createCopilotSetupStep(id: string, button: string, when: string, includeTerms: boolean): BuiltinGettingStartedStep {
-	const description = includeTerms ?
-		`${CopilotDescription}\n${CopilotTermsString}\n${button}` :
-		`${CopilotDescription}\n${button}`;
-
-	return {
-		id,
-		title: CopilotStepTitle,
-		description,
-		when: `${when} && !chatSetupHidden && !chatSetupDisabledInWorkspace`,
-		media: {
-			type: 'svg', altText: 'VS Code Copilot multi file edits', path: 'multi-file-edits.svg'
-		},
-	};
-}
-
 export const walkthroughs: GettingStartedWalkthroughContent = [
 	{
 		id: 'Setup',
-		title: localize('gettingStarted.setup.title', "Get started with VS Code"),
-		description: localize('gettingStarted.setup.description', "Customize your editor, learn the basics, and start coding"),
+		title: localize('gettingStarted.setup.title', "Set up Aixlarity"),
+		description: localize('gettingStarted.setup.description', "Choose a provider, add a key, select a model, then start agent work with evidence."),
 		isFeatured: true,
 		icon: setupIcon,
 		when: '!isWeb',
-		walkthroughPageTitle: localize('gettingStarted.setup.walkthroughPageTitle', 'Setup VS Code'),
+		walkthroughPageTitle: localize('gettingStarted.setup.walkthroughPageTitle', 'Setup Aixlarity'),
 		next: 'Beginner',
 		content: {
 			type: 'steps',
 			steps: [
-				createCopilotSetupStep('CopilotSetupAnonymous', CopilotAnonymousButton, 'chatAnonymous && !chatSetupCompleted', true),
-				createCopilotSetupStep('CopilotSetupSignedOut', CopilotSignedOutButton, 'chatEntitlementSignedOut && !chatAnonymous', false),
-				createCopilotSetupStep('CopilotSetupComplete', CopilotCompleteButton, 'chatSetupCompleted && !chatSetupDisabled && (chatAnonymous || chatPlanPro || chatPlanProPlus || chatPlanBusiness || chatPlanEnterprise || chatPlanFree)', false),
-				createCopilotSetupStep('CopilotSetupSignedIn', CopilotSignedInButton, '!chatEntitlementSignedOut && (!chatSetupCompleted || chatSetupDisabled || chatPlanCanSignUp)', false),
+				{
+					id: 'aixlarityProviderSetup',
+					title: localize('gettingStarted.aixlarity.providerSetup.title', "Choose Provider"),
+					description: localize('gettingStarted.aixlarity.providerSetup.description.interpolated', "Start with the model provider Aixlarity should use. This is local configuration, not an account sign-in flow.\n{0}", Button(localize('gettingStarted.aixlarity.providerSetup.button', "Choose Provider"), 'command:aixlarity.chooseProvider')),
+					completionEvents: ['onCommand:aixlarity.chooseProvider'],
+					media: { type: 'markdown', path: 'empty' }
+				},
+				{
+					id: 'aixlarityApiKeySetup',
+					title: localize('gettingStarted.aixlarity.apiKeySetup.title', "Add API Key"),
+					description: localize('gettingStarted.aixlarity.apiKeySetup.description.interpolated', "Add an API key for the selected provider or create a workspace provider that points at an environment variable.\n{0}", Button(localize('gettingStarted.aixlarity.apiKeySetup.button', "Add API Key"), 'command:aixlarity.addApiKey')),
+					completionEvents: ['onCommand:aixlarity.addApiKey'],
+					media: { type: 'markdown', path: 'empty' }
+				},
+				{
+					id: 'aixlarityModelSetup',
+					title: localize('gettingStarted.aixlarity.modelSetup.title', "Select Model"),
+					description: localize('gettingStarted.aixlarity.modelSetup.description.interpolated', "Type the exact model ID for this provider so every agent request is explicit and reproducible.\n{0}", Button(localize('gettingStarted.aixlarity.modelSetup.button', "Select Model"), 'command:aixlarity.selectModel')),
+					completionEvents: ['onCommand:aixlarity.selectModel'],
+					media: { type: 'markdown', path: 'empty' }
+				},
 				{
 					id: 'pickColorTheme',
 					title: localize('gettingStarted.pickColor.title', "Choose your theme"),

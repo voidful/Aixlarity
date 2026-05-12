@@ -554,7 +554,8 @@ body[data-current-chapter="home"] .main-content {
 }
 
 body[data-current-chapter="home"] .chapter#home {
-    max-width: 1120px;
+    max-width: min(1760px, calc(100vw - var(--sidebar-w) - 3rem));
+    padding: clamp(1.7rem, 2.15vw, 3.1rem) clamp(1.45rem, 2.45vw, 3.35rem) 4.8rem;
 }
 
 .chapter {
@@ -755,9 +756,9 @@ body[data-current-chapter="home"] .chapter#home {
     position: relative;
     display: grid;
     align-items: end;
-    min-height: 37.5rem;
+    min-height: clamp(38rem, 42vw, 46rem);
     margin-bottom: 1.4rem;
-    padding: 2rem;
+    padding: clamp(1.7rem, 2.1vw, 2.7rem);
     overflow: hidden;
     border: 1px solid rgba(28, 42, 51, 0.1);
     border-radius: 8px;
@@ -793,10 +794,10 @@ body[data-current-chapter="home"] .chapter#home {
 
 .ide-product-visual {
     position: absolute;
-    inset: 1.3rem 1.1rem auto auto;
+    inset: clamp(1rem, 1.4vw, 1.7rem) clamp(1rem, 1.4vw, 1.7rem) auto auto;
     z-index: 0;
-    width: min(67%, 46rem);
-    height: 27.4rem;
+    width: min(66%, 72rem);
+    height: clamp(27.5rem, 30vw, 34rem);
     opacity: 0.9;
     overflow: visible;
     perspective: 1200px;
@@ -1129,8 +1130,8 @@ body[data-current-chapter="home"] .chapter#home {
 .ide-product-copy {
     position: relative;
     z-index: 2;
-    max-width: 47rem;
-    padding-top: 8rem;
+    max-width: min(54rem, 50%);
+    padding-top: clamp(8.5rem, 8vw, 11rem);
     text-shadow: 0 1px 18px rgba(0, 0, 0, 0.24);
 }
 
@@ -1179,11 +1180,11 @@ body[data-current-chapter="home"] .chapter#home {
 }
 
 .ide-product-title {
-    max-width: 42rem;
+    max-width: 50rem;
     margin: 0;
     font-family: var(--font-display);
     color: #fff7eb;
-    font-size: clamp(3.3rem, 6vw, 4.9rem);
+    font-size: clamp(3.6rem, 5.2vw, 6.4rem);
     line-height: 1.02;
 }
 
@@ -1192,10 +1193,10 @@ body[data-current-chapter="home"] .chapter#home {
 }
 
 .ide-product-subtitle {
-    max-width: 39rem;
+    max-width: 45rem;
     margin: 1rem 0 1.15rem;
     color: rgba(255, 247, 236, 0.78);
-    font-size: 1.05rem;
+    font-size: clamp(1.05rem, 1.1vw, 1.2rem);
     line-height: 1.64;
 }
 
@@ -1215,15 +1216,22 @@ body[data-current-chapter="home"] .chapter#home {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.6rem;
-    max-width: 34rem;
+    max-width: 42rem;
     margin-top: 1.1rem;
 }
 
 .ide-hero-proof div {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 0.55rem;
+    align-items: baseline;
     padding: 0.74rem 0.8rem;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(185, 255, 246, 0.18);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.065);
+    background: rgba(4, 10, 16, 0.72);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 12px 28px rgba(0, 0, 0, 0.18);
     backdrop-filter: blur(14px);
 }
 
@@ -1235,38 +1243,46 @@ body[data-current-chapter="home"] .chapter#home {
 .ide-hero-proof strong {
     color: #fff7eb;
     font-family: var(--font-mono);
-    font-size: 1rem;
+    font-size: 0.98rem;
     line-height: 1.1;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.34);
 }
 
 .ide-hero-proof span {
-    margin-top: 0.28rem;
-    color: rgba(255, 247, 236, 0.62);
-    font-size: 0.78rem;
+    margin-top: 0;
+    color: rgba(255, 247, 236, 0.88);
+    font-size: 0.82rem;
+    font-weight: 650;
+    line-height: 1.25;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.34);
 }
 
 .ide-status-strip {
-    position: absolute;
-    top: 1.35rem;
-    left: 2rem;
-    z-index: 2;
+    position: relative;
+    z-index: 3;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.55rem;
-    width: min(34rem, calc(100% - 4rem));
-    margin-top: 0;
+    width: min(42rem, 100%);
+    margin-top: 0.8rem;
 }
 
 .ide-status-strip span {
+    display: grid;
+    gap: 0.12rem;
     position: relative;
     min-width: 0;
-    padding: 0.62rem 0.68rem;
+    padding: 0.58rem 0.68rem;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(185, 255, 246, 0.16);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.055);
-    color: rgba(255, 247, 236, 0.62);
-    font-size: 0.78rem;
+    background: rgba(4, 10, 16, 0.72);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    color: rgba(255, 247, 236, 0.88);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.36);
     backdrop-filter: blur(14px);
 }
 
@@ -1289,12 +1305,14 @@ body[data-current-chapter="home"] .chapter#home {
 
 .ide-status-strip strong {
     display: block;
-    margin-bottom: 0.1rem;
-    color: #fff7eb;
+    margin-bottom: 0;
+    color: rgba(185, 255, 246, 0.86);
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: 0.62rem;
+    font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    text-shadow: none;
 }
 
 .ide-hero-tags {
@@ -1304,6 +1322,7 @@ body[data-current-chapter="home"] .chapter#home {
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-top: 1.6rem;
+    max-width: 68rem;
 }
 
 .ide-hero-tags span {
@@ -2813,6 +2832,35 @@ body[data-current-chapter="home"] .chapter#home {
     .ide-flow-visual {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+
+    .ide-product-copy {
+        max-width: min(46rem, 56%);
+    }
+
+    .ide-product-title {
+        font-size: clamp(3.1rem, 4.35vw, 4.35rem);
+    }
+}
+
+@media (min-width: 1100px) and (max-width: 1380px) {
+    body[data-current-chapter="home"] .download-grid,
+    body[data-current-chapter="home"] .ide-product-strip,
+    body[data-current-chapter="home"] .ide-screenshot-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    body[data-current-chapter="home"] .ide-capability-board {
+        grid-template-columns: 1.1fr 1fr 1fr 1fr;
+    }
+
+    body[data-current-chapter="home"] .download-card {
+        min-height: 12rem;
+        padding: 0.9rem;
+    }
+
+    body[data-current-chapter="home"] .download-actions .btn {
+        font-size: 0.8rem;
+    }
 }
 
 @media (max-width: 1160px) {
@@ -2851,6 +2899,11 @@ body[data-current-chapter="home"] .chapter#home {
     }
 
     .chapter {
+        padding: 4.8rem 1.3rem 4rem;
+    }
+
+    body[data-current-chapter="home"] .chapter#home {
+        max-width: none;
         padding: 4.8rem 1.3rem 4rem;
     }
 
@@ -2950,6 +3003,7 @@ body[data-current-chapter="home"] .chapter#home {
     }
 
     .ide-product-copy {
+        max-width: 100%;
         padding-top: 20rem;
     }
 

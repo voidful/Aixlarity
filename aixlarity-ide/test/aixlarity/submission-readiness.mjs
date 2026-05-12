@@ -15,6 +15,11 @@ const viewPath = path.join(root, 'src/vs/workbench/contrib/aixlarity/browser/aix
 const providerCorePath = path.join(repoRoot, 'crates/aixlarity-core/src/providers.rs');
 const providerTypesPath = path.join(repoRoot, 'crates/aixlarity-core/src/providers/types.rs');
 const providerModelPath = path.join(root, 'src/vs/workbench/contrib/aixlarity/browser/aixlarityProviderModel.ts');
+const welcomeContentPath = path.join(root, 'src/vs/workbench/contrib/welcomeGettingStarted/common/gettingStartedContent.ts');
+const welcomeContributionPath = path.join(root, 'src/vs/workbench/contrib/welcomeGettingStarted/browser/gettingStarted.contribution.ts');
+const releaseWorkflowPath = path.join(repoRoot, '.github/workflows/release.yml');
+const gulpVscodePath = path.join(root, 'build/gulpfile.vscode.ts');
+const gulpExtensionsPath = path.join(root, 'build/gulpfile.extensions.ts');
 const cliPath = path.join(repoRoot, 'crates/aixlarity-cli/src/main.rs');
 
 const product = readJson(productPath);
@@ -23,6 +28,11 @@ const view = readText(viewPath);
 const providerCore = readText(providerCorePath);
 const providerTypes = readText(providerTypesPath);
 const providerModel = readText(providerModelPath);
+const welcomeContent = readText(welcomeContentPath);
+const welcomeContribution = readText(welcomeContributionPath);
+const releaseWorkflow = readText(releaseWorkflowPath);
+const gulpVscode = readText(gulpVscodePath);
+const gulpExtensions = readText(gulpExtensionsPath);
 const cli = readText(cliPath);
 
 function assertNoLegacyIdentity(value, field) {
@@ -83,6 +93,11 @@ assert(pkg.scripts?.['test-aixlarity-submission'], 'package script test-aixlarit
 
 const requiredViewPatterns = [
 	'providerSwitchScope',
+	'openProviderSetup',
+	'Provider Setup',
+	'Choose Provider / Add API Key / Select Model',
+	'data-aixlarity-provider-select',
+	'data-aixlarity-model-input',
 	'Provider Preset',
 	'Import Provider Bundle',
 	'providerExportProfile',
@@ -106,6 +121,37 @@ const requiredProviderModelPatterns = [
 for (const pattern of requiredProviderModelPatterns) {
 	assert(providerModel.includes(pattern), `Provider model readiness missing "${pattern}"`);
 }
+
+const requiredFirstRunPatterns = [
+	'aixlarityChooseProvider',
+	'aixlarityAddApiKey',
+	'aixlaritySelectModel',
+	'command:aixlarity.chooseProvider',
+	'command:aixlarity.addApiKey',
+	'command:aixlarity.selectModel',
+	'Set up Aixlarity',
+	'This is local configuration, not an account sign-in flow.',
+];
+for (const pattern of requiredFirstRunPatterns) {
+	assert(welcomeContent.includes(pattern), `First-run provider setup missing "${pattern}"`);
+}
+assert(!welcomeContent.includes('command:welcome.newWorkspaceChat'), 'First-run should not route primary users into chat sign-in setup');
+assert(welcomeContribution.includes('Aixlarity starts with local provider setup'), 'First-run onboarding default should explain provider-first rationale');
+assert(welcomeContribution.includes('default: false'), 'Experimental account onboarding must not be the default first-run path');
+
+const requiredReleaseProfilePatterns = [
+	'AIXLARITY_RELEASE_PROFILE: slim',
+	'vscode-darwin-${VSCODE_ARCH}-min',
+	'vscode-win32-$($env:VSCODE_ARCH)-min',
+	'vscode-linux-${VSCODE_ARCH}-min',
+];
+for (const pattern of requiredReleaseProfilePatterns) {
+	assert(releaseWorkflow.includes(pattern), `Release workflow missing slim profile contract "${pattern}"`);
+}
+assert(gulpVscode.includes('aixlaritySlimReleaseProfile'), 'Desktop packaging must understand the Aixlarity slim release profile');
+assert(gulpVscode.includes('stripSourceMapsInPackagingTasks = isCI || aixlaritySlimReleaseProfile'), 'Slim release must strip packaged sourcemaps outside CI too');
+assert(gulpVscode.includes('skipping extension shims'), 'Slim release must skip Copilot extension shims when the extension is not bundled');
+assert(gulpExtensions.includes('Slim release: skipping bundled Copilot Chat extension'), 'Slim release must skip the bundled Copilot Chat extension');
 
 const requiredCorePatterns = [
 	'workspace_registry_path',
@@ -149,6 +195,8 @@ console.log(JSON.stringify({
 		'submission suite includes artifact-level Electron bundle validation',
 		'model-level behavior contracts are available for CI-safe quality checks',
 		'provider manager keeps scoped preset/import/export affordances',
+		'first-run routes provider setup before any account sign-in flow',
+		'slim release profile uses minified IDE builds and excludes bundled Copilot Chat',
 		'core provider registry persists workspace/user mutations explicitly',
 		'daemon provider RPCs parse scope for use/add/remove',
 	],

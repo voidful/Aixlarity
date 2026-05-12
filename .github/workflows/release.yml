@@ -28,6 +28,7 @@ env:
   CARGO_TERM_COLOR: always
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   VSCODE_QUALITY: stable
+  AIXLARITY_RELEASE_PROFILE: slim
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
 
 jobs:
@@ -102,7 +103,7 @@ jobs:
 
       - name: Package Aixlarity IDE app
         working-directory: aixlarity-ide
-        run: npm run gulp -- "vscode-darwin-${VSCODE_ARCH}"
+        run: npm run gulp -- "vscode-darwin-${VSCODE_ARCH}-min"
 
       - name: Prepare macOS signing mode
         env:
@@ -296,7 +297,7 @@ jobs:
       - name: Package Aixlarity IDE app and installer
         working-directory: aixlarity-ide
         run: |
-          npm run gulp -- "vscode-win32-$($env:VSCODE_ARCH)"
+          npm run gulp -- "vscode-win32-$($env:VSCODE_ARCH)-min"
           npm run gulp -- "vscode-win32-$($env:VSCODE_ARCH)-inno-updater"
           npm run gulp -- "vscode-win32-$($env:VSCODE_ARCH)-user-setup"
 
@@ -385,7 +386,7 @@ jobs:
       - name: Package Aixlarity IDE app and Linux packages
         working-directory: aixlarity-ide
         run: |
-          npm run gulp -- "vscode-linux-${VSCODE_ARCH}"
+          npm run gulp -- "vscode-linux-${VSCODE_ARCH}-min"
           npm run gulp -- "vscode-linux-${VSCODE_ARCH}-prepare-deb"
           npm run gulp -- "vscode-linux-${VSCODE_ARCH}-build-deb"
           npm run gulp -- "vscode-linux-${VSCODE_ARCH}-prepare-rpm"

@@ -106,6 +106,7 @@ import { createTaskVerificationMarkdown, createTaskVerificationPassport } from '
 import { renderTaskVerificationPassport } from './aixlarityVerificationView.js';
 
 type AgentManagerTab = 'mission' | 'artifacts' | 'browser' | 'terminal' | 'studio';
+type ProviderSetupIntent = 'choose-provider' | 'add-api-key' | 'select-model';
 
 interface AixlarityStudioState {
     schema: string;
@@ -153,6 +154,8 @@ export class AixlarityAgentViewPane extends ViewPane {
     private activeGlobalProviderId: string = '';
     private activeWorkspaceProviderId: string = '';
     private providerSwitchScope: 'workspace' | 'global' = 'workspace';
+    private pendingProviderSetupIntent: ProviderSetupIntent | null = null;
+    private providerSetupIntentConsumed = false;
 
     private attachmentsContainer!: HTMLElement;
     private pendingAttachments: Array<{ file: File, base64: string, type: string, name: string }> = [];
@@ -817,6 +820,46 @@ export class AixlarityAgentViewPane extends ViewPane {
             }
             .aixlarity-settings-card:hover {
                 background: color-mix(in srgb, var(--vscode-list-hoverBackground) 50%, transparent);
+            }
+            .aixlarity-provider-setup-focus {
+                border-color: var(--vscode-focusBorder) !important;
+                box-shadow: 0 0 0 1px var(--vscode-focusBorder), 0 0 0 5px color-mix(in srgb, var(--vscode-focusBorder) 14%, transparent);
+            }
+            .aixlarity-provider-setup-steps {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 5px;
+                margin-top: 8px;
+            }
+            .aixlarity-provider-step {
+                min-width: 0;
+                border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 70%, transparent);
+                border-radius: 6px;
+                padding: 6px 7px;
+                background: color-mix(in srgb, var(--vscode-editorWidget-background) 82%, transparent);
+                color: var(--vscode-descriptionForeground);
+            }
+            .aixlarity-provider-step.ready {
+                border-color: color-mix(in srgb, var(--vscode-testing-iconPassed) 45%, var(--vscode-panel-border));
+                color: var(--vscode-foreground);
+            }
+            .aixlarity-provider-step-label {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                min-width: 0;
+                font-size: 10px;
+                font-weight: 700;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .aixlarity-provider-step-status {
+                margin-top: 3px;
+                font-size: 9px;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+                opacity: 0.78;
             }
             .aixlarity-section-label {
                 font-size: 10px;
@@ -3260,8 +3303,8 @@ export class AixlarityAgentViewPane extends ViewPane {
 
         const header = append(this.settingsContainer, $('div.aixlarity-manager-header'));
         const titleBlock = append(header, $('div'));
-        append(titleBlock, $('div.aixlarity-manager-title')).textContent = 'Settings';
-        append(titleBlock, $('div.aixlarity-manager-subtitle')).textContent = 'Provider, trust, execution.';
+        append(titleBlock, $('div.aixlarity-manager-title')).textContent = 'Provider Setup';
+        append(titleBlock, $('div.aixlarity-manager-subtitle')).textContent = 'Choose Provider / Add API Key / Select Model.';
 
         const activeConv = this.conversations.find(c => c.id === this.activeConversationId);
         const selectedProviderId = activeConv?.selectedProviderId || currentProviderId || overview?.current_provider?.id || '';
@@ -3317,6 +3360,7 @@ export class AixlarityAgentViewPane extends ViewPane {
 
         sectionTitle('Provider');
         const providerCard = append(this.settingsContainer, $('div.aixlarity-settings-card'));
+        providerCard.setAttribute('data-aixlarity-provider-setup', 'true');
         const providerTop = append(providerCard, $('div', { style: 'display: flex; align-items: center; gap: 8px; min-width: 0;' }));
         append(providerTop, $('span.codicon.codicon-sparkle', { style: 'color: var(--vscode-descriptionForeground);' }));
         const providerText = append(providerTop, $('div', { style: 'min-width: 0; flex: 1;' }));
@@ -3326,6 +3370,20 @@ export class AixlarityAgentViewPane extends ViewPane {
         const apiProviderSelected = !!activeProvider && activeProvider.family !== 'external-cli';
         append(providerText, $('div', { style: 'font-size: 10px; color: var(--vscode-descriptionForeground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;' })).textContent =
             activeProvider ? (activeProviderModel || (apiProviderSelected ? 'Model required for API' : 'External CLI model')) : 'Select a provider to run agents';
+
+        const setupSteps = append(providerCard, $('div.aixlarity-provider-setup-steps'));
+        const renderProviderStep = (label: string, iconClass: string, ready: boolean, detail: string) => {
+            const step = append(setupSteps, $('div.aixlarity-provider-step'));
+            step.classList.toggle('ready', ready);
+            const labelRow = append(step, $('div.aixlarity-provider-step-label'));
+            append(labelRow, $(`span.codicon.${iconClass}`));
+            append(labelRow, $('span')).textContent = label;
+            append(step, $('div.aixlarity-provider-step-status')).textContent = ready ? 'Ready' : detail;
+        };
+        const providerChosen = !!activeProvider;
+        renderProviderStep('Choose Provider', 'codicon-server', providerChosen, 'Required');
+        renderProviderStep('Add API Key', 'codicon-key', providerChosen && (!apiProviderSelected || !!activeProvider?.api_key_env), providerChosen ? 'Required' : 'After provider');
+        renderProviderStep('Select Model', 'codicon-vm', providerChosen && (!apiProviderSelected || !!activeProviderModel), providerChosen ? 'Required' : 'After provider');
 
         const scopeToggle = append(providerCard, $('div.aixlarity-scope-toggle'));
         const workspaceScopeBtn = append(scopeToggle, $('button.aixlarity-action-button', { title: 'Switch only this workspace' }));
@@ -3351,6 +3409,7 @@ export class AixlarityAgentViewPane extends ViewPane {
         syncScopeButtons();
 
         const providerSelect = append(providerCard, $<HTMLSelectElement>('select.aixlarity-compact-select', { style: 'margin-top: 8px;' }));
+        providerSelect.setAttribute('data-aixlarity-provider-select', 'true');
         if (providers.length === 0) {
             const option = append(providerSelect, $<HTMLOptionElement>('option'));
             option.textContent = 'No providers available';
@@ -3370,10 +3429,11 @@ export class AixlarityAgentViewPane extends ViewPane {
             const modelInput = append(modelEditor, $<HTMLInputElement>('input.aixlarity-model-input', {
                 placeholder: 'Model ID (required for API)'
             }));
+            modelInput.setAttribute('data-aixlarity-model-input', 'true');
             modelInput.value = activeProviderModel;
             const saveModelBtn = append(modelEditor, $<HTMLButtonElement>('button.aixlarity-action-button', { title: 'Save model' }));
             append(saveModelBtn, $('span.codicon.codicon-save'));
-            append(saveModelBtn, $('span')).textContent = 'Save';
+            append(saveModelBtn, $('span')).textContent = 'Save Model';
             modelHint = append(providerCard, $('div.aixlarity-model-hint'));
 
             const syncModelSaveState = () => {
@@ -3463,8 +3523,9 @@ export class AixlarityAgentViewPane extends ViewPane {
 
         const providerActions = append(providerCard, $('div', { style: 'display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;' }));
         const addProviderBtn = append(providerActions, $('button.aixlarity-action-button'));
+        addProviderBtn.setAttribute('data-aixlarity-add-api-key', 'true');
         append(addProviderBtn, $('span.codicon.codicon-add'));
-        append(addProviderBtn, $('span')).textContent = 'Add';
+        append(addProviderBtn, $('span')).textContent = 'Add API Key';
         addProviderBtn.addEventListener('click', () => this.showAddCustomProviderDialog(null, msText));
         const diagnoseBtn = append(providerActions, $<HTMLButtonElement>('button.aixlarity-action-button'));
         append(diagnoseBtn, $('span.codicon.codicon-pulse'));
@@ -3477,8 +3538,9 @@ export class AixlarityAgentViewPane extends ViewPane {
         });
         if (activeProvider?.api_key_env) {
             const keyBtn = append(providerActions, $('button.aixlarity-action-button'));
+            keyBtn.setAttribute('data-aixlarity-key-button', 'true');
             append(keyBtn, $('span.codicon.codicon-key'));
-            append(keyBtn, $('span')).textContent = 'Key';
+            append(keyBtn, $('span')).textContent = 'API Key';
             keyBtn.addEventListener('click', () => this.showProviderKeyDialog(activeProvider));
         }
         const exportProvidersBtn = append(providerActions, $('button.aixlarity-action-button', { title: 'Copy custom provider bundle as JSON' }));
@@ -3536,6 +3598,8 @@ export class AixlarityAgentViewPane extends ViewPane {
                 });
             }
         }
+
+        this.applyPendingProviderSetupIntent();
 
         sectionTitle('Trust');
         const trustCard = append(this.settingsContainer, $('div.aixlarity-settings-card'));
@@ -4784,6 +4848,83 @@ export class AixlarityAgentViewPane extends ViewPane {
         container.appendChild(errEl);
     }
 
+    public openProviderSetup(intent: ProviderSetupIntent = 'choose-provider'): void {
+        this.pendingProviderSetupIntent = intent;
+        this.providerSetupIntentConsumed = false;
+        this.showSettingsDashboard();
+        setTimeout(() => this.applyPendingProviderSetupIntent(), 0);
+    }
+
+    private showSettingsDashboard(anchor?: HTMLElement | null): void {
+        if (!this.settingsContainer || !this.chatContainer || !this.inputWrapper || !this.bottomStatusBar || !this.fleetContainer || !this.historyContainer) {
+            return;
+        }
+
+        this.chatContainer.style.display = 'none';
+        this.inputWrapper.style.display = 'none';
+        this.bottomStatusBar.style.display = 'none';
+        this.fleetContainer.style.display = 'none';
+        this.historyContainer.style.display = 'none';
+        this.settingsContainer.style.display = 'flex';
+        this.settingsContainer.textContent = '';
+
+        const settingsPill = anchor || (this.conversationBar?.querySelector('[data-aixlarity-nav="settings"]') as HTMLElement | null);
+        settingsPill?.classList.add('active');
+        const managerPill = this.conversationBar?.querySelector('[data-aixlarity-nav="fleet"]');
+        managerPill?.classList.remove('active');
+        const historyPill = this.conversationBar?.querySelector('[data-aixlarity-nav="history"]');
+        historyPill?.classList.remove('active');
+
+        this.conversationBar?.querySelectorAll('.aixlarity-conv-pill').forEach(pill => {
+            const nav = pill.getAttribute('data-aixlarity-nav');
+            if (pill !== settingsPill && nav !== 'fleet' && nav !== 'history') {
+                pill.classList.remove('active');
+            }
+        });
+
+        this.renderEssentialSettingsPanel(this.lastOverview, this.providerListCache, this.currentProviderId, this.msTextRef || settingsPill || this.settingsContainer);
+        this.sendRpcToDaemon('overview', {});
+        this.sendRpcToDaemon('studio/load', {});
+    }
+
+    private applyPendingProviderSetupIntent(): void {
+        const intent = this.pendingProviderSetupIntent;
+        if (!intent || !this.isSettingsVisible()) {
+            return;
+        }
+
+        const providerCard = this.settingsContainer.querySelector('[data-aixlarity-provider-setup="true"]') as HTMLElement | null;
+        providerCard?.classList.add('aixlarity-provider-setup-focus');
+        providerCard?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+        if (intent === 'choose-provider') {
+            const providerSelect = this.settingsContainer.querySelector('[data-aixlarity-provider-select="true"]') as HTMLSelectElement | null;
+            providerSelect?.focus();
+            this.pendingProviderSetupIntent = null;
+            return;
+        }
+
+        if (intent === 'select-model') {
+            const modelInput = this.settingsContainer.querySelector('[data-aixlarity-model-input="true"]') as HTMLInputElement | null;
+            const providerSelect = this.settingsContainer.querySelector('[data-aixlarity-provider-select="true"]') as HTMLSelectElement | null;
+            (modelInput || providerSelect)?.focus();
+            this.pendingProviderSetupIntent = null;
+            return;
+        }
+
+        if (intent === 'add-api-key' && !this.providerSetupIntentConsumed) {
+            this.providerSetupIntentConsumed = true;
+            const keyButton = this.settingsContainer.querySelector('[data-aixlarity-key-button="true"]') as HTMLButtonElement | null;
+            const addButton = this.settingsContainer.querySelector('[data-aixlarity-add-api-key="true"]') as HTMLButtonElement | null;
+            const target = keyButton || addButton;
+            if (target) {
+                target.focus();
+                target.click();
+            }
+            this.pendingProviderSetupIntent = null;
+        }
+    }
+
     private isSettingsVisible(): boolean {
         return !!this.settingsContainer && this.settingsContainer.style.display === 'flex';
     }
@@ -5795,6 +5936,7 @@ export class AixlarityAgentViewPane extends ViewPane {
 
         // Manager pill (Fleet)
         const mgrPill = append(this.conversationBar, $('span.aixlarity-conv-pill', { style: 'margin-left: auto;' }));
+        mgrPill.setAttribute('data-aixlarity-nav', 'fleet');
         append(mgrPill, $('span.codicon.codicon-organization', { style: 'font-size: 11px; margin-right: 2px;' }));
         const mgrLabel = document.createElement('span');
         mgrLabel.textContent = 'Fleet';
@@ -5835,6 +5977,7 @@ export class AixlarityAgentViewPane extends ViewPane {
         });
 
         const histPill = append(this.conversationBar, $('span.aixlarity-conv-pill.aixlarity-hist-pill', { style: 'margin-left: 2px;' }));
+        histPill.setAttribute('data-aixlarity-nav', 'history');
         append(histPill, $('span.codicon.codicon-history', { style: 'font-size: 11px; margin-right: 2px;' }));
 
         histPill.addEventListener('click', () => {
@@ -5882,26 +6025,7 @@ export class AixlarityAgentViewPane extends ViewPane {
                 // Return to Chat
                 this.switchConversation(this.activeConversationId);
             } else {
-                this.chatContainer.style.display = 'none';
-                this.inputWrapper.style.display = 'none';
-                this.bottomStatusBar.style.display = 'none';
-                this.fleetContainer.style.display = 'none';
-                this.historyContainer.style.display = 'none';
-                this.settingsContainer.style.display = 'flex';
-                this.settingsContainer.textContent = '';
-                setPill.classList.add('active');
-                mgrPill.classList.remove('active');
-                const p = this.conversationBar.querySelector('.aixlarity-hist-pill');
-                if (p) p.classList.remove('active');
-
-                this.conversationBar.querySelectorAll('.aixlarity-conv-pill').forEach(pill => {
-                    if (pill !== mgrPill && pill !== setPill && !pill.classList.contains('aixlarity-hist-pill')) pill.classList.remove('active');
-                });
-
-                this.renderEssentialSettingsPanel(this.lastOverview, this.providerListCache, this.currentProviderId, this.msTextRef || setPill);
-
-                this.sendRpcToDaemon('overview', {});
-                this.sendRpcToDaemon('studio/load', {});
+                this.showSettingsDashboard(setPill);
             }
         });
     }

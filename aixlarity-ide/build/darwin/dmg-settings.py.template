@@ -6,8 +6,9 @@ format = 'ULMO'
 badge_icon = {{BADGE_ICON}}
 background = {{BACKGROUND}}
 
-# Volume size
-size = '1g'
+# Volume size. Aixlarity slim releases fit below this, but the extra headroom
+# keeps dmgbuild from failing while APFS/HFS metadata is materialized.
+size = '2g'
 shrink = False
 
 # Files and symlinks

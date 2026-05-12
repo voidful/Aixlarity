@@ -44,6 +44,7 @@ const glob = promisify(globCallback);
 const rcedit = promisify(rceditCallback);
 const root = path.dirname(import.meta.dirname);
 const commit = getVersion(root);
+const aixlaritySlimReleaseProfile = process.env['AIXLARITY_RELEASE_PROFILE'] === 'slim';
 
 // Build
 const vscodeEntryPoints = [
@@ -242,8 +243,8 @@ function runTsGoTypeCheck(): Promise<void> {
 
 const sourceMappingURLBase = `https://main.vscode-cdn.net/sourcemaps/${commit}`;
 const isCI = !!process.env['CI'] || !!process.env['BUILD_ARTIFACTSTAGINGDIRECTORY'] || !!process.env['GITHUB_WORKSPACE'];
-const useCdnSourceMapsForPackagingTasks = isCI;
-const stripSourceMapsInPackagingTasks = isCI;
+const useCdnSourceMapsForPackagingTasks = isCI || aixlaritySlimReleaseProfile;
+const stripSourceMapsInPackagingTasks = isCI || aixlaritySlimReleaseProfile;
 const minifyVSCodeTask = task.define('minify-vscode', task.series(
 	bundleVSCodeTask,
 	util.rimraf('out-vscode-min'),
@@ -705,6 +706,11 @@ function copyCopilotNativeDepsTask(platform: string, arch: string, destinationFo
 		copyCopilotNativeDeps(platform, arch, appNodeModulesDir);
 
 		const builtInCopilotExtensionDir = path.join(appBase, 'extensions', 'copilot');
+		if (aixlaritySlimReleaseProfile && !fs.existsSync(builtInCopilotExtensionDir)) {
+			console.log('[aixlarity] Slim release: no bundled Copilot Chat extension; skipping extension shims.');
+			return;
+		}
+
 		prepareBuiltInCopilotExtensionShims(platform, arch, builtInCopilotExtensionDir, appNodeModulesDir);
 	};
 }

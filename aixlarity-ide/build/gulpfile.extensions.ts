@@ -27,6 +27,7 @@ import watcher from './lib/watch/index.ts';
 
 const root = path.dirname(import.meta.dirname);
 const commit = getVersion(root);
+const aixlaritySlimReleaseProfile = process.env['AIXLARITY_RELEASE_PROFILE'] === 'slim';
 
 // Tracks active extension compilations to emit aggregate
 // "Starting compilation" / "Finished compilation" messages
@@ -283,7 +284,14 @@ gulp.task(compileNativeExtensionsBuildTask);
  * Compiles the built-in copilot extension for the build.
  * Used by non-CI local builds where copilot is not downloaded as a VSIX.
  */
-export const compileCopilotExtensionBuildTask = task.define('compile-copilot-extension-build', () => ext.packageCopilotExtensionStream(false).pipe(gulp.dest('.build')));
+export const compileCopilotExtensionBuildTask = task.define('compile-copilot-extension-build', () => {
+	if (aixlaritySlimReleaseProfile) {
+		fancyLog('[aixlarity] Slim release: skipping bundled Copilot Chat extension.');
+		return Promise.resolve();
+	}
+
+	return ext.packageCopilotExtensionStream(false).pipe(gulp.dest('.build'));
+});
 gulp.task(compileCopilotExtensionBuildTask);
 
 /**

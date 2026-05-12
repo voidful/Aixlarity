@@ -92,6 +92,61 @@ async function openAixlarityAgentView(accessor: ServicesAccessor): Promise<Aixla
     return (await viewsService.openView<AixlarityAgentViewPane>(VIEW_ID, true)) || undefined;
 }
 
+type AixlarityProviderSetupIntent = 'choose-provider' | 'add-api-key' | 'select-model';
+
+async function openAixlarityProviderSetup(accessor: ServicesAccessor, intent: AixlarityProviderSetupIntent): Promise<void> {
+    const view = await openAixlarityAgentView(accessor);
+    view?.openProviderSetup(intent);
+}
+
+registerAction2(class extends Action2 {
+    constructor() {
+        super({
+            id: 'aixlarity.chooseProvider',
+            title: localize2('aixlarityChooseProvider', 'Aixlarity: Choose Provider'),
+            category: localize2('aixlarityCategory', 'Aixlarity'),
+            f1: true,
+            icon: Codicon.server,
+        });
+    }
+
+    async run(accessor: ServicesAccessor): Promise<void> {
+        await openAixlarityProviderSetup(accessor, 'choose-provider');
+    }
+});
+
+registerAction2(class extends Action2 {
+    constructor() {
+        super({
+            id: 'aixlarity.addApiKey',
+            title: localize2('aixlarityAddApiKey', 'Aixlarity: Add API Key'),
+            category: localize2('aixlarityCategory', 'Aixlarity'),
+            f1: true,
+            icon: Codicon.key,
+        });
+    }
+
+    async run(accessor: ServicesAccessor): Promise<void> {
+        await openAixlarityProviderSetup(accessor, 'add-api-key');
+    }
+});
+
+registerAction2(class extends Action2 {
+    constructor() {
+        super({
+            id: 'aixlarity.selectModel',
+            title: localize2('aixlaritySelectModel', 'Aixlarity: Select Model'),
+            category: localize2('aixlarityCategory', 'Aixlarity'),
+            f1: true,
+            icon: Codicon.vm,
+        });
+    }
+
+    async run(accessor: ServicesAccessor): Promise<void> {
+        await openAixlarityProviderSetup(accessor, 'select-model');
+    }
+});
+
 registerAction2(class extends Action2 {
     constructor() {
         super({
