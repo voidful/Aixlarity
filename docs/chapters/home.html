@@ -77,7 +77,7 @@
 
     <div class="ide-product-copy">
         <div class="ide-brand-lockup">
-            <img src="assets/aixlarity-icon.png" alt="" aria-hidden="true">
+            <img src="assets/aixlarity-icon.png" alt="" aria-hidden="true" width="44" height="44" decoding="async" fetchpriority="high">
             <div>
                 <span>Aixlarity IDE</span>
                 <strong>Open Agent Workbench</strong>
@@ -239,21 +239,39 @@
     </div>
     <div class="ide-screenshot-grid">
         <figure class="ide-screenshot-card">
-            <img src="assets/aixlarity-ide-mission-control.png" alt="Aixlarity IDE Mission Control interface">
+            <picture>
+                <source
+                    type="image/webp"
+                    srcset="assets/aixlarity-ide-mission-control-960.webp 960w, assets/aixlarity-ide-mission-control-1440.webp 1440w"
+                    sizes="(max-width: 920px) calc(100vw - 2.6rem), 31vw">
+                <img src="assets/aixlarity-ide-mission-control.png" alt="Aixlarity IDE Mission Control interface" width="2880" height="1800" loading="lazy" decoding="async">
+            </picture>
             <figcaption>
                 <strong>Mission Control</strong>
                 <span>長任務、批准、工件狀態與驗收紀錄同屏管理。</span>
             </figcaption>
         </figure>
         <figure class="ide-screenshot-card">
-            <img src="assets/aixlarity-ide-diff-review.png" alt="Aixlarity IDE visual diff review interface">
+            <picture>
+                <source
+                    type="image/webp"
+                    srcset="assets/aixlarity-ide-diff-review-960.webp 960w, assets/aixlarity-ide-diff-review-1440.webp 1440w"
+                    sizes="(max-width: 920px) calc(100vw - 2.6rem), 31vw">
+                <img src="assets/aixlarity-ide-diff-review.png" alt="Aixlarity IDE visual diff review interface" width="2880" height="1800" loading="lazy" decoding="async">
+            </picture>
             <figcaption>
                 <strong>Visual Diff Review</strong>
                 <span>逐輪比較 AI 修改，讓每一段改動都能被確認、留言或退回。</span>
             </figcaption>
         </figure>
         <figure class="ide-screenshot-card">
-            <img src="assets/aixlarity-ide-knowledge-ledger.png" alt="Aixlarity IDE Knowledge Ledger settings interface">
+            <picture>
+                <source
+                    type="image/webp"
+                    srcset="assets/aixlarity-ide-knowledge-ledger-960.webp 960w, assets/aixlarity-ide-knowledge-ledger-1440.webp 1440w"
+                    sizes="(max-width: 920px) calc(100vw - 2.6rem), 31vw">
+                <img src="assets/aixlarity-ide-knowledge-ledger.png" alt="Aixlarity IDE Knowledge Ledger settings interface" width="2880" height="1800" loading="lazy" decoding="async">
+            </picture>
             <figcaption>
                 <strong>Knowledge Ledger</strong>
                 <span>學到的規則可審核、可匯出、可關閉，不藏在黑箱記憶裡。</span>

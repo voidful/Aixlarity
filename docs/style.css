@@ -75,6 +75,29 @@ body::before {
     z-index: -4;
 }
 
+.noscript-home {
+    max-width: 48rem;
+    margin: 2rem auto;
+    padding: 1.4rem;
+    border: 1px solid rgba(28, 42, 51, 0.12);
+    border-radius: 8px;
+    background: var(--bg-panel-strong);
+    box-shadow: var(--shadow-soft);
+}
+
+.noscript-home h1 {
+    margin: 0 0 0.8rem;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    line-height: 1.05;
+    color: var(--text-strong);
+}
+
+.noscript-home p {
+    margin-bottom: 1rem;
+    color: var(--text-dim);
+}
+
 a {
     color: var(--teal-strong);
     text-decoration: none;
@@ -1447,6 +1470,14 @@ body[data-current-chapter="home"] .chapter#home {
     box-shadow: var(--shadow-soft);
 }
 
+body[data-current-chapter="home"] .download-panel,
+body[data-current-chapter="home"] .ide-capability-board,
+body[data-current-chapter="home"] .ide-interface-showcase,
+body[data-current-chapter="home"] .ide-home-content {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 760px;
+}
+
 .download-heading {
     display: flex;
     justify-content: space-between;
@@ -1611,6 +1642,10 @@ body[data-current-chapter="home"] .chapter#home {
     border-radius: 8px;
     background: var(--bg-panel-strong);
     box-shadow: var(--shadow-soft);
+}
+
+.ide-screenshot-card picture {
+    display: block;
 }
 
 .ide-screenshot-card img {

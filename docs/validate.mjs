@@ -97,9 +97,31 @@ const indexHtml = read('docs/index.html');
 const homeHtml = read('docs/chapters/home.html');
 const styleCss = read('docs/style.css');
 const scriptJs = read('docs/script.js');
+const robotsTxt = read('docs/robots.txt');
+const sitemapXml = read('docs/sitemap.xml');
 const readmeZh = read('README.md');
 const readmeEn = read('README.en.md');
 const releaseWorkflow = read('.github/workflows/release.yml');
+
+try {
+  new Function(scriptJs);
+} catch (error) {
+  fail(`docs/script.js has a syntax error: ${error.message}`);
+}
+
+const structuredDataMatch = indexHtml.match(/<script\s+type="application\/ld\+json">([\s\S]*?)<\/script>/);
+if (!structuredDataMatch) {
+  fail('docs/index.html missing SoftwareApplication JSON-LD structured data');
+} else {
+  try {
+    const structuredData = JSON.parse(structuredDataMatch[1]);
+    if (structuredData['@type'] !== 'SoftwareApplication' || structuredData.name !== 'Aixlarity IDE') {
+      fail('docs/index.html JSON-LD must describe Aixlarity IDE as SoftwareApplication');
+    }
+  } catch (error) {
+    fail(`docs/index.html JSON-LD is invalid: ${error.message}`);
+  }
+}
 
 const homepageChecks = [
   ['docs/assets/aixlarity-icon.ai source exists', fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-icon.ai'))],
@@ -114,16 +136,25 @@ const homepageChecks = [
   ['index uses Aixlarity icon asset', indexHtml.includes('assets/aixlarity-icon.png')],
   ['index exposes root favicon, apple touch icon, and web manifest', indexHtml.includes('href="favicon.ico"') && indexHtml.includes('href="apple-touch-icon.png"') && indexHtml.includes('href="site.webmanifest"')],
   ['index social preview uses Aixlarity domain icon', indexHtml.includes('https://aixlarity.com/assets/aixlarity-icon-512.png')],
+  ['index exposes canonical, robots, Open Graph, and Twitter metadata', indexHtml.includes('rel="canonical" href="https://aixlarity.com/"') && indexHtml.includes('name="robots" content="index,follow,max-image-preview:large"') && indexHtml.includes('property="og:title"') && indexHtml.includes('name="twitter:card"')],
+  ['index exposes SoftwareApplication structured data and no-JS product summary', indexHtml.includes('"@type": "SoftwareApplication"') && indexHtml.includes('downloadUrl') && indexHtml.includes('<noscript>') && indexHtml.includes('下載 Aixlarity IDE')],
+  ['docs exposes robots.txt and sitemap.xml for crawlers', robotsTxt.includes('Sitemap: https://aixlarity.com/sitemap.xml') && sitemapXml.includes('<loc>https://aixlarity.com/</loc>')],
+  ['script syntax is checked and avoids no-cache chapter fetches', !scriptJs.includes("cache: 'no-cache'") && !scriptJs.includes('cache: "no-cache"')],
+  ['script updates chapter SEO metadata and throttles viewport work', scriptJs.includes('updateDocumentMeta') && scriptJs.includes('prefetchNearbyChapters') && scriptJs.includes('scheduleViewportRefresh')],
   ['home includes IDE product hero', homeHtml.includes('ide-product-hero')],
   ['home includes brand lockup icon', homeHtml.includes('ide-brand-lockup') && homeHtml.includes('assets/aixlarity-icon.png')],
+  ['home uses intrinsic icon dimensions for fast first paint', indexHtml.includes('width="32" height="32"') && homeHtml.includes('width="44" height="44"')],
   ['home includes release download panel', homeHtml.includes('id="download-aixlarity"') && homeHtml.includes('releases/latest/download/Aixlarity-darwin-arm64.dmg')],
   ['home exposes macOS, Windows, Linux downloads', homeHtml.includes('Aixlarity-darwin-x64.dmg') && homeHtml.includes('Aixlarity-win32-x64-user-setup.exe') && homeHtml.includes('Aixlarity-linux-x64.deb')],
   ['home exposes release checksums', homeHtml.includes('SHASUMS256.txt')],
   ['home includes visual capability board', homeHtml.includes('ide-capability-board')],
   ['home includes IDE screenshot showcase', homeHtml.includes('ide-interface-showcase') && homeHtml.includes('aixlarity-ide-mission-control.png')],
+  ['home screenshots use WebP sources, lazy loading, and intrinsic dimensions', homeHtml.includes('<picture>') && homeHtml.includes('type="image/webp"') && homeHtml.includes('loading="lazy"') && homeHtml.includes('width="2880" height="1800"')],
+  ['home screenshot WebP derivatives exist', fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-ide-mission-control-960.webp')) && fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-ide-mission-control-1440.webp')) && fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-ide-diff-review-960.webp')) && fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-ide-diff-review-1440.webp')) && fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-ide-knowledge-ledger-960.webp')) && fs.existsSync(path.join(docsDir, 'assets', 'aixlarity-ide-knowledge-ledger-1440.webp'))],
   ['home includes animated workflow rail', homeHtml.includes('ide-flow-visual')],
   ['home styles platform download cards', styleCss.includes('.download-panel') && styleCss.includes('.download-card') && styleCss.includes('.platform-mark')],
   ['home styles screenshot cards', styleCss.includes('ide-screenshot-card')],
+  ['home defers below-fold rendering with content visibility', styleCss.includes('content-visibility: auto') && styleCss.includes('contain-intrinsic-size')],
   ['release workflow builds native macOS, Windows, and Linux artifacts', releaseWorkflow.includes('macos-15-intel') && releaseWorkflow.includes('windows-11-arm') && releaseWorkflow.includes('ubuntu-24.04-arm')],
   ['release workflow publishes exact homepage artifact name templates', releaseWorkflow.includes('Aixlarity-darwin-${VSCODE_ARCH}.dmg') && releaseWorkflow.includes('Aixlarity-win32-$env:VSCODE_ARCH-user-setup.exe') && releaseWorkflow.includes('Aixlarity-linux-${VSCODE_ARCH}.deb')],
   ['release workflow emits combined SHA-256 checksums', releaseWorkflow.includes('SHASUMS256.txt') && releaseWorkflow.includes('sha256sum Aixlarity-* aixlarity-cli-*')],
@@ -174,5 +205,6 @@ console.log(JSON.stringify({
     'IDE landing page icon, release downloads, screenshot showcase, visual capability board, and workflow rail are wired',
     'release workflow builds native macOS, Windows, and Linux artifacts with checksums and macOS package validation',
     'README product hero assets, Aixlarity domain, and Knowledge Ledger selling point are wired',
+    'SEO metadata, structured data, robots.txt, sitemap.xml, lazy screenshots, and chapter script performance gates are wired',
   ],
 }, null, 2));

@@ -13,6 +13,11 @@
     const railMeta = document.getElementById('railMeta');
     const chapterToc = document.getElementById('chapterToc');
 
+    const SITE_ORIGIN = 'https://aixlarity.com/';
+    const DEFAULT_TITLE = 'Aixlarity IDE — AI 幫你改程式，每一步都看得見';
+    const DEFAULT_DESCRIPTION = 'Aixlarity IDE 是開源 AI agent 工作台。每一次改動、測試、瀏覽器操作和模型切換，都會整理成你看得懂、查得到的紀錄。';
+    const SOCIAL_IMAGE = 'https://aixlarity.com/assets/aixlarity-icon-512.png';
+
     const chapterCache = {};
     const chapterIndex = new Map();
     const visited = new Set();
@@ -23,6 +28,7 @@
     let currentHeadings = [];
     let totalChapters = 0;
     let pointerFrame = null;
+    let viewportFrame = null;
 
     init();
 
@@ -41,7 +47,7 @@
 
     async function loadManifest() {
         try {
-            const response = await fetch('chapters/manifest.json', { cache: 'no-cache' });
+            const response = await fetch('chapters/manifest.json');
             if (!response.ok) {
                 throw new Error(response.statusText);
             }
@@ -101,7 +107,7 @@
         if (chapterCache[id]) return chapterCache[id];
 
         try {
-            const response = await fetch(`chapters/${id}.html`, { cache: 'no-cache' });
+            const response = await fetch(`chapters/${id}.html`);
             if (!response.ok) {
                 throw new Error(`${response.status} ${response.statusText}`);
             }
@@ -164,7 +170,9 @@
         currentHeadings = getHeadingsForChapter(target, id);
         updateProgress();
         updateRail(target, id);
+        updateDocumentMeta(target, id);
         refreshActiveHeading();
+        prefetchNearbyChapters(id);
 
         window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
         history.replaceState(null, '', `#${id}`);
@@ -556,6 +564,89 @@
         });
     }
 
+    function updateDocumentMeta(target, id) {
+        const item = chapterIndex.get(id);
+        const title = compactText(
+            target.querySelector('.chapter-header h1')?.textContent
+            || target.querySelector('.hero-title')?.textContent
+            || item?.label
+            || 'Aixlarity IDE',
+            68
+        );
+        const description = compactText(
+            target.querySelector('.chapter-desc')?.textContent
+            || target.querySelector('.ide-product-subtitle')?.textContent
+            || target.querySelector('.content-body p')?.textContent
+            || DEFAULT_DESCRIPTION,
+            158
+        );
+        const pageTitle = id === 'home' ? DEFAULT_TITLE : `${title} | Aixlarity IDE`;
+        const pageUrl = id === 'home' ? SITE_ORIGIN : `${SITE_ORIGIN}#${encodeURIComponent(id)}`;
+
+        document.title = pageTitle;
+        setMeta('name', 'description', description);
+        setMeta('property', 'og:title', pageTitle);
+        setMeta('property', 'og:description', description);
+        setMeta('property', 'og:url', pageUrl);
+        setMeta('property', 'og:image', SOCIAL_IMAGE);
+        setMeta('name', 'twitter:title', pageTitle);
+        setMeta('name', 'twitter:description', description);
+        setMeta('name', 'twitter:image', SOCIAL_IMAGE);
+    }
+
+    function setMeta(attribute, key, value) {
+        let element = document.head.querySelector(`meta[${attribute}="${key}"]`);
+        if (!element) {
+            element = document.createElement('meta');
+            element.setAttribute(attribute, key);
+            document.head.appendChild(element);
+        }
+        element.setAttribute('content', value);
+    }
+
+    function compactText(value, maxLength) {
+        const text = String(value || '').replace(/\s+/g, ' ').trim();
+        if (text.length <= maxLength) return text;
+        return `${text.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+    }
+
+    function prefetchNearbyChapters(id) {
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (connection?.saveData || connection?.effectiveType === '2g' || connection?.effectiveType === 'slow-2g') {
+            return;
+        }
+
+        const index = allChapterIds.indexOf(id);
+        if (index < 0) return;
+
+        scheduleIdle(() => {
+            prefetchChapter(allChapterIds[index + 1]);
+        });
+    }
+
+    function prefetchChapter(id) {
+        if (!id || chapterCache[id]) return;
+
+        fetch(`chapters/${id}.html`)
+            .then((response) => response.ok ? response.text() : null)
+            .then((html) => {
+                if (html && !chapterCache[id]) {
+                    chapterCache[id] = html;
+                }
+            })
+            .catch(() => {
+                // Prefetch is a convenience path; normal navigation still reports errors.
+            });
+    }
+
+    function scheduleIdle(callback) {
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(callback, { timeout: 1500 });
+        } else {
+            window.setTimeout(callback, 240);
+        }
+    }
+
     function refreshActiveHeading() {
         backToTop.classList.toggle('visible', window.scrollY > 420);
 
@@ -613,12 +704,8 @@
             }
         });
 
-        window.addEventListener('scroll', () => {
-            refreshActiveHeading();
-            updateProgress();
-        }, { passive: true });
-
-        window.addEventListener('resize', updateProgress);
+        window.addEventListener('scroll', scheduleViewportRefresh, { passive: true });
+        window.addEventListener('resize', scheduleViewportRefresh);
 
         backToTop.addEventListener('click', () => {
             window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
@@ -655,6 +742,16 @@
                 mobileBtn.classList.remove('active');
                 mobileBtn.setAttribute('aria-expanded', 'false');
             }
+        });
+    }
+
+    function scheduleViewportRefresh() {
+        if (viewportFrame) return;
+
+        viewportFrame = window.requestAnimationFrame(() => {
+            refreshActiveHeading();
+            updateProgress();
+            viewportFrame = null;
         });
     }
 
